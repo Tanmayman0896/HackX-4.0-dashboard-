@@ -71,14 +71,20 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    apiService.getTeamJudgeMappings().then(setMappings);
-    apiService.getTeamScores().then(setTeamScores);
+    apiService
+      .getTeamJudgeMappings()
+      .then((res) => setMappings(Array.isArray(res) ? res : []))
+      .catch(() => setMappings([]));
+    apiService
+      .getTeamScores()
+      .then((res) => setTeamScores(Array.isArray(res) ? res : []))
+      .catch(() => setTeamScores([]));
   }, []);
 
   const loadMappings = async () => {
     try {
       const data = await apiService.getTeamJudgeMappings();
-      setMappings(data);
+      setMappings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to load mappings:", error);
     }
@@ -87,8 +93,8 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
   // Get unique problem statements and floors for filtering
   const uniquePS = useMemo(() => {
     const map = new Map<string, { id: string; title: string }>();
-    teams.forEach((team) => {
-      if (team.problemStatement && team.problemStatement.id) {
+    (teams || []).forEach((team) => {
+      if (team && team.problemStatement && team.problemStatement.id) {
         map.set(team.problemStatement.id, team.problemStatement);
       }
     });
@@ -99,13 +105,14 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
 
   // Filter teams based on search and filters
   const filteredTeams = useMemo(() => {
-    return teams.filter((team) => {
+    return (teams || []).filter((team) => {
+      if (!team) return false;
       const matchesSearch =
         team.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         team.round1Room?.name?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesPS =
         selectedPS === "all" || team.problemStatement?.title === selectedPS;
-      const isMapped = mappings.some((m) => m.teamId === team.id);
+      const isMapped = (mappings || []).some((m) => m.teamId === team.id);
       const matchesMappedFilter = !showMappedOnly || isMapped;
 
       return matchesSearch && matchesPS && matchesMappedFilter;

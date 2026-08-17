@@ -98,14 +98,23 @@ app.use("*", (req, res) => {
 // Global error handler
 app.use(logError);
 
-// Database connection test
+// Database connection test with retries for cold-start wake-up
 async function connectDatabase() {
-  try {
-    await prisma.$connect();
-    console.log("✅ Database connected successfully");
-  } catch (error) {
-    console.error("❌ Database connection failed:", error);
-    process.exit(1);
+  let retries = 5;
+  while (retries > 0) {
+    try {
+      await prisma.$connect();
+      console.log("✅ Database connected successfully");
+      return;
+    } catch (error) {
+      retries--;
+      console.warn(`⚠️ Database connection attempt failed. Retrying... (${5 - retries}/5)`);
+      if (retries === 0) {
+        console.error("❌ Database connection warning:", error);
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
   }
 }
 

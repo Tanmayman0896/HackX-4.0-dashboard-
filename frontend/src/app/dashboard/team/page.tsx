@@ -107,19 +107,28 @@ export default function TeamDashboard() {
   };
 
   const handleSubmissionUpdate = () => {
-    apiService.getTeamSubmission().then(setSubmissions);
+    apiService.getTeamSubmission().then(setSubmissions).catch(console.error);
   };
 
   const refreshDomains = () => {
-    apiService.getDomains().then(setDomains);
+    apiService
+      .getDomains()
+      .then((res) => setDomains(Array.isArray(res) ? res : []))
+      .catch(() => setDomains([]));
   };
 
   const refreshMentors = () => {
-    apiService.getMentors().then(setMentors);
+    apiService
+      .getMentors()
+      .then((res) => setMentors(Array.isArray(res) ? res : []))
+      .catch(() => setMentors([]));
   };
 
   const refreshAnnouncements = () => {
-    apiService.getAnnouncements().then(setAnnouncements);
+    apiService
+      .getAnnouncements()
+      .then((res) => setAnnouncements(Array.isArray(res) ? res : []))
+      .catch(() => setAnnouncements([]));
   };
 
   // if (!passwordChanged) {

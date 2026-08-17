@@ -217,11 +217,26 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    apiService.getTeams().then(setTeams);
-    apiService.getJudges().then(setJudges);
-    apiService.getMentors().then(setMentors);
-    apiService.getProblemStatements().then(setProblemStatements);
-    apiService.getAnnouncements().then(setAnnouncements);
+    apiService
+      .getTeams()
+      .then((res) => setTeams(Array.isArray(res) ? res : []))
+      .catch(() => setTeams([]));
+    apiService
+      .getJudges()
+      .then((res) => setJudges(Array.isArray(res) ? res : []))
+      .catch(() => setJudges([]));
+    apiService
+      .getMentors()
+      .then((res) => setMentors(Array.isArray(res) ? res : []))
+      .catch(() => setMentors([]));
+    apiService
+      .getProblemStatements()
+      .then((res) => setProblemStatements(Array.isArray(res) ? res : []))
+      .catch(() => setProblemStatements([]));
+    apiService
+      .getAnnouncements()
+      .then((res) => setAnnouncements(Array.isArray(res) ? res : []))
+      .catch(() => setAnnouncements([]));
 
     async function onWebsocketMessage(ws: WebSocket, ev: MessageEvent) {
       const data = JSON.parse(ev.data) as WebsocketData;

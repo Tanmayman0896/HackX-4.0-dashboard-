@@ -44,11 +44,14 @@ export function ActivityLogs({
   const { toast } = useToast();
 
   // Get unique actions and users for filter dropdowns
-  const actions = Array.from(new Set(logs.map((log) => log.action)));
-  const uniqueActions = actions.sort((a, b) => a.localeCompare(b));
+  const safeLogs = Array.isArray(logs) ? logs : [];
+  const actions = Array.from(new Set(safeLogs.map((log) => log?.action || "")));
+  const uniqueActions = actions.sort((a, b) =>
+    (a || "").localeCompare(b || ""),
+  );
   const uniqueUsers = Array.from(
-    new Set(logs.map((log) => log.user?.username)),
-  ).filter((log) => log);
+    new Set(safeLogs.map((log) => log?.user?.username)),
+  ).filter((u): u is string => Boolean(u));
 
   useEffect(() => {
     setLogs(initialLogs);

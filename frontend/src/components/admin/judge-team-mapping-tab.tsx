@@ -334,9 +334,11 @@ export function JudgeTeamMappingTab({
                           )}
                         </CardTitle>
                         <CardDescription className="mt-1 mb-0">
-                          {team.teamId} • {team.round1Room.block}-{" "}
-                          {team.round1Room.name} • PS:{" "}
-                          {team.problemStatement.title}
+                          {team.teamId} •{" "}
+                          {team?.round1Room
+                            ? `${team.round1Room.block}-${team.round1Room.name}`
+                            : "No Room"}{" "}
+                          • PS: {team?.problemStatement?.title || "N/A"}
                         </CardDescription>
                       </div>
                     </div>

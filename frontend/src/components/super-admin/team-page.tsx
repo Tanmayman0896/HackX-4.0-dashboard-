@@ -51,8 +51,9 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
 
   // Filter teams based on search and filters
   const filteredTeams = useMemo(() => {
-    return teams.filter((team) => {
-      const matchesSearch = team.name
+    return (teams || []).filter((team) => {
+      if (!team) return false;
+      const matchesSearch = (team.name || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
       const matchesStatus =

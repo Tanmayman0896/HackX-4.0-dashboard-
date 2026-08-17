@@ -41,14 +41,17 @@ export function UserManagementTab({
   // Get unique roles for filter
   const uniqueRoles = useMemo(() => {
     const roleSet = new Set(
-      users.filter((user) => user.role).map((user) => user.role),
+      (users || [])
+        .filter((user) => user && user.role)
+        .map((user) => user.role),
     );
     return Array.from(roleSet).sort();
   }, [users]);
 
   // Filter users based on search and filters
   const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
+    return (users || []).filter((user) => {
+      if (!user) return false;
       const matchesSearch =
         user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         false;
@@ -147,8 +150,8 @@ export function UserManagementTab({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-2 w-full">
-            <div className="space-y-2 w-full">
+          <div className="flex w-full flex-col gap-2 md:flex-row">
+            <div className="w-full space-y-2">
               <Label>Search Users</Label>
               <div className="relative">
                 <Search className="absolute top-2.5 left-2 h-4 w-4 text-slate-400" />
@@ -156,7 +159,7 @@ export function UserManagementTab({
                   placeholder="Search by username..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 w-full"
+                  className="w-full pl-8"
                 />
               </div>
             </div>

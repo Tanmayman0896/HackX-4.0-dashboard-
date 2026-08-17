@@ -68,8 +68,14 @@ export default function JudgeDashboard() {
   const { toast } = useToast();
 
   useEffect(() => {
-    apiService.getProfile().then((value) => setJudge(value as Judge));
-    apiService.getEvaluations().then(setAssignedTeams);
+    apiService
+      .getProfile()
+      .then((value) => setJudge(value as Judge))
+      .catch(console.error);
+    apiService
+      .getEvaluations()
+      .then((res) => setAssignedTeams(Array.isArray(res) ? res : []))
+      .catch(() => setAssignedTeams([]));
   }, []);
 
   const scoringCriteria: Criterion[] = [
@@ -324,12 +330,13 @@ export default function JudgeDashboard() {
                         </CardTitle>
                         <CardDescription className="mt-1 text-sm">
                           <strong>PS:</strong>{" "}
-                          {evaluation.team.problemStatement.title}
+                          {evaluation.team?.problemStatement?.title || "N/A"}
                         </CardDescription>
                         <CardDescription className="text-sm">
                           <strong>Room:</strong>{" "}
-                          {evaluation.team.round1Room.block}{" "}
-                          {evaluation.team.round1Room.name}
+                          {evaluation.team?.round1Room
+                            ? `${evaluation.team.round1Room.block} ${evaluation.team.round1Room.name}`
+                            : "Not Assigned"}
                         </CardDescription>
                       </div>
                       <div className="text-left lg:text-right">

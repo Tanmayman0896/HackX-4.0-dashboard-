@@ -62,7 +62,9 @@ export function OverviewTab({
               <Label className="text-sm font-medium">Room Number</Label>
               <p className="flex items-center gap-2 text-lg">
                 <MapPin className="h-4 w-4" />
-                {team.round1Room.block} {team.round1Room.name}
+                {team?.round1Room
+                  ? `${team.round1Room.block} ${team.round1Room.name}`
+                  : "Not Assigned"}
               </p>
             </div>
           </CardContent>

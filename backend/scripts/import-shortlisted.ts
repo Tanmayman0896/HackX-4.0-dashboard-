@@ -1,4 +1,4 @@
-﻿import {PrismaClient} from "@prisma/client";
+import {PrismaClient} from "@prisma/client";
 import {hashPassword} from "../utils/password";
 import * as fs from "fs";
 import * as path from "path";
@@ -357,12 +357,84 @@ function trimString(v?: string) {
   return typeof v === 'string' ? v.trim() : '';
 }
 
+async function createSampleTeams() {
+  console.log("🤖 Creating sample demo teams...");
+  const defaultPassword = await hashPassword("team123");
+
+  const problemStatements = await prisma.problemStatement.findMany();
+  const sampleData = [
+    {
+      name: "Alpha Coders",
+      teamId: "TEAM001",
+      psId: problemStatements[0]?.id,
+      members: [
+        { name: "Alex Johnson", email: "alex@example.com", phone: "9876543210", role: "LEADER" as const },
+        { name: "Sam Smith", email: "sam@example.com", phone: "9876543211", role: "MEMBER" as const },
+      ],
+    },
+    {
+      name: "Byte Builders",
+      teamId: "TEAM002",
+      psId: problemStatements[1]?.id,
+      members: [
+        { name: "Chris Lee", email: "chris@example.com", phone: "9876543212", role: "LEADER" as const },
+        { name: "Morgan Davis", email: "morgan@example.com", phone: "9876543213", role: "MEMBER" as const },
+      ],
+    },
+    {
+      name: "Cyber Mavericks",
+      teamId: "TEAM003",
+      psId: problemStatements[2]?.id,
+      members: [
+        { name: "Jordan Taylor", email: "jordan@example.com", phone: "9876543214", role: "LEADER" as const },
+        { name: "Taylor White", email: "taylor@example.com", phone: "9876543215", role: "MEMBER" as const },
+      ],
+    },
+  ];
+
+  for (const t of sampleData) {
+    const team = await prisma.team.create({
+      data: {
+        name: t.name,
+        teamId: t.teamId,
+        status: "REGISTERED",
+        problemStatementId: t.psId,
+        participants: {
+          create: t.members.map(m => ({
+            name: m.name,
+            email: m.email,
+            phone: m.phone,
+            role: m.role,
+            verified: true,
+          })),
+        },
+      },
+    });
+
+    await prisma.user.create({
+      data: {
+        username: t.teamId,
+        password: defaultPassword,
+        email: `${t.teamId.toLowerCase()}@hackathon.com`,
+        role: "TEAM",
+        teamId: team.id,
+      },
+    });
+
+    console.log(`✅ Created sample team: ${t.name} (${t.teamId})`);
+  }
+}
+
 // ---------- Main import ----------
 export async function importShortlistedTeams() {
-  console.log('📊 Importing shortlisted teams from Excel...');
+  console.log('📊 Importing shortlisted teams...');
 
   const filePath = path.join(__dirname, '../data/extended_shortlisted_teams.csv');
-  if (!fs.existsSync(filePath)) throw new Error(`File not found at ${filePath}`);
+  if (!fs.existsSync(filePath)) {
+    console.log(`⚠️ Shortlisted teams CSV not found at ${filePath}. Creating sample teams instead.`);
+    await createSampleTeams();
+    return;
+  }
 
   const csvContent = fs.readFileSync(filePath, 'utf-8');
   const rows: Record<string, string>[] = parse(csvContent, {
@@ -522,10 +594,25 @@ async function main() {
   console.log("🚀 Starting lenient shortlisted teams import process...");
 
   try {
-    // Clear existing teams and participants
+    // Clear existing data across all tables
     console.log("🧹 Clearing existing data...");
-    await prisma.teamParticipant.deleteMany();
-    await prisma.team.deleteMany();
+    await prisma.activityLog.deleteMany().catch(() => {});
+    await prisma.pSBookmark.deleteMany().catch(() => {});
+    await prisma.mentorshipQueue.deleteMany().catch(() => {});
+    await prisma.evaluation.deleteMany().catch(() => {});
+    await prisma.teamScore.deleteMany().catch(() => {});
+    await prisma.submission.deleteMany().catch(() => {});
+    await prisma.teamCheckpoint.deleteMany().catch(() => {});
+    await prisma.teamParticipant.deleteMany().catch(() => {});
+    await prisma.user.deleteMany().catch(() => {});
+    await prisma.team.deleteMany().catch(() => {});
+    await prisma.judge.deleteMany().catch(() => {});
+    await prisma.mentor.deleteMany().catch(() => {});
+    await prisma.announcement.deleteMany().catch(() => {});
+    await prisma.problemStatement.deleteMany().catch(() => {});
+    await prisma.domain.deleteMany().catch(() => {});
+    await prisma.round1Room.deleteMany().catch(() => {});
+    await prisma.systemSettings.deleteMany().catch(() => {});
 
     // Create basic system data
     await createBasicData();

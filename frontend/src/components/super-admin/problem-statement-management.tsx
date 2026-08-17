@@ -205,24 +205,30 @@ export function ProblemStatementManagement({
   };
 
   useEffect(() => {
-    getDomains().then((data) => {
-      setDomains(data);
-      const domain = data.find((d) => d.id === formData.domainId);
-      if (domain) {
-        setSelectedDomain(domain.name);
-      }
-    } );
+    getDomains()
+      .then((data) => {
+        const safeData = Array.isArray(data) ? data : [];
+        setDomains(safeData);
+        const domain = safeData.find((d) => d.id === formData.domainId);
+        if (domain) {
+          setSelectedDomain(domain.name);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch domains:", err);
+        setDomains([]);
+      });
   }, [formData.domainId]);
 
   useEffect(() => {
     if (formData.domain) {
-      formData.domainId = domains.map((d => d.name))
-        .indexOf(formData.domain) !== -1
-        ? domains.find(d => d.name === formData.domain)!.id
-        : "";
+      const match = (domains || []).find((d) => d.name === formData.domain);
+      if (match) {
+        setFormData((prev) => ({ ...prev, domainId: match.id }));
+      }
       setSelectedDomain(formData.domain);
     }
-  }, [domains, formData]);
+  }, [domains, formData.domain]);
 
   const handleCreate = async () => {
     try {
@@ -304,7 +310,7 @@ export function ProblemStatementManagement({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Problem Statement Management</h2>
-        <div className="flex flex-row gap-4 items-center">
+        <div className="flex flex-row items-center gap-4">
           <div className="flex w-fit items-center space-x-2">
             <Switch
               id="ps-lock"

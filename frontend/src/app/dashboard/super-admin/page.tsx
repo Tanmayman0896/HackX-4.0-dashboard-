@@ -103,20 +103,46 @@ export default function SuperAdminDashboard() {
   const { toast } = useToast();
 
   useEffect(function getAllData() {
-    apiService.getSystemStatus().then((data) => {
-      setPsLocked(data.problem_statements_locked === "true");
-      setMentorshipLocked(data.mentorship_locked === "true");
-      setRound1Locked(data.round1_locked === "true");
-      setRound2Locked(data.round2_locked === "true");
-    });
+    apiService
+      .getSystemStatus()
+      .then((data) => {
+        if (data) {
+          setPsLocked(data.problem_statements_locked === "true");
+          setMentorshipLocked(data.mentorship_locked === "true");
+          setRound1Locked(data.round1_locked === "true");
+          setRound2Locked(data.round2_locked === "true");
+        }
+      })
+      .catch((err) => console.error("Error fetching system status:", err));
 
-    apiService.getAllUsers().then(setUsers);
-    apiService.getTeams().then(setTeams);
-    apiService.getJudges().then(setJudges);
-    apiService.getLogs().then(setLogs);
-    apiService.getProblemStatements().then(setProblemStatements);
-    apiService.getAnnouncements().then(setAnnouncements);
-    apiService.getMentors().then(setMentors);
+    apiService
+      .getAllUsers()
+      .then((res) => setUsers(Array.isArray(res) ? res : []))
+      .catch(() => setUsers([]));
+    apiService
+      .getTeams()
+      .then((res) => setTeams(Array.isArray(res) ? res : []))
+      .catch(() => setTeams([]));
+    apiService
+      .getJudges()
+      .then((res) => setJudges(Array.isArray(res) ? res : []))
+      .catch(() => setJudges([]));
+    apiService
+      .getLogs()
+      .then((res) => setLogs(Array.isArray(res) ? res : []))
+      .catch(() => setLogs([]));
+    apiService
+      .getProblemStatements()
+      .then((res) => setProblemStatements(Array.isArray(res) ? res : []))
+      .catch(() => setProblemStatements([]));
+    apiService
+      .getAnnouncements()
+      .then((res) => setAnnouncements(Array.isArray(res) ? res : []))
+      .catch(() => setAnnouncements([]));
+    apiService
+      .getMentors()
+      .then((res) => setMentors(Array.isArray(res) ? res : []))
+      .catch(() => setMentors([]));
   }, []);
 
   // Add refresh functions

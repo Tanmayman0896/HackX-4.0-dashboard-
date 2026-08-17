@@ -1,79 +1,91 @@
-# MUJ HackX 3.0- Official Website
+# HackX 3.0 System (Backend API & Frontend Dashboard)
 
-Made with ❤️ by Team HackX
+Production-ready hackathon management platform consisting of an **Express.js & TypeScript Backend API** (with PostgreSQL / Prisma ORM and real-time WebSockets) and a **Next.js Frontend Dashboard** (supporting Admin, Judge, Mentor, Team/Participant, and Super-Admin roles).
 
-## Frontend Setup
+---
 
-### Prerequisites
+## 🛠️ Technology Stack
 
-- **Node.js**: Version 18.0.0 or higher
-- **npm** : Package manager
-- **Git**: Version control system
+### Backend
+- **Framework & Language**: Node.js, Express.js, TypeScript (`tsx`)
+- **Database & ORM**: PostgreSQL, Prisma ORM
+- **Real-Time Messaging**: WebSocket (`ws`)
+- **Security & Auth**: JWT, bcryptjs, Helmet, CORS
 
-### Installation
-
-1. **Clone the repository** (if not already done):
-   ```bash
-   git clone https://github.com/AwesomeSam9523/HackX3.0
-   cd HackX3.0
-   ```
-
-2. **Navigate to the frontend directory**:
-   ```bash
-   cd frontend
-   ```
-
-3. **Install dependencies**:
-   ```bash
-   npm install
-   
-   ```
-
-### Development
-
-4. **Start the development server**:
-   ```bash
-   npm run dev
-   ```
-
-   The application will be available at [http://localhost:3000](http://localhost:3000)
-
-### Available Scripts
-
-- `npm run dev` - Start development server with Turbopack
-- `npm run build` - Build the application for production
-- `npm run start` - Start the production server
-- `npm run lint` - Run ESLint to check code quality
-
-### Technology Stack
-
-- **Framework**: Next.js 15.3.4
+### Frontend (Dashboard)
+- **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Animations**: Framer Motion, GSAP
-- **Icons**: Lucide React
+- **Styling**: Tailwind CSS, Lucide Icons, Shadcn UI
+- **State & Data**: React Hooks, WebSocket client integration
 
+---
 
-### Code Quality
+## 📂 Project Structure
 
-The project uses:
-- **ESLint** for code linting
-- **Prettier** for code formatting
-- **Husky** for git hooks
-- **lint-staged** for pre-commit checks
-
-### Building for Production
-
-```bash
-npm run build
-npm run start
+```text
+.
+├── backend/                  # REST API & WebSocket server
+│   ├── middleware/           # Auth, logging & error handlers
+│   ├── prisma/               # Database schema & migrations
+│   ├── routes/               # Express API endpoints
+│   ├── services/             # Core business logic
+│   ├── server.ts             # Server entrypoint
+│   └── Dockerfile
+├── frontend/                 # Dashboard web application
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── dashboard/   # Admin, Judge, Mentor, Team, Super-Admin routes
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx     # Redirects root / to /dashboard/login
+│   │   └── components/
+│   │       ├── admin/
+│   │       ├── auth/
+│   │       ├── layout/
+│   │       ├── mentor/
+│   │       ├── participant/
+│   │       ├── super-admin/
+│   │       └── ui/          # UI Component Library
+│   └── Dockerfile
+├── docker-compose.yml        # Docker Compose (PostgreSQL, Backend, Frontend)
+└── README.md
 ```
 
-### Docker (Optional)
+---
 
-If you prefer to use Docker:
+## 🚀 Getting Started
+
+### 1. Backend Setup
 
 ```bash
-docker build -t hackx-frontend .
-docker run -p 3000:3000 hackx-frontend
+cd backend
+npm install
+
+# Database setup
+npm run db:generate
+npm run db:push
+
+# Start development server (Port 4000 & WebSocket Port 9000)
+npm run dev
+```
+
+### 2. Frontend Dashboard Setup
+
+```bash
+cd frontend
+npm install
+
+# Start Next.js development server (Port 3000)
+npm run dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) to access the Dashboard (redirects to `/dashboard/login`).
+
+---
+
+## 🐳 Docker Deployment
+
+To spin up the database, backend, and frontend dashboard with Docker Compose:
+
+```bash
+docker compose up -d --build
 ```

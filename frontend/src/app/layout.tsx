@@ -1,19 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import LayoutClient from "./LayoutClient";
 import React from "react";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 const kinetikaLight = localFont({
   src: "../../public/fonts/KinetikaLight.otf",
@@ -26,8 +15,8 @@ const kinetikaUltra = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "HACKX 3.0",
-  description: "MUJ's LARGEST HACKATHON",
+  title: "HACKX 3.0 Dashboard",
+  description: "MUJ's Hackathon Dashboard",
 };
 
 export default function RootLayout({
@@ -38,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${kinetikaLight.variable} ${kinetikaUltra.variable} antialiased`}
+        className={`${kinetikaLight.variable} ${kinetikaUltra.variable} font-sans antialiased`}
       >
         <LayoutClient>{children}</LayoutClient>
       </body>
