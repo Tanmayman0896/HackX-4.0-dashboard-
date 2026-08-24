@@ -18,7 +18,7 @@ interface OverviewTabProps {
   selectedMentor: MentorshipSession | null;
   psLocked: boolean;
   mentorshipLocked: boolean;
-  round2Selected: boolean;
+  round3Selected: boolean;
   round1Locked: boolean;
   submissions: Submission[];
 }
@@ -31,16 +31,24 @@ export function OverviewTab({
   round1Locked,
   submissions,
   mentorshipLocked,
-  round2Selected,
+  round3Selected,
 }: OverviewTabProps) {
   return (
     <div className="space-y-6">
-      {round2Selected && (
+      {round3Selected && (
         <Alert className="border-green-200 bg-green-50">
           <Trophy className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800">
             <strong>Congratulations!</strong> You have been selected for Round
-            2. Report to Room AB2-301 at 3:00 PM.
+            3.
+            {team.round3Room ? (
+              <>
+                {" "}
+                Report to <strong>{team.round3Room.name}</strong>.
+              </>
+            ) : (
+              " Room details will be announced soon."
+            )}
           </AlertDescription>
         </Alert>
       )}

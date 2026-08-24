@@ -89,7 +89,7 @@ export class JudgeService {
   }
 
   // Get teams assigned to judge
-  async getAssignedTeams(userId: string) {
+  async getAssignedTeams(userId: string, round?: number) {
     const judge = await prisma.judge.findUnique({
       where: {userId},
     });
@@ -99,7 +99,10 @@ export class JudgeService {
     }
 
     const evaluations = await prisma.evaluation.findMany({
-      where: {judgeId: judge.id},
+      where: {
+        judgeId: judge.id,
+        ...(round !== undefined ? {round} : {}),
+      },
       include: {
         team: {
           select: {
@@ -133,6 +136,12 @@ export class JudgeService {
                 block: true,
               },
             },
+            round3Room: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
       },
@@ -147,22 +156,31 @@ export class JudgeService {
         round: evaluation.round,
         team: {
           ...evaluation.team,
-          hasScore: evaluation.team.teamScores.length > 0,
-          latestScore: evaluation.team.teamScores[0] || null,
+          hasScore:
+            evaluation.team.teamScores.filter((s) => s.round === evaluation.round)
+              .length > 0,
+          latestScore:
+            evaluation.team.teamScores.find((s) => s.round === evaluation.round) ||
+            null,
           submissionStatus:
             evaluation.team.submissions.length > 0 ? "SUBMITTED" : "NOT_SUBMITTED",
           latestSubmission: evaluation.team.submissions[0] || null,
         },
       }))
       .sort((a, b) => {
-        const numA = parseInt(a.team.round1Room?.name || "0", 10);
-        const numB = parseInt(b.team.round1Room?.name || "0", 10);
-        return numA - numB; // ascending numeric order
+        const roomA =
+          a.round === 3 ? a.team.round3Room?.name : a.team.round1Room?.name;
+        const roomB =
+          b.round === 3 ? b.team.round3Room?.name : b.team.round1Room?.name;
+        const numA = parseInt(roomA?.replace(/\D/g, "") || "0", 10);
+        const numB = parseInt(roomB?.replace(/\D/g, "") || "0", 10);
+        if (numA !== numB) return numA - numB;
+        return a.team.name.localeCompare(b.team.name);
       });
   }
 
   // Get specific team details for evaluation
-  async getTeamForEvaluation(userId: string, teamId: string) {
+  async getTeamForEvaluation(userId: string, teamId: string, round = 1) {
     const judge = await prisma.judge.findUnique({
       where: {userId},
     });
@@ -177,7 +195,7 @@ export class JudgeService {
         teamId_judgeId_round: {
           teamId,
           judgeId: judge.id,
-          round: 1, // For now, assuming round 1
+          round,
         },
       },
       include: {
@@ -213,6 +231,7 @@ export class JudgeService {
   // Submit or update team score
   async submitTeamScore(userId: string, scoreData: TeamScoreRequest) {
     const {teamId, scores} = scoreData;
+    const round = scoreData.round ?? 1;
 
     const judge = await prisma.judge.findUnique({
       where: {userId},
@@ -228,7 +247,7 @@ export class JudgeService {
         teamId_judgeId_round: {
           teamId,
           judgeId: judge.id,
-          round: 1,
+          round,
         },
       },
     });
@@ -252,7 +271,7 @@ export class JudgeService {
         teamId_judgeId_round: {
           teamId,
           judgeId: judge.id,
-          round: 1,
+          round,
         },
       },
       update: {
@@ -274,7 +293,7 @@ export class JudgeService {
         feasibility: scores.feasibility,
         totalScore,
         feedback: scores.feedback,
-        round: 1,
+        round,
       },
     });
 
@@ -288,7 +307,7 @@ export class JudgeService {
   }
 
   // Get existing score for a team
-  async getTeamScore(userId: string, teamId: string) {
+  async getTeamScore(userId: string, teamId: string, round = 1) {
     const judge = await prisma.judge.findUnique({
       where: {userId},
     });
@@ -302,14 +321,19 @@ export class JudgeService {
         teamId_judgeId_round: {
           teamId,
           judgeId: judge.id,
-          round: 1,
+          round,
         },
       },
     });
   }
 
   // Update evaluation status
-  async updateEvaluationStatus(userId: string, teamId: string, status: "PENDING" | "COMPLETED") {
+  async updateEvaluationStatus(
+    userId: string,
+    teamId: string,
+    status: "PENDING" | "COMPLETED",
+    round = 1,
+  ) {
     const judge = await prisma.judge.findUnique({
       where: {userId},
     });
@@ -323,7 +347,7 @@ export class JudgeService {
         teamId_judgeId_round: {
           teamId,
           judgeId: judge.id,
-          round: 1,
+          round,
         },
       },
     });

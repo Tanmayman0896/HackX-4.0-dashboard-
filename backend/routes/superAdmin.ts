@@ -373,4 +373,69 @@ router.post("/round2/assign-team", modifyLimiter, logActivity("ASSIGN_TEAM_TO_RO
   }
 });
 
+// Round 3 Management
+router.get("/round3/candidates", async (req: AuthRequest, res, next) => {
+  try {
+    const candidates = await superAdminService.getRound3Candidates();
+    res.json(candidates);
+  } catch (error: any) {
+    next(error)
+  }
+});
+
+router.post("/round3/select-top", modifyLimiter, logActivity("SELECT_TOP_TEAMS_ROUND3"), async (req: AuthRequest, res, next) => {
+  try {
+    const limit = typeof req.body.limit === "number" ? req.body.limit : 30;
+    const selected = await superAdminService.selectTopTeamsForRound3(limit);
+    res.json({message: `Selected top ${selected.length} teams for Round 3`, teams: selected});
+  } catch (error: any) {
+    next(error)
+  }
+});
+
+router.get("/round3/rooms", async (req: AuthRequest, res, next) => {
+  try {
+    const rooms = await superAdminService.getRound3Rooms();
+    res.json(rooms);
+  } catch (error: any) {
+    next(error)
+  }
+});
+
+router.post("/round3/assign-judge", modifyLimiter, logActivity("ASSIGN_JUDGE_ROUND3_ROOM"), async (req: AuthRequest, res, next) => {
+  try {
+    const result = await superAdminService.assignJudgeToRound3Room(req.body.judgeId, req.body.roomId);
+    res.json(result);
+  } catch (error: any) {
+    next(error)
+  }
+});
+
+router.delete("/round3/judge/:judgeId", modifyLimiter, logActivity("REMOVE_JUDGE_ROUND3_ROOM"), async (req: AuthRequest, res, next) => {
+  try {
+    await superAdminService.removeJudgeFromRound3Room(req.params.judgeId);
+    res.json({message: "Judge removed from Round 3 room"});
+  } catch (error: any) {
+    next(error)
+  }
+});
+
+router.post("/round3/auto-assign", modifyLimiter, logActivity("AUTO_ASSIGN_ROUND3_TEAMS"), async (req: AuthRequest, res, next) => {
+  try {
+    const summary = await superAdminService.autoAssignRound3Teams();
+    res.json({message: "Teams distributed across meeting rooms", summary});
+  } catch (error: any) {
+    next(error)
+  }
+});
+
+router.post("/round3/assign-team", modifyLimiter, logActivity("ASSIGN_TEAM_ROUND3_ROOM"), async (req: AuthRequest, res, next) => {
+  try {
+    await superAdminService.assignTeamToRound3Room(req.body.teamId, req.body.roomId);
+    res.json({message: "Team assigned to meeting room successfully"});
+  } catch (error: any) {
+    next(error)
+  }
+});
+
 export default router;

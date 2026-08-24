@@ -27,6 +27,7 @@ export interface CreateUserRequest {
 
 export interface TeamScoreRequest {
   teamId: string
+  round?: number
   scores: {
     innovation: number
     technical: number

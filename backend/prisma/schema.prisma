@@ -37,6 +37,7 @@ enum TeamStatus {
   ROUND1_SUBMITTED
   ROUND1_QUALIFIED
   ROUND2_SUBMITTED
+  ROUND2_QUALIFIED
   ELIMINATED
 }
 
@@ -101,6 +102,8 @@ model Team {
   round1RoomId       String?
   round2Room         Round2Room?       @relation(fields: [round2RoomId], references: [id])
   round2RoomId       String?
+  round3Room         Round3Room?       @relation(fields: [round3RoomId], references: [id])
+  round3RoomId       String?
   checkpoints        TeamCheckpoint[]
   User               User[]
 }
@@ -175,6 +178,8 @@ model Judge {
   updatedAt   DateTime     @updatedAt
   evaluations Evaluation[]
   teamScores  TeamScore[]
+  round3Room  Round3Room?  @relation(fields: [round3RoomId], references: [id])
+  round3RoomId String?
 }
 
 model MentorshipQueue {
@@ -271,6 +276,15 @@ model Round2Room {
   capacity  Int      @default(10)
   createdAt DateTime @default(now())
   teams     Team[]
+}
+
+model Round3Room {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  capacity  Int      @default(10)
+  createdAt DateTime @default(now())
+  teams     Team[]
+  judges    Judge[]
 }
 
 model TeamCheckpoint {

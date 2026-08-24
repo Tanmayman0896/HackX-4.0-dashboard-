@@ -23,7 +23,12 @@ router.get("/profile", async (req: AuthRequest, res, next) => {
 // Get assigned teams
 router.get("/teams", async (req: AuthRequest, res, next) => {
   try {
-    const teams = await judgeService.getAssignedTeams(req.user!.id);
+    const roundParam = req.query.round as string | undefined;
+    const round =
+      roundParam !== undefined && !Number.isNaN(parseInt(roundParam, 10))
+        ? parseInt(roundParam, 10)
+        : undefined;
+    const teams = await judgeService.getAssignedTeams(req.user!.id, round);
     res.json(teams);
   } catch (error: any) {
     next(error)
@@ -33,7 +38,12 @@ router.get("/teams", async (req: AuthRequest, res, next) => {
 // Get specific team for evaluation
 router.get("/teams/:teamId", async (req: AuthRequest, res, next) => {
   try {
-    const teamData = await judgeService.getTeamForEvaluation(req.user!.id, req.params.teamId);
+    const round = req.query.round ? parseInt(req.query.round as string, 10) : 1;
+    const teamData = await judgeService.getTeamForEvaluation(
+      req.user!.id,
+      req.params.teamId,
+      round,
+    );
     res.json(teamData);
   } catch (error: any) {
     next(error)
@@ -53,7 +63,8 @@ router.post("/score", modifyLimiter, logActivity("SUBMIT_TEAM_SCORE"), async (re
 // Get team score
 router.get("/teams/:teamId/score", async (req: AuthRequest, res, next) => {
   try {
-    const score = await judgeService.getTeamScore(req.user!.id, req.params.teamId);
+    const round = req.query.round ? parseInt(req.query.round as string, 10) : 1;
+    const score = await judgeService.getTeamScore(req.user!.id, req.params.teamId, round);
     if (!score) {
       return res.json(null);
     }
@@ -70,8 +81,13 @@ router.post(
   logActivity("UPDATE_EVALUATION_STATUS"),
   async (req: AuthRequest, res, next) => {
     try {
-      const { teamId, status } = req.body;
-      const evaluation = await judgeService.updateEvaluationStatus(req.user!.id, teamId, status);
+      const { teamId, status, round } = req.body;
+      const evaluation = await judgeService.updateEvaluationStatus(
+        req.user!.id,
+        teamId,
+        status,
+        typeof round === "number" ? round : 1,
+      );
       res.json(evaluation);
     } catch (error: any) {
       next(error)

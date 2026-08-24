@@ -4,6 +4,12 @@ import type {LogFilter} from "../types";
 
 const prisma = new PrismaClient();
 
+const ROUND3_ROOM_NAMES = [
+  "Meeting Room 1",
+  "Meeting Room 2",
+  "Meeting Room 3",
+];
+
 interface Checkpoint1Data {
   teamId: string;
   wifi: boolean;
@@ -513,6 +519,318 @@ export class SuperAdminService {
     return prisma.team.update({
       where: {id: teamId},
       data: {round2RoomId: roomId},
+    });
+  }
+
+  // Round 3 Management
+  async getRound3Candidates(sourceRound = 2) {
+    const aggregates = await prisma.teamScore.groupBy({
+      by: ["teamId"],
+      where: {round: sourceRound, totalScore: {not: null}},
+      _avg: {totalScore: true},
+      _count: {_all: true},
+    });
+
+    const scoreByTeam = new Map(
+      aggregates.map((a) => [
+        a.teamId,
+        {
+          averageScore: a._avg?.totalScore ?? 0,
+          judgeCount: a._count?._all ?? 0,
+        },
+      ]),
+    );
+
+    const teams = await prisma.team.findMany({
+      where: {status: {in: ["ROUND1_QUALIFIED", "ROUND2_SUBMITTED", "ROUND2_QUALIFIED"]}},
+      select: {
+        id: true,
+        name: true,
+        teamId: true,
+        status: true,
+        round3Room: {select: {id: true, name: true}},
+      },
+    });
+
+    return teams
+      .map((team) => ({
+        ...team,
+        averageScore: scoreByTeam.get(team.id)?.averageScore ?? null,
+        judgeCount: scoreByTeam.get(team.id)?.judgeCount ?? 0,
+      }))
+      .sort((a, b) => (b.averageScore ?? -1) - (a.averageScore ?? -1));
+  }
+
+  async selectTopTeamsForRound3(limit = 30, sourceRound = 2) {
+    const assignedCount = await prisma.team.count({
+      where: {round3RoomId: {not: null}},
+    });
+
+    if (assignedCount > 0) {
+      throw new Error(
+        "Some teams are already assigned to Round 3 rooms. Release room assignments before re-selecting.",
+      );
+    }
+
+    const candidates = await this.getRound3Candidates(sourceRound);
+    const scored = candidates.filter((c) => c.averageScore !== null);
+    const top = scored.slice(0, limit);
+
+    if (top.length === 0) {
+      throw new Error(`No teams have scores from Round ${sourceRound} yet.`);
+    }
+
+    await prisma.team.updateMany({
+      where: {id: {in: top.map((t) => t.id)}},
+      data: {status: "ROUND2_QUALIFIED"},
+    });
+
+    return top;
+  }
+
+  private async ensureRound3Rooms() {
+    await prisma.round3Room.createMany({
+      data: ROUND3_ROOM_NAMES.map((name) => ({
+        name,
+        capacity: 10,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  async getRound3Rooms() {
+    await this.ensureRound3Rooms();
+
+    return prisma.round3Room.findMany({
+      orderBy: {name: "asc"},
+      include: {
+        teams: {
+          orderBy: {name: "asc"},
+          select: {id: true, name: true, teamId: true, status: true},
+        },
+        judges: {
+          orderBy: {name: "asc"},
+          select: {
+            id: true,
+            name: true,
+            user: {select: {username: true}},
+            evaluations: {where: {round: 3}, select: {id: true, status: true}},
+          },
+        },
+      },
+    });
+  }
+
+  async removeJudgeFromRound3Room(judgeId: string) {
+    const judge = await prisma.judge.findUnique({where: {id: judgeId}});
+    if (!judge) {
+      throw new Error("Judge not found");
+    }
+
+    return prisma.$transaction([
+      prisma.evaluation.deleteMany({where: {judgeId, round: 3}}),
+      prisma.judge.update({where: {id: judgeId}, data: {round3RoomId: null}}),
+    ]);
+  }
+
+  async assignJudgeToRound3Room(judgeId: string, roomId: string) {
+    const judge = await prisma.judge.findUnique({where: {id: judgeId}});
+    if (!judge) {
+      throw new Error("Judge not found");
+    }
+
+    const room = await prisma.round3Room.findUnique({where: {id: roomId}});
+    if (!room) {
+      throw new Error("Round 3 room not found");
+    }
+
+    return prisma.$transaction(async (tx) => {
+      await tx.evaluation.deleteMany({where: {judgeId, round: 3}});
+      await tx.judge.update({
+        where: {id: judgeId},
+        data: {round3RoomId: roomId},
+      });
+
+      const roomTeams = await tx.team.findMany({
+        where: {round3RoomId: roomId},
+        select: {id: true},
+      });
+
+      if (roomTeams.length > 0) {
+        await tx.evaluation.createMany({
+          data: roomTeams.map((team) => ({teamId: team.id, judgeId, round: 3})),
+          skipDuplicates: true,
+        });
+      }
+
+      return tx.judge.findUnique({
+        where: {id: judgeId},
+        include: {
+          user: {select: {username: true}},
+          round3Room: {select: {id: true, name: true}},
+        },
+      });
+    });
+  }
+
+  async autoAssignRound3Teams() {
+    const rooms = await prisma.round3Room.findMany({
+      orderBy: {name: "asc"},
+      include: {judges: {select: {id: true}}},
+    });
+
+    if (rooms.length === 0) {
+      throw new Error("No Round 3 meeting rooms configured.");
+    }
+
+    const unstaffed = rooms.filter((r) => r.judges.length === 0);
+    if (unstaffed.length > 0) {
+      throw new Error(
+        `Assign judges to these rooms first: ${unstaffed.map((r) => r.name).join(", ")}`,
+      );
+    }
+
+    const existingScores = await prisma.teamScore.count({where: {round: 3}});
+    if (existingScores > 0) {
+      throw new Error(
+        "Round 3 judging has already started. Teams cannot be redistributed.",
+      );
+    }
+
+    const candidates = await this.getRound3Candidates();
+    const selectedTeams = candidates.filter(
+      (t) => t.status === "ROUND2_QUALIFIED",
+    );
+
+    if (selectedTeams.length === 0) {
+      throw new Error(
+        "No teams selected for Round 3 yet. Select the top teams first.",
+      );
+    }
+
+    const totalCapacity = rooms.reduce((sum, r) => sum + r.capacity, 0);
+    if (selectedTeams.length > totalCapacity) {
+      throw new Error(
+        `Selected teams (${selectedTeams.length}) exceed total room capacity (${totalCapacity}).`,
+      );
+    }
+
+    return prisma.$transaction(async (tx) => {
+      await tx.evaluation.deleteMany({where: {round: 3}});
+      await tx.team.updateMany({
+        where: {round3RoomId: {not: null}},
+        data: {round3RoomId: null},
+      });
+
+      const load = new Map<string, number>(rooms.map((r) => [r.id, 0]));
+      const assignment = new Map<string, string>();
+      let index = 0;
+      let direction = 1;
+
+      for (const team of selectedTeams) {
+        let placed = false;
+
+        for (let hops = 0; hops < rooms.length && !placed; hops++) {
+          const room = rooms[index];
+          if ((load.get(room.id) ?? 0) < room.capacity) {
+            assignment.set(team.id, room.id);
+            load.set(room.id, (load.get(room.id) ?? 0) + 1);
+            placed = true;
+          }
+          index += direction;
+          if (index >= rooms.length) {
+            index = rooms.length - 1;
+            direction = -1;
+          } else if (index < 0) {
+            index = 0;
+            direction = 1;
+          }
+        }
+
+        if (!placed) {
+          throw new Error("Could not fit all selected teams into rooms.");
+        }
+      }
+
+      for (const [teamId, roomId] of assignment) {
+        await tx.team.update({where: {id: teamId}, data: {round3RoomId: roomId}});
+      }
+
+      const evaluationData: {
+        teamId: string
+        judgeId: string
+        round: number
+      }[] = [];
+
+      for (const room of rooms) {
+        const roomTeams = [...assignment.entries()]
+          .filter(([, roomId]) => roomId === room.id)
+          .map(([teamId]) => teamId);
+
+        for (const judge of room.judges) {
+          for (const teamId of roomTeams) {
+            evaluationData.push({teamId, judgeId: judge.id, round: 3});
+          }
+        }
+      }
+
+      if (evaluationData.length > 0) {
+        await tx.evaluation.createMany({
+          data: evaluationData,
+          skipDuplicates: true,
+        });
+      }
+
+      return {
+        roomsAssigned: [...load.entries()].map(([roomId, count]) => ({
+          roomId,
+          teams: count,
+        })),
+        evaluationsCreated: evaluationData.length,
+        teamsAssigned: assignment.size,
+      };
+    });
+  }
+
+  async assignTeamToRound3Room(teamId: string, roomId: string) {
+    const team = await prisma.team.findUnique({where: {id: teamId}});
+    if (!team) {
+      throw new Error("Team not found");
+    }
+
+    const room = await prisma.round3Room.findUnique({
+      where: {id: roomId},
+      include: {_count: {select: {teams: true}}},
+    });
+    if (!room) {
+      throw new Error("Round 3 room not found");
+    }
+
+    if (team.round3RoomId !== roomId && room._count.teams >= room.capacity) {
+      throw new Error(`${room.name} is at full capacity (${room.capacity}).`);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.team.update({
+        where: {id: teamId},
+        data: {round3RoomId: roomId},
+      });
+
+      await tx.evaluation.deleteMany({where: {teamId, round: 3}});
+
+      const roomJudges = await tx.judge.findMany({
+        where: {round3RoomId: roomId},
+        select: {id: true},
+      });
+
+      if (roomJudges.length > 0) {
+        await tx.evaluation.createMany({
+          data: roomJudges.map((j) => ({teamId, judgeId: j.id, round: 3})),
+          skipDuplicates: true,
+        });
+      }
+
+      return updated;
     });
   }
 

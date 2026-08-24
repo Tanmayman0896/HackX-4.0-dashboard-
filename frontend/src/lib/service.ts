@@ -3,6 +3,7 @@
 import { authService } from "./auth";
 import type {
   Announcement,
+  AutoAssignSummary,
   Checkpoint,
   Checkpoint2Data,
   Domain,
@@ -17,6 +18,8 @@ import type {
   ProblemStatementForm,
   QueueItem,
   Round2Room,
+  Round3Candidate,
+  Round3Room,
   Scores,
   Submission,
   Team,
@@ -309,8 +312,13 @@ class ApiService {
     return this.request("/mentors");
   }
 
-  async getTeamScoresById(teamId: string): Promise<Scores | null> {
-    return this.request(`/teams/${teamId}/score`);
+  async getTeamScoresById(
+    teamId: string,
+    round?: number,
+  ): Promise<Scores | null> {
+    return this.request(
+      `/teams/${teamId}/score${round ? `?round=${round}` : ""}`,
+    );
   }
 
   async bookMentor(
@@ -479,12 +487,67 @@ class ApiService {
     });
   }
 
+  // Round 3 Management
+  async getRound3Candidates(): Promise<Round3Candidate[]> {
+    return this.request("/round3/candidates");
+  }
+
+  async selectTopTeamsForRound3(
+    limit = 30,
+  ): Promise<{ message: string; teams: Round3Candidate[] }> {
+    return this.request("/round3/select-top", {
+      method: "POST",
+      body: JSON.stringify({ limit }),
+    });
+  }
+
+  async getRound3Rooms(): Promise<Round3Room[]> {
+    return this.request("/round3/rooms");
+  }
+
+  async assignJudgeToRound3Room(
+    judgeId: string,
+    roomId: string,
+  ): Promise<Judge> {
+    return this.request("/round3/assign-judge", {
+      method: "POST",
+      body: JSON.stringify({ judgeId, roomId }),
+    });
+  }
+
+  async removeJudgeFromRound3Room(
+    judgeId: string,
+  ): Promise<{ message: string }> {
+    return this.request(`/round3/judge/${judgeId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async autoAssignRound3Teams(): Promise<{
+    message: string;
+    summary: AutoAssignSummary;
+  }> {
+    return this.request("/round3/auto-assign", {
+      method: "POST",
+    });
+  }
+
+  async assignTeamToRound3Room(
+    teamId: string,
+    roomId: string,
+  ): Promise<{ message: string }> {
+    return this.request("/round3/assign-team", {
+      method: "POST",
+      body: JSON.stringify({ teamId, roomId }),
+    });
+  }
+
   async getProfile(): Promise<Judge | Mentor> {
     return this.request("/profile");
   }
 
-  async getEvaluations(): Promise<Evaluation[]> {
-    return this.request("/teams");
+  async getEvaluations(round?: number): Promise<Evaluation[]> {
+    return this.request(`/teams${round ? `?round=${round}` : ""}`);
   }
 
   async lockMentorship(locked: boolean): Promise<{ locked: boolean }> {
@@ -542,6 +605,7 @@ class ApiService {
 
   async submitScore(payload: {
     teamId: string;
+    round?: number;
     scores: {
       innovation: number;
       technical: number;

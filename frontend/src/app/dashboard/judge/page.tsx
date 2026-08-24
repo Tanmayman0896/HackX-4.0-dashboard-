@@ -65,6 +65,7 @@ export default function JudgeDashboard() {
   const [judge, setJudge] = useState<Judge>();
   const [assignedTeams, setAssignedTeams] = useState<Evaluation[]>([]);
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
+  const [activeRound, setActiveRound] = useState<1 | 3>(1);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -72,11 +73,14 @@ export default function JudgeDashboard() {
       .getProfile()
       .then((value) => setJudge(value as Judge))
       .catch(console.error);
+  }, []);
+
+  useEffect(() => {
     apiService
-      .getEvaluations()
+      .getEvaluations(activeRound)
       .then((res) => setAssignedTeams(Array.isArray(res) ? res : []))
       .catch(() => setAssignedTeams([]));
-  }, []);
+  }, [activeRound]);
 
   const scoringCriteria: Criterion[] = [
     {
@@ -112,7 +116,7 @@ export default function JudgeDashboard() {
   ];
 
   const loadScores = async (teamId: string) => {
-    const teamScores = await apiService.getTeamScoresById(teamId);
+    const teamScores = await apiService.getTeamScoresById(teamId, activeRound);
     if (!teamScores) {
       resetScores();
     } else {
@@ -146,9 +150,11 @@ export default function JudgeDashboard() {
   };
 
   const handleSaveScore = async (teamId: string) => {
-    const payload = { teamId, scores };
+    const payload = { teamId, round: activeRound, scores };
     await apiService.submitScore(payload);
-    apiService.getEvaluations().then(setAssignedTeams);
+    apiService
+      .getEvaluations(activeRound)
+      .then((res) => setAssignedTeams(Array.isArray(res) ? res : []));
     toast({
       title: "Team marked!",
       description: `Successfully updated the score of ${teamId}`,
@@ -216,6 +222,24 @@ export default function JudgeDashboard() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
+            <div className="flex items-center rounded-lg border bg-white p-1">
+              <Button
+                size="sm"
+                variant={activeRound === 1 ? "default" : "ghost"}
+                className="h-7 text-xs"
+                onClick={() => setActiveRound(1)}
+              >
+                Round 1
+              </Button>
+              <Button
+                size="sm"
+                variant={activeRound === 3 ? "default" : "ghost"}
+                className="h-7 text-xs"
+                onClick={() => setActiveRound(3)}
+              >
+                Round 3
+              </Button>
+            </div>
             <div className="flex items-center space-x-2">
               <Switch
                 id="hide-evaluated"
@@ -334,9 +358,12 @@ export default function JudgeDashboard() {
                         </CardDescription>
                         <CardDescription className="text-sm">
                           <strong>Room:</strong>{" "}
-                          {evaluation.team?.round1Room
-                            ? `${evaluation.team.round1Room.block} ${evaluation.team.round1Room.name}`
-                            : "Not Assigned"}
+                          {activeRound === 3
+                            ? (evaluation.team?.round3Room?.name ??
+                              "Not Assigned")
+                            : evaluation.team?.round1Room
+                              ? `${evaluation.team.round1Room.block} ${evaluation.team.round1Room.name}`
+                              : "Not Assigned"}
                         </CardDescription>
                       </div>
                       <div className="text-left lg:text-right">

@@ -112,6 +112,10 @@ export interface Team {
   round1Status?: string;
   round2Status?: string;
   round2Room?: string | null;
+  round3Room?: {
+    id: string;
+    name: string;
+  } | null;
   judgementStatus?: string;
   githubRepo: string;
   presentationLink: string;
@@ -229,6 +233,11 @@ export interface Judge {
   expertise: string[];
   round1RoomId?: string;
   round2RoomId?: string;
+  round3RoomId?: string | null;
+  round3Room?: {
+    id: string;
+    name: string;
+  } | null;
   user: BaseUser;
   evaluations: {
     id: string;
@@ -313,6 +322,42 @@ export interface Round2Room {
   capacity: number;
   assignedJudge?: string;
   assignedTeams: string[];
+}
+
+export interface Round3Candidate {
+  id: string;
+  name: string;
+  teamId: string;
+  status: string;
+  averageScore: number | null;
+  judgeCount: number;
+}
+
+export interface Round3JudgeInfo {
+  id: string;
+  name: string;
+  user: { username: string };
+  evaluations: { id: string; status: "PENDING" | "COMPLETED" }[];
+}
+
+export interface Round3Room {
+  id: string;
+  name: string;
+  capacity: number;
+  createdAt: string;
+  teams: {
+    id: string;
+    name: string;
+    teamId: string;
+    status: string;
+  }[];
+  judges: Round3JudgeInfo[];
+}
+
+export interface AutoAssignSummary {
+  roomsAssigned: { roomId: string; teams: number }[];
+  evaluationsCreated: number;
+  teamsAssigned: number;
 }
 
 export interface LogEntry {
