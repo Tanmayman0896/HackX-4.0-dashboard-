@@ -145,6 +145,9 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
                   <SelectItem value="ROUND1_SUBMITTED">R1 Submitted</SelectItem>
                   <SelectItem value="ROUND1_QUALIFIED">R1 Qualified</SelectItem>
                   <SelectItem value="ROUND2_SUBMITTED">R2 Submitted</SelectItem>
+                  <SelectItem value="ROUND2_QUALIFIED">
+                    R2 Qualified (Round 3)
+                  </SelectItem>
                   <SelectItem value="ELIMINATED">Eliminated</SelectItem>
                 </SelectContent>
               </Select>

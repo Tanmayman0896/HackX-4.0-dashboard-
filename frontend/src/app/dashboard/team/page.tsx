@@ -28,7 +28,6 @@ export default function TeamDashboard() {
   const [psLocked, setPsLocked] = useState(false);
   const [mentorshipLocked, setMentorshipLocked] = useState(false);
   const [round1Locked, setRound1Locked] = useState(false);
-  const [round2Selected, setRound2Selected] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [team, setTeam] = useState<Team | null>(null);
   const [domains, setDomains] = useState<Domain[]>([]);
@@ -48,7 +47,6 @@ export default function TeamDashboard() {
   useEffect(() => {
     // TODO remove later
     setPasswordChanged(true);
-    setRound2Selected(false);
     if (passwordChanged) {
       loadData();
     }
@@ -199,7 +197,7 @@ export default function TeamDashboard() {
               selectedMentor={selectedMentor}
               psLocked={psLocked}
               mentorshipLocked={mentorshipLocked}
-              round2Selected={round2Selected}
+              round3Selected={team.status === "ROUND2_QUALIFIED"}
               round1Locked={round1Locked}
               submissions={submissions}
             />

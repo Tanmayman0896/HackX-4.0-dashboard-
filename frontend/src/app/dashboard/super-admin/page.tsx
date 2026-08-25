@@ -51,6 +51,7 @@ import {
 import { ProblemStatementManagement } from "@/components/super-admin/problem-statement-management";
 import { TeamJudgeMapping } from "@/components/super-admin/team-judge-mapping";
 import { Round2RoomMapping } from "@/components/super-admin/round2-room-mapping";
+import { Round3RoomManagement } from "@/components/super-admin/round3-room-management";
 import { ActivityLogs } from "@/components/super-admin/activity-logs";
 import { UserManagementTab } from "@/components/super-admin/user-management-tab";
 import { TeamPage } from "@/components/super-admin/team-page";
@@ -384,7 +385,7 @@ export default function SuperAdminDashboard() {
 
         <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
           <div className="overflow-x-auto">
-            <TabsList className="grid w-max min-w-[800px] grid-cols-9 sm:w-full sm:min-w-0">
+            <TabsList className="grid w-max min-w-[900px] grid-cols-10 sm:w-full sm:min-w-0">
               <TabsTrigger value="overview" className="text-xs sm:text-sm">
                 Overview
               </TabsTrigger>
@@ -402,6 +403,9 @@ export default function SuperAdminDashboard() {
               </TabsTrigger>
               <TabsTrigger value="round2" className="text-xs sm:text-sm">
                 Round 2
+              </TabsTrigger>
+              <TabsTrigger value="round3" className="text-xs sm:text-sm">
+                Round 3
               </TabsTrigger>
               <TabsTrigger value="teams" className="text-xs sm:text-sm">
                 Teams
@@ -907,6 +911,10 @@ export default function SuperAdminDashboard() {
 
           <TabsContent value="round2">
             <Round2RoomMapping teams={teams} judges={judges} />
+          </TabsContent>
+
+          <TabsContent value="round3">
+            <Round3RoomManagement judges={judges} />
           </TabsContent>
 
           <TabsContent value="teams">

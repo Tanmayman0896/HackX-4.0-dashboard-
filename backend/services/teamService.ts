@@ -49,6 +49,9 @@ export class TeamService {
             round2Room: {
               select: {id: true, block: true, name: true},
             },
+            round3Room: {
+              select: {id: true, name: true},
+            },
           },
         },
       },

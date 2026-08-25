@@ -1,6 +1,7 @@
 import {Router} from "express";
 import {adminService} from "../services/adminService";
 import {teamService} from "../services/teamService";
+import {superAdminService} from "../services/superAdminService";
 import {AuthRequest, requireAdmin} from "../middleware/auth";
 import {logActivity} from "../middleware/logging";
 
@@ -111,6 +112,16 @@ router.get("/settings", async (req: AuthRequest, res, next) => {
 router.get("/round2/rooms", async (req: AuthRequest, res, next) => {
   try {
     const rooms = await adminService.getRound2Rooms();
+    res.json(rooms);
+  } catch (error: any) {
+    next(error)
+  }
+});
+
+// Round 3 Management (Read Only)
+router.get("/round3/rooms", async (req: AuthRequest, res, next) => {
+  try {
+    const rooms = await superAdminService.getRound3Rooms();
     res.json(rooms);
   } catch (error: any) {
     next(error)
