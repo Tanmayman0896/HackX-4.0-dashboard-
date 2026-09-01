@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 export class AuthService {
   async login(credentials: LoginRequest) {
     const { username, password } = credentials;
+    
     // Find user by username
     const user = await prisma.user.findUnique({
       where: { username },
@@ -29,7 +30,6 @@ export class AuthService {
     // Verify password
     const isValidPassword = await comparePassword(password, user.password);
     if (!isValidPassword) {
-      console.log('wrong compare')
       throw new Error("Invalid credentials");
     }
 
