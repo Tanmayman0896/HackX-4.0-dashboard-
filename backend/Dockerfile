@@ -1,39 +1,43 @@
 # ---------- Stage 1: Build ----------
 FROM node:20-alpine AS builder
-
 WORKDIR /app
+# Prisma's musl engine links against OpenSSL 3
+RUN apk add --no-cache openssl
 
-# Install dependencies (use clean install for CI consistency)
 COPY package*.json ./
-RUN npm ci --silent
-
-# Copy only necessary files for build
-COPY tsconfig.json ./
 COPY prisma ./prisma/
-COPY . .
+RUN npm ci
 
-# Generate Prisma client and build the app
-RUN npx prisma generate
-RUN npm run build
+COPY . .
+RUN npx prisma generate && npm run build
 
 # ---------- Stage 2: Run ----------
 FROM node:20-alpine AS runner
 WORKDIR /app
+RUN apk add --no-cache openssl
 
-# Copy only the essential build output and Prisma client
+ENV NODE_ENV=production
+ENV PORT=5000
+
+# Runtime deps only. @prisma/client and the prisma CLI are runtime deps so the
+# generated client is available to dist/server.js and migrate deploy works
+# without downloading anything at container start.
 COPY package*.json ./
-RUN npm ci --omit=dev --silent
-
 COPY prisma ./prisma/
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+RUN npm ci --omit=dev --ignore-scripts \
+    && npx prisma generate \
+    && npm cache clean --force
+
 COPY --from=builder /app/dist ./dist
 
-# Expose app ports
-EXPOSE 5000
-EXPOSE 9000
+RUN chown -R node:node /app
+USER node
 
-# Environment variables (override at runtime)
-ENV NODE_ENV=production
+# HTTP API and WebSocket server
+EXPOSE 5000 9000
 
-# Run Prisma migrations before starting the server
-CMD npx prisma migrate deploy && node dist/server.js
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=5 \
+  CMD wget -qO /dev/null http://127.0.0.1:5000/health || exit 1
+
+# Apply pending migrations, then exec node so it receives signals as PID 1
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && exec node dist/server.js"]

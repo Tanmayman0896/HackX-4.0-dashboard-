@@ -84,8 +84,29 @@ Visit [http://localhost:3000](http://localhost:3000) to access the Dashboard (re
 
 ## 🐳 Docker Deployment
 
-To spin up the database, backend, and frontend dashboard with Docker Compose:
+Everything is configured from a single `.env` file next to `docker-compose.yml`:
 
 ```bash
+cp .env.example .env   # then set POSTGRES_PASSWORD, JWT_SECRET and the public URLs
 docker compose up -d --build
+```
+
+This starts PostgreSQL (data in the `db_data` volume), the backend (which runs
+`prisma migrate deploy` on start) and the frontend. All three bind to
+`127.0.0.1` only; put a reverse proxy in front of them. The production host
+runs nginx with TLS from Let's Encrypt and routes:
+
+| Path     | Upstream                |
+|----------|-------------------------|
+| `/api/`  | backend, port 5000      |
+| `/ws`    | backend WebSocket, 9000 |
+| `/`      | frontend, port 3000     |
+
+`NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` are baked into the frontend
+image at build time, so rebuild the frontend after changing them.
+
+To redeploy after pushing to `main`:
+
+```bash
+cd ~/HackX4Dashboard && git pull && docker compose up -d --build
 ```

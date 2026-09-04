@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+data
+scripts
+coverage
+*.md
+*.tsbuildinfo
+.git
+.gitignore
+Dockerfile
+.dockerignore
+.DS_Store

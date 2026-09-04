@@ -22,6 +22,8 @@ import teamRoutes from "./routes/team";
 dotenv.config();
 
 const app = express();
+// Running behind nginx: trust the first proxy hop for req.ip / X-Forwarded-*
+app.set("trust proxy", 1);
 const wss = new WebSocketServer({port: 9000})
 const PORT = process.env.PORT || 4000;
 const prisma = new PrismaClient();

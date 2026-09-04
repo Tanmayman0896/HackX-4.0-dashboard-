@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+build
+coverage
+.env
+.env.*
+*.md
+*.tsbuildinfo
+.git
+.gitignore
+.husky
+.idea
+.vercel
+Dockerfile
+.dockerignore
+.DS_Store

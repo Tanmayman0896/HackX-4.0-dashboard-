@@ -4,29 +4,45 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY package*.json ./
+ENV HUSKY=0
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Avoid peer conflicts during Docker builds
-RUN npm ci --silent
+COPY package*.json ./
+# --ignore-scripts skips the husky "prepare" hook, which has no .git here
+RUN npm ci --ignore-scripts
 
 COPY . .
+
+# NEXT_PUBLIC_* values are inlined into the browser bundle at build time,
+# so they must be passed as build args (see docker-compose.yml / CI).
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_WS_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
+
 RUN npm run build
 
 # =============================
 # Stage 2: Runtime
 # =============================
-FROM node:20-alpine
+FROM node:20-alpine AS runner
 WORKDIR /app
-
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=builder /app ./
+# Next.js standalone output: a self-contained server with only the
+# node_modules it actually needs.
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
+USER node
 EXPOSE 3000
-CMD ["npm", "start"]
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
+  CMD wget -qO /dev/null http://127.0.0.1:3000/dashboard/login || exit 1
+
+CMD ["node", "server.js"]
