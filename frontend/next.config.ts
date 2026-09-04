@@ -15,6 +15,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    // Pages used to live under /dashboard/*; keep old links and bookmarks working.
+    return [
+      { source: "/dashboard", destination: "/login", permanent: true },
+      { source: "/dashboard/:path*", destination: "/:path*", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

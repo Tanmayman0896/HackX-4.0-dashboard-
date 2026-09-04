@@ -34,9 +34,9 @@ Production-ready hackathon management platform consisting of an **Express.js & T
 ├── frontend/                 # Dashboard web application
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── dashboard/   # Admin, Judge, Mentor, Team, Super-Admin routes
+│   │   │   ├── login/, admin/, judge/, mentor/, team/, super-admin/   # Role routes
 │   │   │   ├── layout.tsx
-│   │   │   └── page.tsx     # Redirects root / to /dashboard/login
+│   │   │   └── page.tsx     # Redirects root / to /login
 │   │   └── components/
 │   │       ├── admin/
 │   │       ├── auth/
@@ -78,7 +78,7 @@ npm install
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to access the Dashboard (redirects to `/dashboard/login`).
+Visit [http://localhost:3000](http://localhost:3000) to access the Dashboard (redirects to `/login`).
 
 ---
 

@@ -41,7 +41,7 @@ export default function LoginPage() {
         SUPER_ADMIN: "/super-admin",
       };
 
-      router.push(`/dashboard/${roleRoutes[user.role]}`);
+      router.push(roleRoutes[user.role]);
     } catch (error) {
       console.error(error);
       toast({
