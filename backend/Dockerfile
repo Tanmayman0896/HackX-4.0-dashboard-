@@ -6,7 +6,13 @@ RUN apk add --no-cache openssl
 
 COPY package*.json ./
 COPY prisma ./prisma/
-RUN npm ci
+# /root/.npm is a BuildKit cache mount: it persists on the build host between
+# builds but is never written into the image, so when package*.json changes
+# npm ci reinstalls from local tarballs instead of re-downloading everything.
+# --no-audit: the post-install registry audit call has been observed hanging
+# for npm's full 5-minute fetch timeout on this dependency set, and its output
+# is meaningless inside an image build anyway.
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 COPY . .
 RUN npx prisma generate && npm run build
@@ -24,13 +30,14 @@ ENV PORT=5000
 # without downloading anything at container start.
 COPY package*.json ./
 COPY prisma ./prisma/
-RUN npm ci --omit=dev --ignore-scripts \
-    && npx prisma generate \
-    && npm cache clean --force
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --ignore-scripts --no-audit --no-fund \
+    && npx prisma generate
 
 COPY --from=builder /app/dist ./dist
 
-RUN chown -R node:node /app
+# /app stays root-owned and read-only for the node user. The app never writes
+# to disk, and a recursive chown here would copy all of node_modules into a
+# second ~300MB layer on every build.
 USER node
 
 # HTTP API and WebSocket server

@@ -8,8 +8,11 @@ ENV HUSKY=0
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY package*.json ./
-# --ignore-scripts skips the husky "prepare" hook, which has no .git here
-RUN npm ci --ignore-scripts
+# --ignore-scripts skips the husky "prepare" hook, which has no .git here.
+# /root/.npm is a BuildKit cache mount shared with the backend build: it
+# persists on the build host but never lands in the image. --no-audit skips
+# the registry audit call, which can hang for minutes (see backend/Dockerfile).
+RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts --no-audit --no-fund
 
 COPY . .
 
@@ -20,7 +23,9 @@ ARG NEXT_PUBLIC_WS_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 
-RUN npm run build
+# .next/cache holds Next.js's compiler cache. Keeping it in a cache mount makes
+# rebuilds incremental; it is not part of the standalone output copied below.
+RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 # =============================
 # Stage 2: Runtime
