@@ -1,4 +1,4 @@
-# HackX 3.0 System (Backend API & Frontend Dashboard)
+# HackX 4.0 System (Backend API & Frontend Dashboard)
 
 Production-ready hackathon management platform consisting of an **Express.js & TypeScript Backend API** (with PostgreSQL / Prisma ORM and real-time WebSockets) and a **Next.js Frontend Dashboard** (supporting Admin, Judge, Mentor, Team/Participant, and Super-Admin roles).
 

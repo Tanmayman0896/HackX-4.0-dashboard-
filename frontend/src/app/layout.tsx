@@ -15,7 +15,7 @@ const kinetikaUltra = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "HACKX 3.0 Dashboard",
+  title: "HACKX 4.0 Dashboard",
   description: "MUJ's Hackathon Dashboard",
 };
 

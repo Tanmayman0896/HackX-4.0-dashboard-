@@ -358,7 +358,7 @@ export default function AdminDashboard() {
         <div className="mb-6 flex flex-col space-y-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">Admin Dashboard</h1>
-            <p className="mt-1 text-sm sm:text-base">MUJ HackX 3.0</p>
+            <p className="mt-1 text-sm sm:text-base">MUJ HackX 4.0</p>
           </div>
           <div className="flex items-center gap-2">
             <Badge

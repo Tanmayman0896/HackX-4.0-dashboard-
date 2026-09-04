@@ -80,7 +80,7 @@ export default function MentorDashboard() {
               Welcome, {mentorInfo.name}
             </h1>
             <p className="mt-1 text-sm text-slate-600 sm:text-base">
-              MUJ HackX 3.0
+              MUJ HackX 4.0
             </p>
           </div>
           <div className="text-left sm:text-right">

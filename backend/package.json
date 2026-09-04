@@ -1,7 +1,7 @@
 {
   "name": "hackx-backend",
   "version": "1.0.0",
-  "description": "Backend API for MUJ HackX 3.0 Dashboard",
+  "description": "Backend API for MUJ HackX 4.0 Dashboard",
   "main": "server.ts",
   "type": "module",
   "scripts": {
