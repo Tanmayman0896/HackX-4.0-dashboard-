@@ -9,6 +9,16 @@ import { AnnouncementsTab } from "@/components/participant/announcements-tab";
 import { SubmissionsTab } from "@/components/participant/submissions-tab";
 import { BookmarksTab } from "@/components/participant/bookmarks-tab";
 import { apiService } from "@/lib/service";
+import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
+import { BootScreen, EmptyState } from "@/components/shell/primitives";
+import {
+  Bookmark,
+  FileText,
+  LayoutGrid,
+  Megaphone,
+  MessagesSquare,
+  UploadCloud,
+} from "lucide-react";
 import type {
   Announcement,
   Domain,
@@ -134,130 +144,131 @@ export default function TeamDashboard() {
   // }
 
   if (!team) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600 sm:h-12 sm:w-12"></div>
-          <p className="text-sm text-slate-600 sm:text-base">
-            Loading team data...
-          </p>
-        </div>
-      </div>
-    );
+    return <BootScreen label="Loading team data" />;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-col space-y-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-              Welcome, {team.name}!
-            </h1>
-          </div>
-          <div className="text-left sm:text-right">
-            <p className="text-xs text-slate-500 sm:text-sm">Current Time</p>
-            <p className="font-mono text-base sm:text-lg">
+    <Tabs defaultValue="overview">
+      <AppShell
+        role="Participant"
+        title={team.name}
+        subtitle={team.teamId}
+        identity={
+          <ShellIdentity
+            name={team.name}
+            meta={team.teamId ? `Team ${team.teamId}` : undefined}
+          />
+        }
+        actions={
+          <div className="border-border bg-card hidden items-baseline gap-2 rounded-md border px-2.5 py-1.5 sm:flex">
+            <span className="eyebrow">Now</span>
+            <span
+              data-numeric
+              className="text-foreground text-[0.8125rem] font-medium"
+            >
               {currentTime.toLocaleTimeString()}
-            </p>
+            </span>
           </div>
-        </div>
+        }
+        nav={
+          <TabsList>
+            <TabsTrigger value="overview">
+              <LayoutGrid />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="problem-statements">
+              <FileText />
+              Problem Statements
+            </TabsTrigger>
+            <TabsTrigger value="mentorship">
+              <MessagesSquare />
+              Mentorship
+            </TabsTrigger>
+            <TabsTrigger value="announcements">
+              <Megaphone />
+              Announcements
+            </TabsTrigger>
+            <TabsTrigger value="submissions">
+              <UploadCloud />
+              Submissions
+            </TabsTrigger>
+            <TabsTrigger value="bookmarks">
+              <Bookmark />
+              Bookmarks
+            </TabsTrigger>
+          </TabsList>
+        }
+      >
+        <TabsContent value="overview">
+          <OverviewTab
+            team={team}
+            selectedPS={selectedPS}
+            selectedMentor={selectedMentor}
+            psLocked={psLocked}
+            mentorshipLocked={mentorshipLocked}
+            round3Selected={team.status === "ROUND2_QUALIFIED"}
+            round1Locked={round1Locked}
+            submissions={submissions}
+          />
+        </TabsContent>
 
-        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
-          <div className="overflow-x-auto">
-            <TabsList className="grid w-max min-w-[600px] grid-cols-6 sm:w-full sm:min-w-0">
-              <TabsTrigger value="overview" className="text-xs sm:text-sm">
-                Overview
-              </TabsTrigger>
-              <TabsTrigger
-                value="problem-statements"
-                className="text-xs sm:text-sm"
-              >
-                Problem Statements
-              </TabsTrigger>
-              <TabsTrigger value="mentorship" className="text-xs sm:text-sm">
-                Mentorship
-              </TabsTrigger>
-              <TabsTrigger value="announcements" className="text-xs sm:text-sm">
-                Announcements
-              </TabsTrigger>
-              <TabsTrigger value="submissions" className="text-xs sm:text-sm">
-                Submissions
-              </TabsTrigger>
-              <TabsTrigger value="bookmarks" className="text-xs sm:text-sm">
-                Bookmarks
-              </TabsTrigger>
-            </TabsList>
-          </div>
+        <TabsContent value="problem-statements">
+          <ProblemStatements
+            domains={domains}
+            selectedPS={selectedPS}
+            bookmarkedPS={bookmarkedPS}
+            psLocked={psLocked}
+            onSelectPSAction={setSelectedPS}
+            onBookmarkAction={handleBookmark}
+            refreshDomainsAction={refreshDomains}
+          />
+        </TabsContent>
 
-          <TabsContent value="overview">
-            <OverviewTab
-              team={team}
-              selectedPS={selectedPS}
-              selectedMentor={selectedMentor}
-              psLocked={psLocked}
-              mentorshipLocked={mentorshipLocked}
-              round3Selected={team.status === "ROUND2_QUALIFIED"}
-              round1Locked={round1Locked}
-              submissions={submissions}
+        <TabsContent value="mentorship">
+          {mentorshipLocked && !selectedMentor ? (
+            <EmptyState
+              icon={<MessagesSquare />}
+              title="Mentorship is locked"
+              description="Booking is closed right now. Check back later or watch the Announcements tab."
             />
-          </TabsContent>
-
-          <TabsContent value="problem-statements">
-            <ProblemStatements
-              domains={domains}
-              selectedPS={selectedPS}
-              bookmarkedPS={bookmarkedPS}
-              psLocked={psLocked}
-              onSelectPSAction={setSelectedPS}
-              onBookmarkAction={handleBookmark}
-              refreshDomainsAction={refreshDomains}
+          ) : notDonePreviousMentorship ? (
+            <Mentorship
+              mentors={mentors}
+              mentorshipSession={selectedMentor}
+              onSelectMentorAction={setSelectedMentor}
+              refreshMentorsAction={refreshMentors}
             />
-          </TabsContent>
-
-          <TabsContent value="mentorship">
-            {mentorshipLocked && !selectedMentor ? (
-              <div className="w-full text-center">
-                Mentorship sessions are currently locked. Please check back
-                later.
-              </div>
-            ) : notDonePreviousMentorship ? (
-              <Mentorship
-                mentors={mentors}
-                mentorshipSession={selectedMentor}
-                onSelectMentorAction={setSelectedMentor}
-                refreshMentorsAction={refreshMentors}
-              />
-            ) : (
-              <div className="w-full text-center">
-                You have already completed your mentorship session.
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="announcements">
-            <AnnouncementsTab
-              announcements={announcements}
-              refreshAnnouncementAction={refreshAnnouncements}
+          ) : (
+            <EmptyState
+              icon={<MessagesSquare />}
+              title="Session complete"
+              description="You have already used your mentorship session for this round."
             />
-          </TabsContent>
+          )}
+        </TabsContent>
 
-          <TabsContent value="submissions">
-            <SubmissionsTab
-              submissions={submissions}
-              round1Locked={round1Locked}
-              onSubmissionUpdateAction={handleSubmissionUpdate}
-            />
-          </TabsContent>
+        <TabsContent value="announcements">
+          <AnnouncementsTab
+            announcements={announcements}
+            refreshAnnouncementAction={refreshAnnouncements}
+          />
+        </TabsContent>
 
-          <TabsContent value="bookmarks">
-            <BookmarksTab
-              bookmarkedPS={bookmarkedPS}
-              onBookmarkUpdateAction={handleBookmark}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+        <TabsContent value="submissions">
+          <SubmissionsTab
+            submissions={submissions}
+            round1Locked={round1Locked}
+            onSubmissionUpdateAction={handleSubmissionUpdate}
+          />
+        </TabsContent>
+
+        <TabsContent value="bookmarks">
+          <BookmarksTab
+            bookmarkedPS={bookmarkedPS}
+            onBookmarkUpdateAction={handleBookmark}
+          />
+        </TabsContent>
+      </AppShell>
+    </Tabs>
   );
 }

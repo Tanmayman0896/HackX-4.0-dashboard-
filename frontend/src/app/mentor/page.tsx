@@ -7,6 +7,9 @@ import { MapPin, Video } from "lucide-react";
 import { MentorInfoTab } from "@/components/mentor/mentor-info-tab";
 import { QueueManagement } from "@/components/mentor/queue-management";
 import { apiService } from "@/lib/service";
+import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
+import { BootScreen } from "@/components/shell/primitives";
+import { LayoutGrid, ListOrdered } from "lucide-react";
 import type { Mentor, QueueItem } from "@/lib/types";
 
 export default function MentorDashboard() {
@@ -59,63 +62,59 @@ export default function MentorDashboard() {
   // }
 
   if (!mentorInfo) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600 sm:h-12 sm:w-12"></div>
-          <p className="text-sm text-slate-600 sm:text-base">
-            Loading mentor data...
-          </p>
-        </div>
-      </div>
-    );
+    return <BootScreen label="Loading mentor data" />;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-6 flex flex-col space-y-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-              Welcome, {mentorInfo.name}
-            </h1>
-            <p className="mt-1 text-sm text-slate-600 sm:text-base">
-              MUJ HackX 4.0
-            </p>
-          </div>
-          <div className="text-left sm:text-right">
-            <p className="text-xs text-slate-500 sm:text-sm">Current Time</p>
-            <p className="font-mono text-base sm:text-lg">
+    <Tabs defaultValue="overview">
+      <AppShell
+        role="Mentor"
+        title={mentorInfo.name}
+        subtitle={`${mentorInfo.mode === "ONLINE" ? "Online" : "In person"} · ${queue.filter((q) => q.status === "WAITING").length} waiting`}
+        identity={
+          <ShellIdentity
+            name={mentorInfo.name}
+            meta={mentorInfo.user?.username}
+          />
+        }
+        actions={
+          <div className="border-border bg-card hidden items-baseline gap-2 rounded-md border px-2.5 py-1.5 sm:flex">
+            <span className="eyebrow">Now</span>
+            <span
+              data-numeric
+              className="text-foreground text-[0.8125rem] font-medium"
+            >
               {currentTime.toLocaleTimeString()}
-            </p>
+            </span>
           </div>
-        </div>
-
-        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview" className="text-sm sm:text-base">
+        }
+        nav={
+          <TabsList>
+            <TabsTrigger value="overview">
+              <LayoutGrid />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="queue" className="text-sm sm:text-base">
+            <TabsTrigger value="queue">
+              <ListOrdered />
               Queue Management
             </TabsTrigger>
           </TabsList>
+        }
+      >
+        <TabsContent value="overview">
+          <MentorInfoTab
+            mentorInfo={mentorInfo}
+            queue={queue}
+            onRefreshAction={loadQueue}
+          />
+        </TabsContent>
 
-          <TabsContent value="overview">
-            <MentorInfoTab
-              mentorInfo={mentorInfo}
-              queue={queue}
-              onRefreshAction={loadQueue}
-            />
-          </TabsContent>
-
-          <TabsContent value="queue">
-            <QueueManagement
-              queue={queue}
-              onMarkResolvedAction={handleMarkResolved}
-            />
-          </TabsContent>
-        </Tabs>
+        <TabsContent value="queue">
+          <QueueManagement
+            queue={queue}
+            onMarkResolvedAction={handleMarkResolved}
+          />
+        </TabsContent>
 
         {/* Mode-specific alerts */}
         {mentorInfo.mode === "IN_PERSON" && (
@@ -139,7 +138,7 @@ export default function MentorDashboard() {
             </AlertDescription>
           </Alert>
         )}
-      </div>
-    </div>
+      </AppShell>
+    </Tabs>
   );
 }

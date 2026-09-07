@@ -203,21 +203,21 @@ export function CreateTeamModal({
         {createdTeam ? (
           // Success View
           <div className="space-y-6">
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+            <div className="border-ok/30 bg-ok/10 rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <h3 className="text-lg font-medium text-green-800">
+                <CheckCircle className="text-ok-ink h-5 w-5" />
+                <h3 className="text-ok-ink text-lg font-medium">
                   Team Created!
                 </h3>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-green-700">
+                  <Label className="text-ok-ink text-sm font-medium">
                     Team ID
                   </Label>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 rounded-md border bg-white px-3 py-2 font-mono text-sm">
+                    <code className="border-border bg-muted flex-1 rounded-md border px-3 py-2 font-mono text-sm">
                       {createdTeam.teamId}
                     </code>
                   </div>
@@ -235,7 +235,7 @@ export function CreateTeamModal({
                 className="relative w-fit text-sm font-medium"
               >
                 Team Name
-                <span className={"absolute -right-2 text-red-500"}>*</span>
+                <span className={"text-danger absolute -right-2"}>*</span>
               </Label>
               <Input
                 id="team-name"
@@ -251,13 +251,13 @@ export function CreateTeamModal({
               <div className="flex items-center gap-2">
                 <Label className="relative text-sm font-medium">
                   Team Leader
-                  <span className={"absolute -right-2 text-red-500"}>*</span>
+                  <span className={"text-danger absolute -right-2"}>*</span>
                 </Label>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-600">Name</Label>
+                  <Label className="text-muted-foreground text-xs">Name</Label>
                   <Input
                     placeholder="Leader name"
                     value={teamLeader.name}
@@ -266,7 +266,7 @@ export function CreateTeamModal({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-600">Email</Label>
+                  <Label className="text-muted-foreground text-xs">Email</Label>
                   <Input
                     type="email"
                     placeholder="leader@example.com"
@@ -277,7 +277,7 @@ export function CreateTeamModal({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs text-slate-600">Phone</Label>
+                <Label className="text-muted-foreground text-xs">Phone</Label>
                 <Input
                   placeholder="Phone number"
                   value={teamLeader.phone}
@@ -307,7 +307,7 @@ export function CreateTeamModal({
               {teamMembers.map((member, index) => (
                 <div
                   key={index}
-                  className="space-y-3 rounded-lg border bg-slate-50 p-4"
+                  className="border-border bg-muted space-y-3 rounded-lg border p-4"
                 >
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-xs">
@@ -319,7 +319,7 @@ export function CreateTeamModal({
                         size="sm"
                         variant="ghost"
                         onClick={() => removeTeamMember(index)}
-                        className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                        className="text-danger-ink hover:text-danger h-6 w-6 p-0"
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -328,7 +328,9 @@ export function CreateTeamModal({
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
-                      <Label className="text-xs text-slate-600">Name</Label>
+                      <Label className="text-muted-foreground text-xs">
+                        Name
+                      </Label>
                       <Input
                         placeholder="Member name"
                         value={member.name}
@@ -339,7 +341,9 @@ export function CreateTeamModal({
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-slate-600">Email</Label>
+                      <Label className="text-muted-foreground text-xs">
+                        Email
+                      </Label>
                       <Input
                         type="email"
                         placeholder="member@example.com"
@@ -352,7 +356,7 @@ export function CreateTeamModal({
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-slate-600">
+                    <Label className="text-muted-foreground text-xs">
                       Phone (Optional)
                     </Label>
                     <Input

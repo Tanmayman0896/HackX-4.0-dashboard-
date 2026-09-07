@@ -179,7 +179,9 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Round 2 Room Management</h2>
+        <h2 className="text-base font-semibold tracking-tight">
+          Round 2 Room Management
+        </h2>
         <div className="flex gap-2">
           <Dialog open={isJudgeMapOpen} onOpenChange={setIsJudgeMapOpen}>
             <DialogTrigger asChild>
@@ -316,12 +318,12 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
         {rooms.map((room) => (
           <Card
             key={room.id}
-            className={`border-l-4 ${room.assignedJudge ? "border-l-green-500" : "border-l-gray-300"}`}
+            className={`border-l-2 ${room.assignedJudge ? "border-l-ok" : "border-l-border"}`}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg">{room.roomNumber}</CardTitle>
+                  <CardTitle className="">{room.roomNumber}</CardTitle>
                   <CardDescription>{room.floor}</CardDescription>
                 </div>
                 <Badge variant={room.assignedJudge ? "default" : "secondary"}>
@@ -334,7 +336,7 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
                 {room.assignedJudge ? (
                   <div>
                     <div className="mb-2 flex items-center gap-2">
-                      <UserCheck className="h-4 w-4 text-green-600" />
+                      <UserCheck className="text-ok-ink h-4 w-4" />
                       <span className="text-sm font-medium">
                         Judge: {getJudgeName(room.assignedJudge)}
                       </span>
@@ -343,7 +345,7 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
                     {room.assignedTeams.length > 0 ? (
                       <div>
                         <div className="mb-1 flex items-center gap-2">
-                          <Users className="h-4 w-4 text-blue-600" />
+                          <Users className="text-hackx h-4 w-4" />
                           <span className="text-sm font-medium">
                             Assigned Teams:
                           </span>
@@ -359,13 +361,13 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-sm text-slate-500">
+                      <div className="text-muted-foreground text-sm">
                         No teams assigned yet
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="text-sm text-slate-500">
+                  <div className="text-muted-foreground text-sm">
                     <MapPin className="mr-1 inline h-4 w-4" />
                     Waiting for judge assignment
                   </div>
@@ -386,25 +388,25 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-hackx text-2xl font-semibold tracking-tight tabular-nums">
                 {rooms.filter((r) => r.assignedJudge).length}/{rooms.length}
               </div>
-              <p className="text-sm text-slate-500">Rooms with Judges</p>
+              <p className="text-muted-foreground text-sm">Rooms with Judges</p>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-ok-ink text-2xl font-semibold tracking-tight tabular-nums">
                 {rooms.reduce(
                   (sum, room) => sum + room.assignedTeams.length,
                   0,
                 )}
               </div>
-              <p className="text-sm text-slate-500">Teams Assigned</p>
+              <p className="text-muted-foreground text-sm">Teams Assigned</p>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-warn-ink text-2xl font-semibold tracking-tight tabular-nums">
                 {availableTeams.length}
               </div>
-              <p className="text-sm text-slate-500">Teams Pending</p>
+              <p className="text-muted-foreground text-sm">Teams Pending</p>
             </div>
           </div>
         </CardContent>

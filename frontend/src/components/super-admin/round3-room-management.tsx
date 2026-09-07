@@ -211,7 +211,7 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <RefreshCw className="h-6 w-6 animate-spin text-slate-400" />
+        <RefreshCw className="text-muted-foreground h-6 w-6 animate-spin" />
       </div>
     );
   }
@@ -219,7 +219,7 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <h2 className="text-xl font-bold sm:text-2xl">
+        <h2 className="text-base font-semibold tracking-tight">
           Round 3 Room Management
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -245,21 +245,21 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
               </DialogHeader>
               <div className="max-h-72 space-y-1 overflow-y-auto rounded-md border p-2">
                 {previewTeams.length === 0 ? (
-                  <p className="p-4 text-center text-sm text-slate-500">
+                  <p className="text-muted-foreground p-4 text-center text-sm">
                     No scored teams available yet.
                   </p>
                 ) : (
                   previewTeams.map((team, index) => (
                     <div
                       key={team.id}
-                      className="flex items-center justify-between rounded px-2 py-1 text-sm odd:bg-slate-50"
+                      className="odd:bg-muted/50 flex items-center justify-between rounded px-2 py-1 text-sm"
                     >
                       <span>
-                        <span className="mr-2 inline-block w-6 text-right font-semibold text-slate-400">
+                        <span className="text-muted-foreground mr-2 inline-block w-6 text-right font-semibold">
                           {index + 1}.
                         </span>
                         <span className="font-medium">{team.name}</span>
-                        <span className="ml-2 text-xs text-slate-400">
+                        <span className="text-muted-foreground ml-2 text-xs">
                           ({team.teamId})
                         </span>
                       </span>
@@ -321,8 +321,8 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
       </div>
 
       {!allRoomsStaffed && (
-        <Card className="border-l-4 border-l-orange-500">
-          <CardContent className="pt-4 text-sm text-slate-600">
+        <Card className="border-l-warn border-l-2">
+          <CardContent className="text-muted-foreground pt-4 text-sm">
             Assign at least one judge to each meeting room before dividing
             teams. Unstaffed rooms:{" "}
             <span className="font-medium">
@@ -339,16 +339,14 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
         {rooms.map((room) => (
           <Card
             key={room.id}
-            className={`border-l-4 ${
-              room.judges.length > 0
-                ? "border-l-green-500"
-                : "border-l-gray-300"
+            className={`border-l-2 ${
+              room.judges.length > 0 ? "border-l-ok" : "border-l-border"
             }`}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg">{room.name}</CardTitle>
+                  <CardTitle className="">{room.name}</CardTitle>
                   <CardDescription>Capacity: {room.capacity}</CardDescription>
                 </div>
                 <Badge
@@ -365,16 +363,16 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
                 {room.judges.map((judge) => (
                   <div
                     key={judge.id}
-                    className="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1"
+                    className="bg-muted flex items-center justify-between rounded-md px-2 py-1"
                   >
                     <span className="flex items-center gap-1.5 text-sm">
-                      <UserCheck className="h-3.5 w-3.5 text-green-600" />
+                      <UserCheck className="text-ok-ink h-3.5 w-3.5" />
                       {judge.name}
                     </span>
                     <button
                       type="button"
                       aria-label={`Remove ${judge.name}`}
-                      className="rounded p-0.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded p-0.5"
                       onClick={() => handleRemoveJudge(judge.id)}
                     >
                       <X className="h-3.5 w-3.5" />
@@ -401,7 +399,7 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
               </div>
 
               <div>
-                <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                <div className="text-muted-foreground mb-1 flex items-center justify-between text-xs">
                   <span className="flex items-center gap-1">
                     <Users className="h-3.5 w-3.5" /> Teams
                   </span>
@@ -429,7 +427,7 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-muted-foreground text-xs">
                     No teams assigned yet
                   </p>
                 )}
@@ -521,28 +519,28 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-hackx text-2xl font-semibold tracking-tight tabular-nums">
                 {rooms.filter((r) => r.judges.length > 0).length}/{rooms.length}
               </div>
-              <p className="text-sm text-slate-500">Rooms with Judges</p>
+              <p className="text-muted-foreground text-sm">Rooms with Judges</p>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-info-ink text-2xl font-semibold tracking-tight tabular-nums">
                 {assignedJudgeIds.size}
               </div>
-              <p className="text-sm text-slate-500">Judges Assigned</p>
+              <p className="text-muted-foreground text-sm">Judges Assigned</p>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-ok-ink text-2xl font-semibold tracking-tight tabular-nums">
                 {assignedTeamCount}
               </div>
-              <p className="text-sm text-slate-500">Teams Assigned</p>
+              <p className="text-muted-foreground text-sm">Teams Assigned</p>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-warn-ink text-2xl font-semibold tracking-tight tabular-nums">
                 {pendingTeams >= 0 ? pendingTeams : selectedTeams.length}
               </div>
-              <p className="text-sm text-slate-500">Teams Pending</p>
+              <p className="text-muted-foreground text-sm">Teams Pending</p>
             </div>
           </div>
         </CardContent>

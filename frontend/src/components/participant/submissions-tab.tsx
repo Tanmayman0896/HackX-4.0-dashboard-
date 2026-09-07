@@ -79,7 +79,9 @@ export function SubmissionsTab({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Project Submissions</h2>
+        <h2 className="text-base font-semibold tracking-tight">
+          Project Submissions
+        </h2>
         <Badge variant="outline">
           {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
         </Badge>
@@ -162,7 +164,7 @@ export function SubmissionsTab({
                       <Badge variant={"secondary"}>
                         Submission no. {submissions.length - index}
                       </Badge>
-                      <span className="flex items-center gap-1 text-sm text-slate-500">
+                      <span className="text-muted-foreground flex items-center gap-1 text-sm">
                         <Clock className="h-3 w-3" />
                         {new Date(submission.submittedAt).toLocaleString()}
                       </span>
@@ -174,7 +176,7 @@ export function SubmissionsTab({
                           href={submission.githubRepo}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
+                          className="text-hackx hover:underline"
                         >
                           {submission.githubRepo}
                         </a>
@@ -185,7 +187,7 @@ export function SubmissionsTab({
                           href={submission.presentationLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
+                          className="text-hackx hover:underline"
                         >
                           {submission.presentationLink}
                         </a>
@@ -196,9 +198,9 @@ export function SubmissionsTab({
               </div>
             ) : (
               <div className="py-8 text-center">
-                <Upload className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-                <p className="text-slate-500">No submissions yet</p>
-                <p className="mt-2 text-sm text-slate-400">
+                <Upload className="text-muted-foreground/60 mx-auto mb-4 h-12 w-12" />
+                <p className="text-muted-foreground">No submissions yet</p>
+                <p className="text-muted-foreground mt-2 text-sm">
                   Submit your project using the form above
                 </p>
               </div>

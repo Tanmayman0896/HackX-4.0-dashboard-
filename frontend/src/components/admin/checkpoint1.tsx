@@ -211,7 +211,7 @@ export function Checkpoint1Modal({
                 }
                 className={`text-sm ${
                   teamData.status === "PARTIALLY_COMPLETED"
-                    ? "border-orange-500 text-orange-600"
+                    ? "border-warn/40 text-warn-ink"
                     : ""
                 }`}
               >
@@ -226,7 +226,7 @@ export function Checkpoint1Modal({
           <DialogDescription className="text-base">
             Team details confirmation, participant management, and WiFi opt-in
             {teamData?.status === "PARTIALLY_COMPLETED" && (
-              <span className="mt-1 block font-medium text-orange-600">
+              <span className="text-warn-ink mt-1 block font-medium">
                 ⚠ This checkpoint was previously completed with partial
                 attendance
               </span>
@@ -236,14 +236,16 @@ export function Checkpoint1Modal({
 
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="text-lg text-gray-500">Loading team data...</div>
+            <div className="text-muted-foreground text-lg">
+              Loading team data...
+            </div>
           </div>
         ) : (
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-2">
             {/* Team Summary */}
             <Card className="flex-shrink-0">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
+                <CardTitle className="flex items-center gap-2">
                   <UserCheck className="h-5 w-5" />
                   Team Summary
                 </CardTitle>
@@ -251,13 +253,13 @@ export function Checkpoint1Modal({
               <CardContent>
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">
+                    <Label className="text-muted-foreground text-sm font-medium">
                       Team Name:
                     </Label>
                     <p className="mt-1 text-base font-semibold">{teamName}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">
+                    <Label className="text-muted-foreground text-sm font-medium">
                       Team ID:
                     </Label>
                     <p className="mt-1 font-mono text-base font-semibold">
@@ -265,7 +267,7 @@ export function Checkpoint1Modal({
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">
+                    <Label className="text-muted-foreground text-sm font-medium">
                       Total Participants:
                     </Label>
                     <p className="mt-1 text-base font-semibold">
@@ -273,7 +275,7 @@ export function Checkpoint1Modal({
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">
+                    <Label className="text-muted-foreground text-sm font-medium">
                       Present:
                     </Label>
                     <Badge
@@ -290,9 +292,7 @@ export function Checkpoint1Modal({
             {/* Participants Management */}
             <Card className="min-h-0 flex-1">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">
-                  Participants Management
-                </CardTitle>
+                <CardTitle className="">Participants Management</CardTitle>
               </CardHeader>
               <CardContent className="max-h-96 space-y-4 overflow-y-auto">
                 {/* Existing Participants */}
@@ -300,7 +300,7 @@ export function Checkpoint1Modal({
                   {participants.map((participant, index) => (
                     <div
                       key={participant.id || `temp-${index}`}
-                      className="flex items-center gap-3 rounded-lg border bg-gray-50 p-3"
+                      className="border-border bg-muted flex items-center gap-3 rounded-lg border p-3"
                     >
                       <div className="flex items-center gap-2">
                         <Switch
@@ -356,7 +356,7 @@ export function Checkpoint1Modal({
                         size="sm"
                         variant="outline"
                         onClick={() => removeParticipant(index)}
-                        className="h-9 w-9 p-0 text-red-600 hover:text-red-700"
+                        className="text-danger-ink hover:text-danger h-9 w-9 p-0"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -450,10 +450,10 @@ export function Checkpoint1Modal({
             {/* WiFi Opt-in */}
             <Card className="flex-shrink-0">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">WiFi Access</CardTitle>
+                <CardTitle className="">WiFi Access</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center space-x-3 rounded-lg bg-blue-50 p-3">
+                <div className="bg-hackx/10 flex items-center space-x-3 rounded-lg p-3">
                   <Switch
                     checked={wifi}
                     onCheckedChange={setWifi}
@@ -461,7 +461,7 @@ export function Checkpoint1Modal({
                   />
                   <Label className="text-sm font-medium">WiFi Opt-in</Label>
                 </div>
-                <p className="mt-2 text-xs text-gray-600">
+                <p className="text-muted-foreground mt-2 text-xs">
                   Enable if the team wants access to WiFi during the hackathon
                 </p>
               </CardContent>
@@ -469,7 +469,7 @@ export function Checkpoint1Modal({
           </div>
         )}
 
-        <DialogFooter className="flex gap-3 bg-white pt-4">
+        <DialogFooter className="bg-popover flex gap-3 pt-4">
           <Button
             variant="outline"
             onClick={onClose}
@@ -480,7 +480,7 @@ export function Checkpoint1Modal({
           <Button
             onClick={handleComplete}
             disabled={loading || presentCount < 2}
-            className={`${presentCount < participants.length ? "bg-yellow-600 text-black hover:bg-yellow-700" : "bg-green-600 text-white hover:bg-green-700"} h-9 flex-1 text-sm`}
+            className={`${presentCount < participants.length ? "bg-warn text-black hover:brightness-95" : "bg-ok text-white hover:brightness-95"} h-9 flex-1 text-sm`}
           >
             {loading
               ? "Processing..."

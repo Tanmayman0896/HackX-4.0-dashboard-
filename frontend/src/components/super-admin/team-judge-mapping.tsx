@@ -232,8 +232,10 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Team-Judge Mapping</h2>
-          <p className="text-slate-600">
+          <h2 className="text-base font-semibold tracking-tight">
+            Team-Judge Mapping
+          </h2>
+          <p className="text-muted-foreground">
             {teams.length} total teams • {mappings.length} mapped •{" "}
             {unmappedTeamsCount} unmapped
           </p>
@@ -318,7 +320,7 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
             <div className="space-y-2">
               <Label>Search Teams</Label>
               <div className="relative">
-                <Search className="absolute top-2.5 left-2 h-4 w-4 text-slate-400" />
+                <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
                 <Input
                   placeholder="Team name or room..."
                   value={searchTerm}
@@ -401,10 +403,10 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                       key={team.id}
                       className={`rounded-lg border p-3 transition-colors ${
                         isSelected
-                          ? "border-blue-200 bg-blue-50"
+                          ? "border-hackx/35 bg-hackx/10"
                           : isMapped
-                            ? "border-green-200 bg-green-50"
-                            : "hover:bg-slate-50"
+                            ? "border-ok/30 bg-ok/10"
+                            : "hover:bg-muted/60"
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -427,13 +429,13 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-slate-500">
+                            <p className="text-muted-foreground text-sm">
                               {team.round1Room?.block ?? ""}{" "}
                               {team.round1Room?.name ?? ""} •{" "}
                               {team.problemStatement?.title ?? "-"}
                             </p>
                             {isMapped && (
-                              <p className="text-sm text-green-600">
+                              <p className="text-ok-ink text-sm">
                                 Assigned to: {getJudgeName(mapping.judge.id)}
                               </p>
                             )}
@@ -503,9 +505,9 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                             {stats.evaluated}/{stats.assigned} evaluated
                           </span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-slate-200">
+                        <div className="bg-muted h-2 w-full rounded-full">
                           <div
-                            className="h-2 rounded-full bg-green-500"
+                            className="bg-ok h-2 rounded-full"
                             style={{
                               width:
                                 stats.assigned > 0
@@ -532,20 +534,20 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
 
                       {assignedTeams.length > 0 && (
                         <div className="mt-2">
-                          <Label className="text-xs text-slate-500">
+                          <Label className="text-muted-foreground text-xs">
                             Assigned Teams:
                           </Label>
                           <div className="max-h-20 overflow-y-auto">
                             {assignedTeams.slice(0, 3).map((mapping) => (
                               <div
                                 key={mapping.teamId}
-                                className="text-xs text-slate-600"
+                                className="text-muted-foreground text-xs"
                               >
                                 {getTeamName(mapping.teamId)}
                               </div>
                             ))}
                             {assignedTeams.length > 3 && (
-                              <div className="text-xs text-slate-400">
+                              <div className="text-muted-foreground text-xs">
                                 +{assignedTeams.length - 3} more...
                               </div>
                             )}
@@ -571,14 +573,11 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
           <div className="space-y-4">
             {selectedTeamScores.length > 0 ? (
               selectedTeamScores.map((score) => (
-                <Card
-                  key={score.teamId}
-                  className="border-l-4 border-l-green-500"
-                >
+                <Card key={score.teamId} className="border-l-ok border-l-2">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="text-lg">{score.name}</CardTitle>
+                        <CardTitle className="">{score.name}</CardTitle>
                         <CardDescription>
                           Evaluated by {score.teamScores[0].judge.name}
                         </CardDescription>
@@ -610,7 +609,7 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                           </Badge>
                         </div>
                       ))}
-                      <div className="mt-2 text-xs text-slate-500">
+                      <div className="text-muted-foreground mt-2 text-xs">
                         Evaluated on:{" "}
                         {new Date(
                           score.teamScores[0].createdAt,
@@ -622,8 +621,8 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
               ))
             ) : (
               <div className="py-8 text-center">
-                <Trophy className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-                <p className="text-slate-500">
+                <Trophy className="text-muted-foreground/60 mx-auto mb-4 h-12 w-12" />
+                <p className="text-muted-foreground">
                   No scores available for this team
                 </p>
               </div>

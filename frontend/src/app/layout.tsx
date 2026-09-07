@@ -15,7 +15,7 @@ const kinetikaUltra = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "HACKX 4.0 Dashboard",
+  title: "MUJ HackX 4.0 Dashboard",
   description: "MUJ's Hackathon Dashboard",
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${kinetikaLight.variable} ${kinetikaUltra.variable} font-sans antialiased`}
       >

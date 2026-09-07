@@ -309,7 +309,9 @@ export function ProblemStatementManagement({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Problem Statement Management</h2>
+        <h2 className="text-base font-semibold tracking-tight">
+          Problem Statement Management
+        </h2>
         <div className="flex flex-row items-center gap-4">
           <div className="flex w-fit items-center space-x-2">
             <Switch
@@ -376,11 +378,11 @@ export function ProblemStatementManagement({
         <CardContent>
           <div className="space-y-4">
             {problemStatements.map((ps) => (
-              <Card key={ps.id} className="border-l-4 border-l-blue-500">
+              <Card key={ps.id} className="border-l-hackx border-l-2">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg">{ps.title}</CardTitle>
+                      <CardTitle className="">{ps.title}</CardTitle>
                       <CardDescription className="mt-1">
                         {ps.description}
                       </CardDescription>
@@ -451,7 +453,7 @@ export function ProblemStatementManagement({
                 <CardContent className="pt-0">
                   <div>
                     <Label className="text-sm font-medium">Deliverables:</Label>
-                    <ul className="mt-1 list-inside list-disc text-sm text-slate-600">
+                    <ul className="text-muted-foreground mt-1 list-inside list-disc text-sm">
                       {ps.deliverables.map((deliverable, index) => (
                         <li key={index}>{deliverable}</li>
                       ))}

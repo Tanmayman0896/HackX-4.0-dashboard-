@@ -46,9 +46,11 @@ export function BookmarksTab({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Bookmarked Problem Statements</h2>
-        <Badge variant="outline" className="bg-yellow-50">
-          <Star className="mr-1 h-3 w-3 fill-yellow-400 text-yellow-400" />
+        <h2 className="text-base font-semibold tracking-tight">
+          Bookmarked Problem Statements
+        </h2>
+        <Badge variant="outline" className="bg-warn/12">
+          <Star className="fill-warn text-warn mr-1 h-3 w-3" />
           {bookmarkedPS.length} bookmarked
         </Badge>
       </div>
@@ -56,12 +58,12 @@ export function BookmarksTab({
       <div className="space-y-4">
         {bookmarkedPS.length > 0 ? (
           bookmarkedPS.map((ps) => (
-            <Card key={ps.id} className="border-l-4 border-l-yellow-500">
+            <Card key={ps.id} className="border-l-warn border-l-2">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <CardTitle className="flex items-center gap-2">
+                      <Star className="fill-warn text-warn h-4 w-4" />
                       {ps.title}
                     </CardTitle>
                     <CardDescription className="mt-2">
@@ -90,7 +92,7 @@ export function BookmarksTab({
               <CardContent className="pt-0">
                 <div>
                   <Label className="text-sm font-medium">Deliverables:</Label>
-                  <ul className="mt-1 list-inside list-disc text-sm text-slate-600">
+                  <ul className="text-muted-foreground mt-1 list-inside list-disc text-sm">
                     {ps.deliverables.map((deliverable, index) => (
                       <li key={index}>{deliverable}</li>
                     ))}
@@ -102,9 +104,11 @@ export function BookmarksTab({
         ) : (
           <Card>
             <CardContent className="py-8 text-center">
-              <Star className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-              <p className="text-slate-500">No bookmarked problem statements</p>
-              <p className="mt-2 text-sm text-slate-400">
+              <Star className="text-muted-foreground/60 mx-auto mb-4 h-12 w-12" />
+              <p className="text-muted-foreground">
+                No bookmarked problem statements
+              </p>
+              <p className="text-muted-foreground mt-2 text-sm">
                 Bookmark problem statements from the Problem Statements tab to
                 save them here
               </p>

@@ -60,9 +60,9 @@ export function QueueManagement({
       <CardContent>
         {queue.length === 0 ? (
           <div className="py-8 text-center">
-            <Users className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-            <p className="text-slate-500">No teams in queue</p>
-            <p className="mt-2 text-sm text-slate-400">
+            <Users className="text-muted-foreground/60 mx-auto mb-4 h-12 w-12" />
+            <p className="text-muted-foreground">No teams in queue</p>
+            <p className="text-muted-foreground mt-2 text-sm">
               Teams will appear here when they book mentorship slots
             </p>
           </div>
@@ -71,12 +71,12 @@ export function QueueManagement({
             {queue.map((queueItem, index) => (
               <Card
                 key={queueItem.id}
-                className={`border-l-4 ${index === 0 ? "border-l-green-500 bg-green-50" : "border-l-blue-500"}`}
+                className={`border-l-2 ${index === 0 ? "border-l-ok bg-ok/10" : "border-l-hackx"}`}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="flex items-center gap-2 text-lg">
+                      <CardTitle className="flex items-center gap-2">
                         {index === 0 && <Badge variant="default">Next</Badge>}
                         {queueItem.team.name}
                       </CardTitle>
@@ -91,7 +91,7 @@ export function QueueManagement({
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-slate-600">
+                    <div className="text-muted-foreground flex items-center gap-4 text-sm">
                       <span className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
                         {queueItem.team?.round1Room

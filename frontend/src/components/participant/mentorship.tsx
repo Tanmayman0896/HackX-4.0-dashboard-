@@ -147,7 +147,9 @@ export function Mentorship({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Mentor Booking</h2>
+        <h2 className="text-base font-semibold tracking-tight">
+          Mentor Booking
+        </h2>
         <Button variant="outline" size="sm" disabled={true}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Auto refresh (10s)

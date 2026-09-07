@@ -61,7 +61,7 @@ export function PasswordChangeForm({
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
+    <div className="bg-background flex min-h-screen items-center justify-center p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Change Password Required</CardTitle>

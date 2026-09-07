@@ -91,7 +91,9 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
       <div className="space-y-6">
         <Card>
           <CardContent className="p-6">
-            <p className="text-center text-slate-500">Loading team data...</p>
+            <p className="text-muted-foreground text-center">
+              Loading team data...
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -102,8 +104,10 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Team Management</h2>
-          <p className="text-slate-600">
+          <h2 className="text-base font-semibold tracking-tight">
+            Team Management
+          </h2>
+          <p className="text-muted-foreground">
             View team status, scores, submissions, and judging details
           </p>
         </div>
@@ -123,7 +127,7 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
             <div className="w-full space-y-2">
               <Label>Search Teams</Label>
               <div className="relative">
-                <Search className="absolute top-2.5 left-2 h-4 w-4 text-slate-400" />
+                <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
                 <Input
                   placeholder="Search by team name..."
                   value={searchTerm}
@@ -194,12 +198,12 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
               return (
                 <Card
                   key={team.id}
-                  className={`border-l-4 ${isJudged ? "border-l-green-500" : "border-l-orange-500"}`}
+                  className={`border-l-2 ${isJudged ? "border-l-ok" : "border-l-warn"}`}
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="flex items-center gap-2 text-lg">
+                        <CardTitle className="flex items-center gap-2">
                           {team.name}
                           {isJudged ? (
                             <Badge variant="default">
@@ -239,26 +243,30 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
                       {/* Team Stats */}
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600">
+                          <div className="text-hackx text-2xl font-semibold tracking-tight tabular-nums">
                             {isJudged ? score : "N/A"}
                           </div>
-                          <p className="text-xs text-slate-500">Score</p>
+                          <p className="text-muted-foreground text-xs">Score</p>
                         </div>
                         <div className="text-center">
                           <div className="text-sm font-medium">{judgeName}</div>
-                          <p className="text-xs text-slate-500">Judge</p>
+                          <p className="text-muted-foreground text-xs">Judge</p>
                         </div>
                         <div className="text-center">
                           <div className="text-sm font-medium">
                             {judgingTime}
                           </div>
-                          <p className="text-xs text-slate-500">Judged At</p>
+                          <p className="text-muted-foreground text-xs">
+                            Judged At
+                          </p>
                         </div>
                         <div className="text-center">
                           <div className="text-sm font-medium">
                             {team.status}
                           </div>
-                          <p className="text-xs text-slate-500">Team Status</p>
+                          <p className="text-muted-foreground text-xs">
+                            Team Status
+                          </p>
                         </div>
                       </div>
 
@@ -332,7 +340,7 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Team Information</CardTitle>
+                    <CardTitle className="">Team Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm font-medium *:space-y-1">
                     <div>
@@ -362,7 +370,7 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Evaluation Status</CardTitle>
+                    <CardTitle className="">Evaluation Status</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm font-medium *:space-y-1">
                     <div>
@@ -394,7 +402,7 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Submissions</CardTitle>
+                  <CardTitle className="">Submissions</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -464,7 +472,7 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
             <CardTitle className="text-sm">Total Teams</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-hackx text-2xl font-semibold tracking-tight tabular-nums">
               {teams.length}
             </div>
           </CardContent>
@@ -474,7 +482,7 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
             <CardTitle className="text-sm">Teams Judged</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-ok-ink text-2xl font-semibold tracking-tight tabular-nums">
               {teams.filter((t) => t.judgementStatus === "Completed").length}
             </div>
           </CardContent>
@@ -484,7 +492,7 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
             <CardTitle className="text-sm">Submissions Complete</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-info-ink text-2xl font-semibold tracking-tight tabular-nums">
               {teams.filter((t) => t.submissionStatus === "SUBMITTED").length}
             </div>
           </CardContent>
@@ -494,7 +502,7 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
             <CardTitle className="text-sm">Round 2 Selected</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-warn-ink text-2xl font-semibold tracking-tight tabular-nums">
               {teams.filter((t) => t.round2Status === "Selected").length}
             </div>
           </CardContent>

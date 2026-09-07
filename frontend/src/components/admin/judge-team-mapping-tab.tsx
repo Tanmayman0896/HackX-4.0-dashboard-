@@ -122,8 +122,10 @@ export function JudgeTeamMappingTab({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Judge-Team Mapping Overview</h2>
-          <p className="text-slate-600">
+          <h2 className="text-base font-semibold tracking-tight">
+            Judge-Team Mapping Overview
+          </h2>
+          <p className="text-muted-foreground">
             View team assignments and evaluation progress
           </p>
         </div>
@@ -145,7 +147,7 @@ export function JudgeTeamMappingTab({
             <div className="w-full space-y-2">
               <Label>Search Judges</Label>
               <div className="relative">
-                <Search className="absolute top-2.5 left-2 h-4 w-4 text-slate-400" />
+                <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
                 <Input
                   placeholder="Search by judge name..."
                   value={searchTerm}
@@ -193,11 +195,11 @@ export function JudgeTeamMappingTab({
               );
 
               return (
-                <Card key={judge.id} className="border-l-hackx border-l-4">
+                <Card key={judge.id} className="border-l-hackx border-l-2">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="text-lg">{judge.name}</CardTitle>
+                        <CardTitle className="">{judge.name}</CardTitle>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">
@@ -230,9 +232,9 @@ export function JudgeTeamMappingTab({
                             %
                           </span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-slate-200">
+                        <div className="bg-muted h-2 w-full rounded-full">
                           <div
-                            className="h-2 rounded-full bg-green-500"
+                            className="bg-ok h-2 rounded-full"
                             style={{
                               width:
                                 stats.assigned > 0
@@ -246,7 +248,7 @@ export function JudgeTeamMappingTab({
                       {/* Quick Team Preview */}
                       {assignedTeams.length > 0 && (
                         <div>
-                          <Label className="text-sm text-slate-600">
+                          <Label className="text-muted-foreground text-sm">
                             Assigned Teams:
                           </Label>
                           <div className="mt-1 flex flex-wrap gap-1">
@@ -314,12 +316,12 @@ export function JudgeTeamMappingTab({
               return (
                 <Card
                   key={team.id}
-                  className={`border-l-4 ${isEvaluated ? "border-l-green-500" : "border-l-orange-500"}`}
+                  className={`border-l-2 ${isEvaluated ? "border-l-ok" : "border-l-warn"}`}
                 >
                   <CardHeader className="pb-0">
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="flex items-center gap-2 text-lg">
+                        <CardTitle className="flex items-center gap-2">
                           {team.name}
                           {isEvaluated ? (
                             <Badge variant="default">
@@ -357,7 +359,7 @@ export function JudgeTeamMappingTab({
             <CardTitle className="text-sm">Total Judges</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-hackx text-2xl font-semibold tracking-tight tabular-nums">
               {judges.length}
             </div>
           </CardContent>
@@ -367,7 +369,7 @@ export function JudgeTeamMappingTab({
             <CardTitle className="text-sm">Teams Mapped</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-ok-ink text-2xl font-semibold tracking-tight tabular-nums">
               {mappings.length}
             </div>
           </CardContent>
@@ -377,7 +379,7 @@ export function JudgeTeamMappingTab({
             <CardTitle className="text-sm">Teams Evaluated</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-info-ink text-2xl font-semibold tracking-tight tabular-nums">
               {evaluatedTeams.length}
             </div>
           </CardContent>
@@ -387,7 +389,7 @@ export function JudgeTeamMappingTab({
             <CardTitle className="text-sm">Evaluation Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-warn-ink text-2xl font-semibold tracking-tight tabular-nums">
               {mappings.length > 0
                 ? Math.round((evaluatedTeams.length / mappings.length) * 100)
                 : 0}

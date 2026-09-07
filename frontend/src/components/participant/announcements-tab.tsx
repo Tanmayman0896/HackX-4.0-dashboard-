@@ -49,8 +49,10 @@ export function AnnouncementsTab({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Announcements</h2>
-        <Badge variant="outline" className="bg-blue-50">
+        <h2 className="text-base font-semibold tracking-tight">
+          Announcements
+        </h2>
+        <Badge variant="outline" className="bg-hackx/10">
           {announcements.length} total
         </Badge>
       </div>
@@ -58,13 +60,10 @@ export function AnnouncementsTab({
       <div className="space-y-4">
         {announcements.length > 0 ? (
           announcements.map((announcement) => (
-            <Card
-              key={announcement.id}
-              className="border-l-4 border-l-blue-500"
-            >
+            <Card key={announcement.id} className="border-l-hackx border-l-2">
               <CardHeader className="pb-0">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                  <CardTitle className="flex items-center gap-2">
                     <Megaphone className="h-5 w-5" />
                     {announcement.title}
                   </CardTitle>
@@ -75,16 +74,16 @@ export function AnnouncementsTab({
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-slate-600">{announcement.message}</p>
+                <p className="text-muted-foreground">{announcement.message}</p>
               </CardContent>
             </Card>
           ))
         ) : (
           <Card>
             <CardContent className="py-8 text-center">
-              <Megaphone className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-              <p className="text-slate-500">No announcements yet</p>
-              <p className="mt-2 text-sm text-slate-400">
+              <Megaphone className="text-muted-foreground/60 mx-auto mb-4 h-12 w-12" />
+              <p className="text-muted-foreground">No announcements yet</p>
+              <p className="text-muted-foreground mt-2 text-sm">
                 Check back later for updates
               </p>
             </CardContent>

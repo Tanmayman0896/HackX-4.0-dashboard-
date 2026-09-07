@@ -13,6 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AppShell } from "@/components/shell/app-shell";
+import { Metric, MetricRow } from "@/components/shell/primitives";
+import { GitBranch, LayoutGrid } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -347,130 +350,92 @@ export default function AdminDashboard() {
     if (status === "PARTIALLY_COMPLETED") {
       return {
         variant: "outline" as const,
-        className: "text-xs border-orange-500 text-orange-600",
+        className: "text-xs border-warn/40 text-warn-ink",
       };
     }
     return { variant: "secondary" as const, className: "text-xs" };
   }
   return (
-    <div className="text-offblack min-h-screen bg-white p-4 sm:p-6">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-col space-y-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">Admin Dashboard</h1>
-            <p className="mt-1 text-sm sm:text-base">MUJ HackX 4.0</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="default"
-              className="bg-green-500 text-xs sm:text-sm"
-            >
-              <RefreshCw className="mr-1 h-3 w-3" />
-              Live Updates
+    <>
+      <Tabs defaultValue="overview">
+        <AppShell
+          role="Admin"
+          title="Admin Dashboard"
+          subtitle="MUJ HackX 4.0 · operations"
+          actions={
+            <Badge variant="green" className="h-8.5 px-2.5" data-dot={false}>
+              <span className="relative flex size-1.5">
+                <span className="bg-ok absolute inline-flex size-full animate-ping rounded-full opacity-70" />
+                <span className="bg-ok relative inline-flex size-1.5 rounded-full" />
+              </span>
+              Live
             </Badge>
-          </div>
-        </div>
-
-        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
-          <div className="overflow-x-auto">
-            <TabsList className="grid w-max min-w-[700px] grid-cols-6 sm:w-full sm:min-w-0">
-              <TabsTrigger value="overview" className="text-xs sm:text-sm">
+          }
+          nav={
+            <TabsList>
+              <TabsTrigger value="overview">
+                <LayoutGrid />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="teams" className="text-xs sm:text-sm">
+              <TabsTrigger value="teams">
+                <Users />
                 Teams
               </TabsTrigger>
-              <TabsTrigger value="judges" className="text-xs sm:text-sm">
+              <TabsTrigger value="judges">
+                <Gavel />
                 Judges
               </TabsTrigger>
-              <TabsTrigger value="judge-mapping" className="text-xs sm:text-sm">
+              <TabsTrigger value="judge-mapping">
+                <GitBranch />
                 Judge Mapping
               </TabsTrigger>
-              <TabsTrigger value="mentors" className="text-xs sm:text-sm">
+              <TabsTrigger value="mentors">
+                <UserCheck />
                 Mentors
               </TabsTrigger>
-              <TabsTrigger value="announcements" className="text-xs sm:text-sm">
+              <TabsTrigger value="announcements">
+                <Megaphone />
                 Announcements
               </TabsTrigger>
             </TabsList>
-          </div>
-
+          }
+        >
           <TabsContent value="overview">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Total Teams
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-hackx text-2xl font-bold sm:text-3xl">
-                    {teams.length}
-                  </div>
-                  <p className="text-xs text-slate-500 sm:text-sm">
-                    Registered teams
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                    <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Completed CP3
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-hackx text-2xl font-bold sm:text-3xl">
-                    {
-                      teams.filter((team) => isCheckpointCompleted(team, 3))
-                        .length
-                    }
-                  </div>
-                  <p className="text-xs text-slate-500 sm:text-sm">
-                    Ready for judging
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                    <Gavel className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Judges Active
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-hackx text-2xl font-bold sm:text-3xl">
-                    {judges.length}
-                  </div>
-                  <p className="text-xs text-slate-500 sm:text-sm">
-                    Currently evaluating
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                    <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Avg. Evaluation Time
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-hackx text-2xl font-bold sm:text-3xl">
-                    12m
-                  </div>
-                  <p className="text-xs text-slate-500 sm:text-sm">Per team</p>
-                </CardContent>
-              </Card>
-            </div>
+            <MetricRow className="lg:grid-cols-4">
+              <Metric
+                label="Total teams"
+                value={teams.length}
+                hint="Registered"
+                tone="brand"
+                icon={<Users />}
+              />
+              <Metric
+                label="Completed CP3"
+                value={
+                  teams.filter((team) => isCheckpointCompleted(team, 3)).length
+                }
+                hint="Ready for judging"
+                tone="ok"
+                icon={<UserCheck />}
+              />
+              <Metric
+                label="Judges active"
+                value={judges.length}
+                hint="Currently evaluating"
+                icon={<Gavel />}
+              />
+              <Metric
+                label="Avg. evaluation"
+                value="12m"
+                hint="Per team"
+                icon={<Clock />}
+              />
+            </MetricRow>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg sm:text-xl">
+                  <CardTitle className="">
                     Problem Statement Statistics
                   </CardTitle>
                   <CardDescription className="text-sm">
@@ -482,19 +447,19 @@ export default function AdminDashboard() {
                     {problemStatements.map((ps) => (
                       <div
                         key={ps.id}
-                        className="flex flex-col space-y-2 rounded-lg bg-gray-100 p-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0"
+                        className="bg-muted flex flex-col space-y-2 rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0"
                       >
                         <div className="flex-1">
                           <span className="text-sm font-medium sm:text-base">
                             {ps.title}
                           </span>
-                          <p className="text-xs text-slate-500 sm:text-sm">
+                          <p className="text-muted-foreground text-xs sm:text-sm">
                             {ps.domain.name}
                           </p>
                         </div>
                         <Badge
                           variant="outline"
-                          className="text-offblack w-fit text-xs"
+                          className="text-foreground w-fit text-xs"
                         >
                           {ps.selectedCount} teams
                         </Badge>
@@ -506,22 +471,20 @@ export default function AdminDashboard() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg sm:text-xl">
-                    Registration Status
-                  </CardTitle>
+                  <CardTitle className="">Registration Status</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {teams.slice(0, 5).map((team) => (
                       <div
                         key={team.id}
-                        className="flex flex-col space-y-3 rounded-lg bg-gray-100 p-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0"
+                        className="bg-muted flex flex-col space-y-3 rounded-lg p-4 xl:flex-row xl:items-center xl:justify-between xl:space-y-0"
                       >
                         <div className="flex-1">
                           <h4 className="text-sm font-medium sm:text-base">
                             {team.name}
                           </h4>
-                          <p className="text-xs break-all text-slate-500 sm:text-sm">
+                          <p className="text-muted-foreground text-xs break-words sm:text-sm">
                             ID: {team.generatedId}
                             {team.round1Room ? (
                               <>
@@ -575,9 +538,7 @@ export default function AdminDashboard() {
           <TabsContent value="registration">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg sm:text-xl">
-                  Registration Status
-                </CardTitle>
+                <CardTitle className="">Registration Status</CardTitle>
                 <CardDescription className="text-sm">
                   Real-time checkpoint completion status
                 </CardDescription>
@@ -593,7 +554,7 @@ export default function AdminDashboard() {
                         <h4 className="text-sm font-medium sm:text-base">
                           {team.name}
                         </h4>
-                        <p className="text-xs text-slate-500 sm:text-sm">
+                        <p className="text-muted-foreground text-xs sm:text-sm">
                           Room:{" "}
                           {team.round1Room
                             ? `${team.round1Room.block} ${team.round1Room.name}`
@@ -640,7 +601,7 @@ export default function AdminDashboard() {
           <TabsContent value="teams">
             <div className="space-y-4 sm:space-y-6">
               <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-                <h2 className="text-xl font-bold sm:text-2xl">
+                <h2 className="text-base font-semibold tracking-tight">
                   Registration Checkpoints
                 </h2>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -666,9 +627,7 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base sm:text-lg">
-                        Checkpoint 1
-                      </CardTitle>
+                      <CardTitle className="">Checkpoint 1</CardTitle>
                       <CardDescription className="text-sm">
                         AB1 Entrance & Main Gate
                       </CardDescription>
@@ -685,9 +644,7 @@ export default function AdminDashboard() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base sm:text-lg">
-                        Checkpoint 2
-                      </CardTitle>
+                      <CardTitle className="">Checkpoint 2</CardTitle>
                       <CardDescription className="text-sm">
                         AB1 Lobby
                       </CardDescription>
@@ -705,9 +662,7 @@ export default function AdminDashboard() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base sm:text-lg">
-                        Checkpoint 3
-                      </CardTitle>
+                      <CardTitle className="">Checkpoint 3</CardTitle>
                       <CardDescription className="text-sm">
                         Auditorium Entrance
                       </CardDescription>
@@ -746,16 +701,14 @@ export default function AdminDashboard() {
                 {filteredTeams.map((team) => (
                   <Card key={team.id}>
                     <CardHeader className="pb-3">
-                      <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+                      <div className="flex flex-col space-y-3 xl:flex-row xl:items-center xl:justify-between xl:space-y-0">
                         <div className="flex-1">
-                          <CardTitle className="text-base sm:text-lg">
-                            {team.name}
-                          </CardTitle>
+                          <CardTitle className="">{team.name}</CardTitle>
                           <CardDescription className="mt-1 text-sm">
                             {team.problemStatement?.title ||
                               "No Problem Statement Selected"}
                           </CardDescription>
-                          <p className="mt-1 text-xs break-all text-slate-500 sm:text-sm">
+                          <p className="text-muted-foreground mt-1 text-xs break-words sm:text-sm">
                             Team ID: {team.teamId}
                             {` | `}
                             Participants: {team.participants.length}
@@ -764,14 +717,14 @@ export default function AdminDashboard() {
                               : " | Room: Not Assigned"}
                             {getCheckpointStatus(team, 1) ===
                               "PARTIALLY_COMPLETED" && (
-                              <span className="ml-2 font-medium text-orange-600">
+                              <span className="text-warn-ink ml-2 font-medium">
                                 ⚠ CP1 Partial
                               </span>
                             )}
                           </p>
                         </div>
                         <div className="text-left lg:text-right">
-                          <p className="text-xs text-slate-500 sm:text-sm">
+                          <p className="text-muted-foreground text-xs sm:text-sm">
                             Status
                           </p>
                           <Badge variant="outline" className="text-xs">
@@ -819,7 +772,7 @@ export default function AdminDashboard() {
                           className={`bg-transparent text-xs ${
                             getCheckpointStatus(team, 1) ===
                             "PARTIALLY_COMPLETED"
-                              ? "border-orange-500 text-orange-600"
+                              ? "border-warn/40 text-warn-ink"
                               : ""
                           }`}
                           onClick={() => {
@@ -862,7 +815,7 @@ export default function AdminDashboard() {
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
-                              <div className="rounded-lg bg-slate-50 p-4">
+                              <div className="bg-muted rounded-lg p-4">
                                 <h4 className="mb-2 text-sm font-medium">
                                   Team Credentials
                                 </h4>
@@ -894,13 +847,13 @@ export default function AdminDashboard() {
                                   </div>
                                 </div>
                               </div>
-                              <div className="text-xs text-slate-600 sm:text-sm">
+                              <div className="text-muted-foreground text-xs sm:text-sm">
                                 <p>✓ Participant ID cards distributed</p>
                                 <p>✓ Welcome kits given</p>
                               </div>
                             </div>
                             <DialogFooter className="flex-col gap-2 sm:flex-row">
-                              <DialogClose className="bg-hackx hover:text-hackx hover:border-hackx w-full rounded-sm border-[1px] px-3 py-1 text-white hover:bg-white sm:w-auto">
+                              <DialogClose className="bg-hackx hover:text-hackx hover:border-hackx hover:bg-card w-full rounded-sm border-[1px] px-3 py-1 text-white sm:w-auto">
                                 Done
                               </DialogClose>
                             </DialogFooter>
@@ -954,7 +907,7 @@ export default function AdminDashboard() {
                               onClick={() =>
                                 handleRefreshToCheckpoint1(team.id)
                               }
-                              className="text-xs text-orange-600 hover:text-orange-700"
+                              className="text-warn-ink hover:text-warn text-xs"
                             >
                               ↻ Reset to CP1
                             </Button>
@@ -963,7 +916,7 @@ export default function AdminDashboard() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeleteTeam(team.id, team.name)}
-                            className="text-xs text-red-600 hover:border-red-300 hover:text-red-700"
+                            className="hover:border-destructive/45 text-danger-ink hover:text-danger text-xs"
                           >
                             <Trash2 className="mr-1 h-3 w-3" />
                             Delete
@@ -979,15 +932,13 @@ export default function AdminDashboard() {
 
           <TabsContent value="judges">
             <div className="space-y-4 sm:space-y-6">
-              <h2 className="text-xl font-bold sm:text-2xl">
+              <h2 className="text-base font-semibold tracking-tight">
                 Judge Management
               </h2>
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg sm:text-xl">
-                    Judge Progress Overview
-                  </CardTitle>
+                  <CardTitle className="">Judge Progress Overview</CardTitle>
                   <CardDescription className="text-sm">
                     Monitor evaluation progress - scores are hidden from admin
                     view
@@ -998,14 +949,12 @@ export default function AdminDashboard() {
                     {judges.map((judge) => (
                       <Card
                         key={judge.id}
-                        className="border-l-hackx m-0 border-l-4"
+                        className="border-l-hackx m-0 border-l-2"
                       >
                         <CardHeader className="pb-3">
                           <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                             <div>
-                              <CardTitle className="text-base sm:text-lg">
-                                {judge.name}
-                              </CardTitle>
+                              <CardTitle className="">{judge.name}</CardTitle>
                             </div>
                           </div>
                         </CardHeader>
@@ -1013,25 +962,25 @@ export default function AdminDashboard() {
                           <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                             <div className="flex items-center gap-4">
                               <div className="text-center">
-                                <p className="text-xl font-bold text-green-600 sm:text-2xl">
+                                <p className="text-ok-ink text-2xl font-semibold tracking-tight tabular-nums">
                                   {judge.teamsCompleted}
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-muted-foreground text-xs">
                                   Completed
                                 </p>
                               </div>
                               <div className="text-center">
-                                <p className="text-xl font-bold text-orange-600 sm:text-2xl">
+                                <p className="text-warn-ink text-2xl font-semibold tracking-tight tabular-nums">
                                   {judge.teamsLeft}
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-muted-foreground text-xs">
                                   Remaining
                                 </p>
                               </div>
                             </div>
-                            <div className="h-2 w-full rounded-full bg-slate-200 sm:w-32">
+                            <div className="bg-muted h-2 w-full rounded-full sm:w-32">
                               <div
-                                className="h-2 rounded-full bg-green-500"
+                                className="bg-ok h-2 rounded-full"
                                 style={{
                                   width: `${(judge.teamsCompleted / (judge.teamsCompleted + judge.teamsLeft)) * 100}%`,
                                 }}
@@ -1053,15 +1002,13 @@ export default function AdminDashboard() {
 
           <TabsContent value="mentors">
             <div className="space-y-4 sm:space-y-6">
-              <h2 className="text-xl font-bold sm:text-2xl">
+              <h2 className="text-base font-semibold tracking-tight">
                 Mentor Queue Management
               </h2>
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg sm:text-xl">
-                    Mentor Status Overview
-                  </CardTitle>
+                  <CardTitle className="">Mentor Status Overview</CardTitle>
                   <CardDescription className="text-sm">
                     Real-time mentor queue status and availability
                   </CardDescription>
@@ -1071,14 +1018,12 @@ export default function AdminDashboard() {
                     {mentors.map((mentor) => (
                       <Card
                         key={mentor.id}
-                        className="border-l-hackx border-l-4"
+                        className="border-l-hackx border-l-2"
                       >
                         <CardHeader className="pb-3">
                           <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                             <div>
-                              <CardTitle className="text-base sm:text-lg">
-                                {mentor.name}
-                              </CardTitle>
+                              <CardTitle className="">{mentor.name}</CardTitle>
                               <CardDescription className="text-sm">
                                 {mentor.domains.join(", ")} | ID:{" "}
                                 {mentor.user.username} | Meet Link:{" "}
@@ -1101,7 +1046,7 @@ export default function AdminDashboard() {
                           <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                             <div className="flex items-center gap-4">
                               <div className="text-center">
-                                <p className="text-xl font-bold text-blue-600 sm:text-2xl">
+                                <p className="text-hackx text-2xl font-semibold tracking-tight tabular-nums">
                                   {
                                     mentor.mentorshipQueue.filter(
                                       (q) => q.status === "WAITING",
@@ -1109,7 +1054,7 @@ export default function AdminDashboard() {
                                   }
                                   /5
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-muted-foreground text-xs">
                                   Queue Status
                                 </p>
                               </div>
@@ -1135,7 +1080,7 @@ export default function AdminDashboard() {
                                   </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-2">
-                                  <div className="text-sm text-slate-600">
+                                  <div className="text-muted-foreground text-sm">
                                     {mentor.mentorshipQueue.length === 0
                                       ? "No teams in the queue."
                                       : mentor.mentorshipQueue.map((item) => (
@@ -1164,7 +1109,7 @@ export default function AdminDashboard() {
                                                 {item.status}
                                               </Badge>
                                             </div>
-                                            <p className="font-medium text-slate-500">
+                                            <p className="text-muted-foreground font-medium">
                                               {ago(item.createdAt)}
                                             </p>
                                             <p className="text-sm">
@@ -1193,13 +1138,13 @@ export default function AdminDashboard() {
 
           <TabsContent value="announcements">
             <div className="space-y-4 sm:space-y-6">
-              <h2 className="text-xl font-bold sm:text-2xl">
+              <h2 className="text-base font-semibold tracking-tight">
                 Announcement Management
               </h2>
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <CardTitle className="flex items-center gap-2">
                     <Megaphone className="h-4 w-4 sm:h-5 sm:w-5" />
                     Post New Announcement
                   </CardTitle>
@@ -1244,9 +1189,7 @@ export default function AdminDashboard() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg sm:text-xl">
-                    Recent Announcements
-                  </CardTitle>
+                  <CardTitle className="">Recent Announcements</CardTitle>
                   <CardDescription className="text-sm">
                     Previously posted announcements
                   </CardDescription>
@@ -1267,7 +1210,7 @@ export default function AdminDashboard() {
                             {ago(announcement.createdAt)}
                           </Badge>
                         </div>
-                        <p className="text-xs text-slate-600 sm:text-sm">
+                        <p className="text-muted-foreground text-xs sm:text-sm">
                           {announcement.message}
                         </p>
                       </div>
@@ -1277,8 +1220,8 @@ export default function AdminDashboard() {
               </Card>
             </div>
           </TabsContent>
-        </Tabs>
-      </div>
+        </AppShell>
+      </Tabs>
 
       {/* Enhanced Checkpoint 1 Modal */}
       <Checkpoint1Modal
@@ -1298,6 +1241,6 @@ export default function AdminDashboard() {
         onClose={() => setCreateTeamModalOpen(false)}
         onTeamCreated={handleTeamCreated}
       />
-    </div>
+    </>
   );
 }
