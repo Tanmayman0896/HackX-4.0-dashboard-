@@ -47,7 +47,7 @@ export function TeamDetails({
             <Label className="text-sm font-medium">Team Members</Label>
             <ul className="mt-2 space-y-1">
               {team.participants.map((member, index) => (
-                <li key={index} className="text-sm text-slate-600">
+                <li key={index} className="text-muted-foreground text-sm">
                   {member.name}
                 </li>
               ))}

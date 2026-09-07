@@ -113,13 +113,13 @@ export function UserManagementTab({
 
   const getRoleColor = (role: string) => {
     const colors: { [key: string]: string } = {
-      TEAM: "bg-blue-500",
-      MENTOR: "bg-green-500",
-      JUDGE: "bg-purple-500",
-      ADMIN: "bg-orange-500",
-      SUPER_ADMIN: "bg-red-500",
+      TEAM: "bg-hackx",
+      MENTOR: "bg-ok",
+      JUDGE: "bg-info",
+      ADMIN: "bg-warn",
+      SUPER_ADMIN: "bg-danger",
     };
-    return colors[role] || "bg-gray-500";
+    return colors[role] || "bg-muted-foreground";
   };
 
   const formatRole = (role: string | undefined | null) => {
@@ -131,8 +131,10 @@ export function UserManagementTab({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">User Management</h2>
-          <p className="text-slate-600">
+          <h2 className="text-base font-semibold tracking-tight">
+            User Management
+          </h2>
+          <p className="text-muted-foreground">
             {users.length} total users • {filteredUsers.length} shown
           </p>
         </div>
@@ -154,7 +156,7 @@ export function UserManagementTab({
             <div className="w-full space-y-2">
               <Label>Search Users</Label>
               <div className="relative">
-                <Search className="absolute top-2.5 left-2 h-4 w-4 text-slate-400" />
+                <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
                 <Input
                   placeholder="Search by username..."
                   value={searchTerm}
@@ -226,7 +228,7 @@ export function UserManagementTab({
               filteredUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between rounded-lg border p-4 hover:bg-slate-50"
+                  className="hover:bg-muted/60 flex items-center justify-between rounded-lg border p-4"
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -285,8 +287,8 @@ export function UserManagementTab({
               ))
             ) : (
               <div className="py-8 text-center">
-                <Search className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-                <p className="text-slate-500">
+                <Search className="text-muted-foreground/60 mx-auto mb-4 h-12 w-12" />
+                <p className="text-muted-foreground">
                   No users found matching the current filters
                 </p>
                 <Button
@@ -310,7 +312,7 @@ export function UserManagementTab({
             <CardTitle className="text-sm">Active Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-ok-ink text-2xl font-semibold tracking-tight tabular-nums">
               {users.filter((u) => u.status === "ACTIVE").length}
             </div>
           </CardContent>
@@ -320,7 +322,7 @@ export function UserManagementTab({
             <CardTitle className="text-sm">Disabled Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-danger-ink text-2xl font-semibold tracking-tight tabular-nums">
               {users.filter((u) => u.status === "DISABLED").length}
             </div>
           </CardContent>
@@ -330,7 +332,7 @@ export function UserManagementTab({
             <CardTitle className="text-sm">Total Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-hackx text-2xl font-semibold tracking-tight tabular-nums">
               {users.length}
             </div>
           </CardContent>

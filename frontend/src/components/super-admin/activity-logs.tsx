@@ -123,24 +123,26 @@ export function ActivityLogs({
 
   const getActionColor = (action: string) => {
     const colors: { [key: string]: string } = {
-      TOGGLE_PS_LOCK: "bg-yellow-500",
-      TOGGLE_MENTORSHIP_LOCK: "bg-yellow-500",
-      TOGGLE_USER_STATUS: "bg-blue-500",
-      RESET_PASSWORD: "bg-red-500",
-      DELETE_USER: "bg-red-500",
-      REMOVE_TEAM_JUDGE_MAPPING: "bg-orange-500",
-      MAP_TEAM_TO_JUDGE: "bg-green-500",
-      CREATE_USER: "bg-purple-500",
-      CREATE_ANNOUNCEMENT: "bg-indigo-500",
-      UPDATE_PROBLEM_STATEMENT: "bg-emerald-500",
+      TOGGLE_PS_LOCK: "bg-warn",
+      TOGGLE_MENTORSHIP_LOCK: "bg-warn",
+      TOGGLE_USER_STATUS: "bg-hackx",
+      RESET_PASSWORD: "bg-danger",
+      DELETE_USER: "bg-danger",
+      REMOVE_TEAM_JUDGE_MAPPING: "bg-warn",
+      MAP_TEAM_TO_JUDGE: "bg-ok",
+      CREATE_USER: "bg-info",
+      CREATE_ANNOUNCEMENT: "bg-info",
+      UPDATE_PROBLEM_STATEMENT: "bg-ok",
     };
-    return colors[action] || "bg-slate-500";
+    return colors[action] || "bg-muted-foreground";
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Activity Logs</h2>
+        <h2 className="text-base font-semibold tracking-tight">
+          Activity Logs
+        </h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={exportLogs}>
             <Download className="mr-2 h-4 w-4" />
@@ -169,7 +171,7 @@ export function ActivityLogs({
             <div className="w-full space-y-2">
               <Label htmlFor="search">Search</Label>
               <div className="relative">
-                <Search className="absolute top-2.5 left-2 h-4 w-4 text-slate-400" />
+                <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
                 <Input
                   id="search"
                   placeholder="Search logs..."
@@ -250,7 +252,7 @@ export function ActivityLogs({
               filteredLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="rounded-lg border p-4 hover:bg-slate-50"
+                  className="hover:bg-muted/60 rounded-lg border p-4"
                 >
                   <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -262,21 +264,21 @@ export function ActivityLogs({
                       <span className="text-sm font-medium">
                         By: {log.user?.username || "Deleted User"}
                       </span>
-                      <span className="text-xs font-medium text-slate-500">
+                      <span className="text-muted-foreground text-xs font-medium">
                         @ {log.details}
                       </span>
                     </div>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-muted-foreground text-xs">
                       {log.createdAt}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-500">{log.payload}</p>
+                  <p className="text-muted-foreground text-sm">{log.payload}</p>
                 </div>
               ))
             ) : (
               <div className="py-8 text-center">
-                <FileText className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-                <p className="text-slate-500">
+                <FileText className="text-muted-foreground/60 mx-auto mb-4 h-12 w-12" />
+                <p className="text-muted-foreground">
                   No logs found matching the current filters
                 </p>
                 <Button

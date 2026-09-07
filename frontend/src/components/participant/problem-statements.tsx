@@ -93,7 +93,9 @@ export function ProblemStatements({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Problem Statements</h2>
+        <h2 className="text-base font-semibold tracking-tight">
+          Problem Statements
+        </h2>
         <Button variant="outline" size="sm" disabled={true}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Auto refreshing (30s)
@@ -105,13 +107,13 @@ export function ProblemStatements({
         {domains.map((domain) => (
           <Card
             key={domain.id}
-            className="cursor-pointer border-2 transition-shadow hover:border-blue-300 hover:shadow-md"
+            className="hover:border-hackx/45 cursor-pointer border-2 transition-shadow hover:shadow-md"
             onClick={() =>
               setSelectedDomain(selectedDomain === domain.id ? null : domain.id)
             }
           >
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-lg">
+              <CardTitle className="flex items-center justify-between">
                 {domain.name}
                 <Badge variant="outline">
                   {domain.problemStatements.reduce(
@@ -139,11 +141,11 @@ export function ProblemStatements({
           {domains
             .find((d) => d.id === selectedDomain)
             ?.problemStatements.map((ps) => (
-              <Card key={ps.id} className="border-l-4 border-l-blue-500">
+              <Card key={ps.id} className="border-l-hackx border-l-2">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg">{ps.title}</CardTitle>
+                      <CardTitle className="">{ps.title}</CardTitle>
                       <CardDescription className="mt-2">
                         {ps.description}
                       </CardDescription>
@@ -157,7 +159,7 @@ export function ProblemStatements({
                         {bookmarkedPS
                           .map((problem) => problem.id)
                           .includes(ps.id) ? (
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <Star className="fill-warn text-warn h-4 w-4" />
                         ) : (
                           <StarOff className="h-4 w-4" />
                         )}
@@ -175,7 +177,7 @@ export function ProblemStatements({
                       <Label className="text-sm font-medium">
                         Deliverables:
                       </Label>
-                      <ul className="mt-1 list-inside list-disc text-sm text-slate-600">
+                      <ul className="text-muted-foreground mt-1 list-inside list-disc text-sm">
                         {ps.deliverables.map((deliverable, index) => (
                           <li key={index}>{deliverable}</li>
                         ))}

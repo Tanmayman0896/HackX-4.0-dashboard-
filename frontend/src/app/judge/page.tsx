@@ -1,13 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +27,18 @@ import {
 } from "lucide-react";
 import { Evaluation, Judge } from "@/lib/types";
 import { apiService } from "@/lib/service";
+import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
+import {
+  BootScreen,
+  EmptyState,
+  Metric,
+  MetricRow,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  PanelTitle,
+  Section,
+} from "@/components/shell/primitives";
 import { useToast } from "@/hooks/use-toast";
 
 type ScoreKeys =
@@ -180,7 +185,7 @@ export default function JudgeDashboard() {
 
   // if (!passwordChanged) {
   //   return (
-  //     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+  //     <div className="min-h-screen bg-background flex items-center justify-center p-6">
   //       <Card className="w-full max-w-md">
   //         <CardHeader>
   //           <CardTitle>Change Password Required</CardTitle>
@@ -209,375 +214,322 @@ export default function JudgeDashboard() {
   // }
 
   if (!judge) {
-    return <div>Loading...</div>;
+    return <BootScreen label="Loading judge data" />;
   }
 
+  const evaluatedCount = assignedTeams.filter((t) => t.evaluated).length;
+  const averageScore =
+    evaluatedCount > 0
+      ? (
+          assignedTeams
+            .filter((t) => t.evaluated)
+            .reduce((sum, t) => sum + t.team.latestScore.totalScore, 0) /
+          evaluatedCount
+        ).toFixed(1)
+      : "0.0";
+
   return (
-    <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-col space-y-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-              Welcome, {judge.name}
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center rounded-lg border bg-white p-1">
-              <Button
-                size="sm"
-                variant={activeRound === 1 ? "default" : "ghost"}
-                className="h-7 text-xs"
-                onClick={() => setActiveRound(1)}
-              >
-                Round 1
-              </Button>
-              <Button
-                size="sm"
-                variant={activeRound === 3 ? "default" : "ghost"}
-                className="h-7 text-xs"
-                onClick={() => setActiveRound(3)}
-              >
-                Round 3
-              </Button>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="hide-evaluated"
-                checked={hideEvaluated}
-                onCheckedChange={setHideEvaluated}
-              />
-              <Label htmlFor="hide-evaluated" className="text-xs sm:text-sm">
-                Hide Evaluated Teams
-              </Label>
-            </div>
-          </div>
+    <AppShell
+      role="Judge"
+      title={judge.name}
+      subtitle={`Round ${activeRound} · ${evaluatedCount} of ${assignedTeams.length} evaluated`}
+      identity={<ShellIdentity name={judge.name} meta={judge.user.username} />}
+      nav={
+        <div className="flex w-full flex-col gap-0.5">
+          <p className="eyebrow px-3 pb-2">Evaluation round</p>
+          {([1, 3] as const).map((round) => (
+            <button
+              key={round}
+              type="button"
+              onClick={() => setActiveRound(round)}
+              aria-current={activeRound === round}
+              className={`focus-visible:ring-ring/40 relative flex w-full shrink-0 cursor-pointer items-center justify-start gap-2.5 rounded-md px-3 py-2 text-[0.8125rem] font-medium whitespace-nowrap transition-colors duration-150 outline-none before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:content-[''] focus-visible:ring-2 ${
+                activeRound === round
+                  ? "bg-hackx-soft text-hackx-ink before:bg-hackx font-semibold"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground before:opacity-0"
+              }`}
+            >
+              <Gavel className="size-4 shrink-0" />
+              Round {round}
+            </button>
+          ))}
         </div>
-
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:grid-cols-3 sm:gap-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <Gavel className="h-4 w-4 sm:h-5 sm:w-5" />
-                Judge Info
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div>
-                <Label className="text-xs font-medium sm:text-sm">
-                  User ID
-                </Label>
-                <p className="text-base sm:text-lg">{judge.user.username}</p>
-              </div>
-              <div>
-                <Label className="text-xs font-medium sm:text-sm">
-                  Teams Assigned
-                </Label>
-                <p className="text-base sm:text-lg">{assignedTeams.length}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-                Evaluation Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600 sm:text-3xl">
-                  {assignedTeams.filter((t) => t.evaluated).length}/
-                  {assignedTeams.length}
-                </div>
-                <p className="text-xs text-slate-500 sm:text-sm">
-                  Teams Evaluated
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <Calculator className="h-4 w-4 sm:h-5 sm:w-5" />
-                Average Score
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600 sm:text-3xl">
-                  {assignedTeams.filter((t) => t.evaluated).length > 0
-                    ? (
-                        assignedTeams
-                          .filter((t) => t.evaluated)
-                          .reduce(
-                            (sum, t) => sum + t.team.latestScore.totalScore,
-                            0,
-                          ) / assignedTeams.filter((t) => t.evaluated).length
-                      ).toFixed(1)
-                    : "0.0"}
-                </div>
-                <p className="text-xs text-slate-500 sm:text-sm">Out of 10</p>
-              </div>
-            </CardContent>
-          </Card>
+      }
+      actions={
+        <div className="border-border bg-card flex h-8.5 items-center gap-2 rounded-md border px-2.5">
+          <Switch
+            id="hide-evaluated"
+            checked={hideEvaluated}
+            onCheckedChange={setHideEvaluated}
+          />
+          <Label
+            htmlFor="hide-evaluated"
+            className="cursor-pointer text-xs whitespace-nowrap"
+          >
+            Hide evaluated
+          </Label>
         </div>
+      }
+    >
+      <div className="space-y-7">
+        <MetricRow className="sm:grid-cols-3">
+          <Metric
+            label="Assigned"
+            value={assignedTeams.length}
+            hint={`Judge ID ${judge.user.username}`}
+            icon={<Users />}
+          />
+          <Metric
+            label="Evaluated"
+            value={`${evaluatedCount}/${assignedTeams.length}`}
+            hint="Teams scored this round"
+            tone="ok"
+            icon={<Gavel />}
+          />
+          <Metric
+            label="Average score"
+            value={averageScore}
+            hint="Out of 10.0"
+            tone="brand"
+            icon={<Calculator />}
+          />
+        </MetricRow>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
-              Teams Assigned for Evaluation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
+        <Section
+          title="Teams assigned for evaluation"
+          description={`Round ${activeRound} · showing ${filteredEvaluations.length} of ${assignedTeams.length}`}
+        >
+          {filteredEvaluations.length === 0 ? (
+            <EmptyState
+              icon={<MapPin />}
+              title="Nothing to evaluate"
+              description={
+                hideEvaluated
+                  ? "Every assigned team for this round has been scored."
+                  : "No teams have been assigned to you for this round yet."
+              }
+            />
+          ) : (
+            <div className="space-y-3">
               {filteredEvaluations.map((evaluation) => (
-                <Card
-                  key={evaluation.evaluationId}
-                  className={`cursor-pointer border-l-4 transition-colors hover:bg-slate-50 ${evaluation.evaluated ? "border-l-hackx" : ""}`}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-                      <div className="flex-1">
-                        <CardTitle className="flex flex-col gap-2 text-base sm:flex-row sm:items-center sm:text-lg">
-                          <span>{evaluation.team.name}</span>
-                          {evaluation.evaluated && (
-                            <Badge
-                              variant="default"
-                              className="w-fit bg-green-500 text-xs"
-                            >
-                              Evaluated
-                            </Badge>
-                          )}
-                        </CardTitle>
-                        <CardDescription className="mt-1 text-sm">
-                          <strong>PS:</strong>{" "}
-                          {evaluation.team?.problemStatement?.title || "N/A"}
-                        </CardDescription>
-                        <CardDescription className="text-sm">
-                          <strong>Room:</strong>{" "}
-                          {activeRound === 3
-                            ? (evaluation.team?.round3Room?.name ??
-                              "Not Assigned")
-                            : evaluation.team?.round1Room
-                              ? `${evaluation.team.round1Room.block} ${evaluation.team.round1Room.name}`
-                              : "Not Assigned"}
-                        </CardDescription>
-                      </div>
-                      <div className="text-left lg:text-right">
+                <Panel key={evaluation.evaluationId} className="relative">
+                  <span
+                    aria-hidden
+                    className={`absolute inset-y-0 left-0 w-0.5 ${
+                      evaluation.evaluated ? "bg-ok" : "bg-hackx/45"
+                    }`}
+                  />
+                  <PanelHeader className="items-start">
+                    <div className="min-w-0">
+                      <PanelTitle className="flex-wrap text-sm">
+                        <span className="truncate">{evaluation.team.name}</span>
+                        {evaluation.evaluated ? (
+                          <Badge variant="green">Evaluated</Badge>
+                        ) : (
+                          <Badge variant="yellow">Pending</Badge>
+                        )}
                         <Badge
                           variant={
                             evaluation.team.submissionStatus === "SUBMITTED"
                               ? "default"
                               : "destructive"
                           }
-                          className="text-xs"
                         >
                           {evaluation.team.submissionStatus === "SUBMITTED"
                             ? "Submitted"
-                            : "Not Submitted"}
+                            : "Not submitted"}
                         </Badge>
-                      </div>
+                      </PanelTitle>
+                      <p className="text-muted-foreground mt-1.5 text-[0.8125rem]">
+                        {evaluation.team?.problemStatement?.title || "N/A"}
+                      </p>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      <div className="flex flex-col gap-2 sm:flex-row">
-                        {evaluation.team.latestSubmission?.githubRepo ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              window.open(
-                                evaluation.team.latestSubmission?.githubRepo,
-                                "_blank",
-                              )
-                            }
-                            className="w-full text-xs sm:w-auto"
-                          >
-                            <Github className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                            GitHub Repo
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled
-                            className="w-full bg-transparent text-xs sm:w-auto"
-                          >
-                            <Github className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                            No GitHub
-                          </Button>
-                        )}
-
-                        {evaluation.team.latestSubmission?.presentationLink ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              window.open(
-                                evaluation.team.latestSubmission
-                                  ?.presentationLink,
-                                "_blank",
-                              )
-                            }
-                            className="w-full text-xs sm:w-auto"
-                          >
-                            <FileText className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                            Presentation
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled
-                            className="w-full bg-transparent text-xs sm:w-auto"
-                          >
-                            <FileText className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                            No Presentation
-                          </Button>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-                        <div className="flex items-center gap-4">
-                          {evaluation.evaluated && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-slate-600 sm:text-sm">
-                                Score:
-                              </span>
-                              <Badge
-                                variant="outline"
-                                className="font-mono text-xs"
-                              >
-                                {evaluation.team.latestScore.totalScore}/10
-                              </Badge>
-                            </div>
-                          )}
+                    {evaluation.evaluated && (
+                      <div className="shrink-0 text-right">
+                        <div className="eyebrow">Score</div>
+                        <div
+                          data-numeric
+                          className="text-foreground mt-1 text-lg leading-none font-semibold"
+                        >
+                          {evaluation.team.latestScore.totalScore}
+                          <span className="text-faint text-xs font-normal">
+                            /10
+                          </span>
                         </div>
-                        <Dialog
-                          open={openTeamId === evaluation.team.id}
-                          onOpenChange={(open) =>
-                            setOpenTeamId(open ? evaluation.team.id : null)
+                      </div>
+                    )}
+                  </PanelHeader>
+
+                  <PanelBody className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                      <span className="text-muted-foreground flex items-center gap-1.5 text-[0.8125rem]">
+                        <MapPin className="text-faint size-3.5" />
+                        {activeRound === 3
+                          ? (evaluation.team?.round3Room?.name ??
+                            "Room not assigned")
+                          : evaluation.team?.round1Room
+                            ? `${evaluation.team.round1Room.block} ${evaluation.team.round1Room.name}`
+                            : "Room not assigned"}
+                      </span>
+
+                      {evaluation.team.latestSubmission?.githubRepo ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            window.open(
+                              evaluation.team.latestSubmission?.githubRepo,
+                              "_blank",
+                            )
                           }
                         >
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant={
-                                evaluation.evaluated ? "outline" : "default"
-                              }
-                              className="w-full text-xs sm:w-auto"
-                              onClick={() => loadScores(evaluation.team.id)}
-                            >
-                              {evaluation.evaluated ? (
-                                <>
-                                  <Edit className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                  Edit Score
-                                </>
-                              ) : (
-                                <>
-                                  <Gavel className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                  Evaluate
-                                </>
-                              )}
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle className="text-lg sm:text-xl">
-                                Evaluate Team: {evaluation.team.name}
-                              </DialogTitle>
-                              <DialogDescription className="text-sm">
-                                Score each criteria on a scale of 0-10. The
-                                weighted score will be calculated automatically.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-6">
-                              {scoringCriteria.map((criteria) => (
-                                <div key={criteria.id} className="space-y-3">
-                                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-                                    <Label className="text-sm font-medium">
-                                      {criteria.name}
-                                    </Label>
-                                    <div className="flex items-center gap-2">
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        Weight: {criteria.weight}%
-                                      </Badge>
-                                      <Badge
-                                        variant="secondary"
-                                        className="text-xs"
-                                      >
-                                        {scores[criteria.id] || 0}/
-                                        {criteria.maxScore}
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                  <Slider
-                                    value={[scores[criteria.id] || 0]}
-                                    onValueChange={(value) =>
-                                      handleScoreChange(criteria.id, value)
-                                    }
-                                    max={criteria.maxScore}
-                                    step={0.1}
-                                    className="w-full"
-                                  />
-                                </div>
-                              ))}
-                              <Separator />
-                              <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-                                <span className="text-base font-semibold sm:text-lg">
-                                  Weighted Total Score:
-                                </span>
-                                <Badge
-                                  variant="default"
-                                  className="w-fit px-3 py-1 text-sm sm:text-lg"
-                                >
-                                  {calculateWeightedScore()}
-                                  /10.0
-                                </Badge>
-                              </div>
-                            </div>
-                            <DialogFooter className="flex-col gap-2 sm:flex-row">
-                              <Button
-                                variant="outline"
-                                className="w-full bg-transparent sm:w-auto"
-                                onClick={() => setOpenTeamId(null)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={resetScores}
-                                className="w-full bg-transparent sm:w-auto"
-                              >
-                                Reset
-                              </Button>
-                              <Button
-                                onClick={() =>
-                                  handleSaveScore(evaluation.team.id)
-                                }
-                                className="w-full sm:w-auto"
-                              >
-                                Save Score
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
+                          <Github />
+                          GitHub
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" disabled>
+                          <Github />
+                          No GitHub
+                        </Button>
+                      )}
+
+                      {evaluation.team.latestSubmission?.presentationLink ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            window.open(
+                              evaluation.team.latestSubmission
+                                ?.presentationLink,
+                              "_blank",
+                            )
+                          }
+                        >
+                          <FileText />
+                          Presentation
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" disabled>
+                          <FileText />
+                          No presentation
+                        </Button>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
+
+                    <Dialog
+                      open={openTeamId === evaluation.team.id}
+                      onOpenChange={(open) =>
+                        setOpenTeamId(open ? evaluation.team.id : null)
+                      }
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant={evaluation.evaluated ? "outline" : "default"}
+                          className="w-full sm:w-auto"
+                          onClick={() => loadScores(evaluation.team.id)}
+                        >
+                          {evaluation.evaluated ? (
+                            <>
+                              <Edit />
+                              Edit score
+                            </>
+                          ) : (
+                            <>
+                              <Gavel />
+                              Evaluate
+                            </>
+                          )}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>
+                            Evaluate: {evaluation.team.name}
+                          </DialogTitle>
+                          <DialogDescription>
+                            Score each criterion from 0–10. The weighted total
+                            is calculated automatically.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-5">
+                          {scoringCriteria.map((criteria) => (
+                            <div key={criteria.id} className="space-y-2.5">
+                              <div className="flex items-center justify-between gap-3">
+                                <Label className="text-[0.8125rem]">
+                                  {criteria.name}
+                                </Label>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline">
+                                    {criteria.weight}%
+                                  </Badge>
+                                  <span
+                                    data-numeric
+                                    className="text-foreground w-11 text-right text-[0.8125rem] font-semibold"
+                                  >
+                                    {scores[criteria.id] || 0}
+                                    <span className="text-faint font-normal">
+                                      /{criteria.maxScore}
+                                    </span>
+                                  </span>
+                                </div>
+                              </div>
+                              <Slider
+                                value={[scores[criteria.id] || 0]}
+                                onValueChange={(value) =>
+                                  handleScoreChange(criteria.id, value)
+                                }
+                                max={criteria.maxScore}
+                                step={0.1}
+                                className="w-full"
+                              />
+                            </div>
+                          ))}
+                          <Separator />
+                          <div className="bg-muted/60 border-hairline flex items-center justify-between rounded-md border px-3.5 py-3">
+                            <span className="eyebrow">Weighted total</span>
+                            <span
+                              data-numeric
+                              className="text-hackx text-2xl leading-none font-semibold"
+                            >
+                              {calculateWeightedScore()}
+                              <span className="text-faint text-sm font-normal">
+                                /10.0
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                        <DialogFooter className="flex-col gap-2 sm:flex-row">
+                          <Button
+                            variant="outline"
+                            className="w-full sm:w-auto"
+                            onClick={() => setOpenTeamId(null)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={resetScores}
+                            className="w-full sm:w-auto"
+                          >
+                            Reset
+                          </Button>
+                          <Button
+                            onClick={() => handleSaveScore(evaluation.team.id)}
+                            className="w-full sm:w-auto"
+                          >
+                            Save score
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </PanelBody>
+                </Panel>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </Section>
       </div>
-    </div>
+    </AppShell>
   );
 }

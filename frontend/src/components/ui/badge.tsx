@@ -1,35 +1,43 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
+/**
+ * Status chip. Signal variants carry a leading dot so state is readable
+ * without relying on colour alone; neutral variants stay bare.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
+  [
+    "inline-flex w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden",
+    "rounded border px-1.5 py-0.5 text-[0.6875rem] leading-4 font-medium whitespace-nowrap",
+    "transition-colors duration-150",
+    "[&>svg]:pointer-events-none [&>svg]:size-3",
+    "focus-visible:ring-ring/40 focus-visible:ring-2",
+    // Dot marker, enabled per-variant.
+    "before:hidden before:size-1.5 before:shrink-0 before:rounded-full before:bg-current before:content-['']",
+    "data-[dot=true]:before:block",
+  ].join(" "),
   {
     variants: {
       variant: {
-        secondary:
-          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
-        default:
-          "border-transparent bg-hackx text-secondary-foreground [a&]:hover:bg-secondary/90",
-        destructive:
-          "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline:
-          "text-offblack [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        green:
-          "border-transparent bg-green-500 text-white [a&]:hover:bg-green-600 focus-visible:ring-green-500/30 dark:focus-visible:ring-green-500/50",
-        yellow:
-          "border-transparent bg-yellow-500 text-black [a&]:hover:bg-yellow-600 focus-visible:ring-yellow-500/30 dark:focus-visible:ring-yellow-500/50",
-        red:
-          "border-transparent bg-red-500 text-white [a&]:hover:bg-red-600 focus-visible:ring-red-500/30 dark:focus-visible:ring-red-500/50",
+        default: "border-hackx/25 bg-hackx/10 text-hackx-ink",
+        secondary: "border-border bg-muted text-muted-foreground",
+        outline: "border-border bg-transparent text-muted-foreground",
+        destructive: "border-danger/25 bg-danger/10 text-danger-ink",
+        green: "border-ok/25 bg-ok/10 text-ok-ink",
+        yellow: "border-warn/30 bg-warn/12 text-warn-ink",
+        red: "border-danger/25 bg-danger/10 text-danger-ink",
       },
     },
     defaultVariants: {
       variant: "default",
     },
-  }
-)
+  },
+);
+
+const DOTTED = new Set(["green", "yellow", "red", "destructive"]);
 
 function Badge({
   className,
@@ -38,15 +46,16 @@ function Badge({
   ...props
 }: React.ComponentProps<"span"> &
   VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot : "span"
+  const Comp = asChild ? Slot : "span";
 
   return (
     <Comp
       data-slot="badge"
+      data-dot={DOTTED.has(variant ?? "default")}
       className={cn(badgeVariants({ variant }), className)}
       {...props}
     />
-  )
+  );
 }
 
-export { Badge, badgeVariants }
+export { Badge, badgeVariants };

@@ -1,9 +1,15 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Field,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  PanelTitle,
+  Section,
+} from "@/components/shell/primitives";
 import { Clock, MapPin, Trophy, Users } from "lucide-react";
 import type {
   MentorshipSession,
@@ -33,19 +39,60 @@ export function OverviewTab({
   mentorshipLocked,
   round3Selected,
 }: OverviewTabProps) {
+  const progress = [
+    {
+      label: "Problem statement",
+      value: selectedPS?.title ? "Selected" : "Not selected",
+      tone: selectedPS?.title ? ("green" as const) : ("secondary" as const),
+      detail: selectedPS?.title ?? "Choose one from the Problem Statements tab",
+    },
+    {
+      label: "Mentor booking",
+      value: selectedMentor
+        ? "Booked"
+        : mentorshipLocked
+          ? "Locked"
+          : "Available",
+      tone: selectedMentor
+        ? ("green" as const)
+        : mentorshipLocked
+          ? ("red" as const)
+          : ("secondary" as const),
+      detail: selectedMentor
+        ? (selectedMentor.mentor?.name ?? "Session booked")
+        : mentorshipLocked
+          ? "Bookings are closed"
+          : "Book a slot from the Mentorship tab",
+    },
+    {
+      label: "Round 1 submission",
+      value: round1Locked
+        ? "Locked"
+        : submissions.length > 0
+          ? "Submitted"
+          : "Pending",
+      tone: round1Locked
+        ? ("red" as const)
+        : submissions.length > 0
+          ? ("green" as const)
+          : ("yellow" as const),
+      detail: round1Locked
+        ? "Submissions are closed"
+        : submissions.length > 0
+          ? `${submissions.length} submission${submissions.length > 1 ? "s" : ""} on record`
+          : "Add your repo and deck in the Submissions tab",
+    },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {round3Selected && (
-        <Alert className="border-green-200 bg-green-50">
-          <Trophy className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
-            <strong>Congratulations!</strong> You have been selected for Round
-            3.
+        <Alert className="border-ok/25 bg-ok/8 text-foreground before:bg-ok [&>svg]:text-ok">
+          <Trophy className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Congratulations — you are through to Round 3.</strong>
             {team.round3Room ? (
-              <>
-                {" "}
-                Report to <strong>{team.round3Room.name}</strong>.
-              </>
+              <> Report to {team.round3Room.name}.</>
             ) : (
               " Room details will be announced soon."
             )}
@@ -53,89 +100,109 @@ export function OverviewTab({
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Team Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium">Team Name</Label>
-              <p className="text-lg">{team.name}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Room Number</Label>
-              <p className="flex items-center gap-2 text-lg">
-                <MapPin className="h-4 w-4" />
-                {team?.round1Room
-                  ? `${team.round1Room.block} ${team.round1Room.name}`
-                  : "Not Assigned"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      <Section
+        title="Progress"
+        description="Where your team stands across the three gated stages."
+      >
+        <Panel>
+          <div className="divide-hairline divide-y">
+            {progress.map((row) => (
+              <div
+                key={row.label}
+                className="flex items-start justify-between gap-4 px-4 py-3.5"
+              >
+                <div className="min-w-0">
+                  <div className="text-foreground text-[0.8125rem] font-medium">
+                    {row.label}
+                  </div>
+                  <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                    {row.detail}
+                  </p>
+                </div>
+                <Badge variant={row.tone} className="mt-0.5 shrink-0">
+                  {row.value}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </Section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span>Problem Statement</span>
-              <Badge variant={selectedPS ? "default" : "secondary"}>
-                {selectedPS?.title ? "Selected" : "Not Selected"}
-              </Badge>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Section title="Team">
+          <Panel>
+            <PanelHeader>
+              <PanelTitle>
+                <Users />
+                Team details
+              </PanelTitle>
+              <span className="eyebrow">{team.teamId}</span>
+            </PanelHeader>
+            <PanelBody className="grid gap-5 sm:grid-cols-2">
+              <Field label="Team name">{team.name}</Field>
+              <Field label="Round 1 room">
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="text-faint size-3.5" />
+                  {team?.round1Room
+                    ? `${team.round1Room.block} ${team.round1Room.name}`
+                    : "Not assigned"}
+                </span>
+              </Field>
+              <Field label="Status" className="sm:col-span-2">
+                <Badge variant="secondary">
+                  {team.status?.replaceAll("_", " ") ?? "—"}
+                </Badge>
+              </Field>
+            </PanelBody>
+          </Panel>
+        </Section>
+
+        <Section title="Members">
+          <Panel>
+            <PanelHeader>
+              <PanelTitle>
+                <Users />
+                Roster
+              </PanelTitle>
+              <span className="eyebrow">
+                {team.participants?.length ?? 0} members
+              </span>
+            </PanelHeader>
+            <div className="divide-hairline divide-y">
+              {(team.participants ?? []).map((member, index) => (
+                <div
+                  key={member.id ?? index}
+                  className="flex items-center gap-3 px-4 py-2.5"
+                >
+                  <span className="bg-muted text-muted-foreground border-hairline flex size-7 shrink-0 items-center justify-center rounded-md border text-[0.6875rem] font-semibold">
+                    {member.name?.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="text-foreground block truncate text-[0.8125rem] font-medium">
+                      {member.name}
+                    </span>
+                    <span className="text-faint block truncate text-xs">
+                      {member.email}
+                    </span>
+                  </span>
+                  {member.role === "LEADER" && (
+                    <Badge variant="outline">Leader</Badge>
+                  )}
+                </div>
+              ))}
             </div>
-            <div className="flex items-center justify-between">
-              <span>Mentor Booking</span>
-              <Badge
-                variant={
-                  selectedMentor
-                    ? "default"
-                    : mentorshipLocked
-                      ? "destructive"
-                      : "secondary"
-                }
-              >
-                {selectedMentor
-                  ? "Booked"
-                  : mentorshipLocked
-                    ? "Locked"
-                    : "Available"}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Round 1 Submission</span>
-              <Badge
-                variant={
-                  round1Locked
-                    ? "destructive"
-                    : submissions.length > 0
-                      ? "default"
-                      : "secondary"
-                }
-              >
-                {round1Locked
-                  ? "Locked"
-                  : submissions.length > 0
-                    ? "Submitted"
-                    : "Available"}
-              </Badge>
-            </div>
-            {psLocked && (
-              <Alert>
-                <Clock className="h-4 w-4" />
-                <AlertDescription>
-                  Problem statement selection is now locked.
-                </AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
+          </Panel>
+        </Section>
       </div>
+
+      {psLocked && (
+        <Alert>
+          <Clock className="h-4 w-4" />
+          <AlertDescription>
+            Problem statement selection is now locked.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

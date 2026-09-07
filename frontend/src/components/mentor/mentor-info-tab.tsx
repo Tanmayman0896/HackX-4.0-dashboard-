@@ -1,8 +1,17 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Field,
+  Metric,
+  MetricRow,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  PanelTitle,
+  Section,
+} from "@/components/shell/primitives";
 import { Clock, RefreshCw, Users } from "lucide-react";
 import { GoogleMeetLink } from "./google-meet-link";
 import type { Mentor, QueueItem } from "@/lib/types";
@@ -18,74 +27,60 @@ export function MentorInfoTab({
   queue,
   onRefreshAction,
 }: MentorInfoTabProps) {
+  const waiting = queue.filter((q) => q.status === "WAITING").length;
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Mentor Info
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <Label className="text-sm font-medium">ID</Label>
-              <p className="text-lg">{mentorInfo.user.username}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Domain</Label>
-              <p className="text-lg">{mentorInfo.domains.join(", ")}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Mode</Label>
-              <Badge
-                variant={mentorInfo.mode === "ONLINE" ? "default" : "secondary"}
-              >
-                {mentorInfo.mode}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-7">
+      <MetricRow className="lg:grid-cols-3">
+        <Metric
+          label="Teams in queue"
+          value={`${waiting}/5`}
+          hint="Waiting for this mentor"
+          tone="brand"
+          icon={<Clock />}
+        />
+        <Metric
+          label="Mentoring mode"
+          value={mentorInfo.mode === "ONLINE" ? "Online" : "In person"}
+          hint={mentorInfo.domains.join(", ")}
+          icon={<Users />}
+        />
+        <Metric
+          label="Auto refresh"
+          value="10s"
+          hint="Queue updates automatically"
+          icon={<RefreshCw />}
+        />
+      </MetricRow>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Queue Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">
-                {queue.filter((q) => q.status === "WAITING").length}/5
-              </div>
-              <p className="text-sm text-slate-500">Teams in queue</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <RefreshCw className="h-5 w-5" />
-              Auto Refresh
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-2 text-sm text-slate-600">
-              Queue updates every 10 seconds automatically
-            </p>
-            <button
-              onClick={onRefreshAction}
-              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh Now
-            </button>
-          </CardContent>
-        </Card>
-      </div>
+      <Section
+        title="Mentor profile"
+        actions={
+          <Button size="sm" variant="outline" onClick={onRefreshAction}>
+            <RefreshCw />
+            Refresh now
+          </Button>
+        }
+      >
+        <Panel>
+          <PanelHeader>
+            <PanelTitle>
+              <Users />
+              Assignment
+            </PanelTitle>
+            <Badge variant={mentorInfo.isAvailable ? "green" : "red"}>
+              {mentorInfo.isAvailable ? "Available" : "Not available"}
+            </Badge>
+          </PanelHeader>
+          <PanelBody className="grid gap-5 sm:grid-cols-3">
+            <Field label="Mentor ID">{mentorInfo.user.username}</Field>
+            <Field label="Domains">{mentorInfo.domains.join(", ")}</Field>
+            <Field label="Mode">
+              <Badge variant="secondary">{mentorInfo.mode}</Badge>
+            </Field>
+          </PanelBody>
+        </Panel>
+      </Section>
 
       {mentorInfo.mode === "ONLINE" && <GoogleMeetLink />}
     </div>
