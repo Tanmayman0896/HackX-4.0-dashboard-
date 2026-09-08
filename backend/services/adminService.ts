@@ -891,10 +891,7 @@ export class AdminService {
         },
         orderBy: {createdAt: "desc"},
       });
-      if (!lastTeam) {
-        return; // not possible as we are importing teams
-      }
-      const count = parseInt(lastTeam.teamId.replace("TEAM", ""));
+      const count = lastTeam ? parseInt(lastTeam.teamId.replace("TEAM", "")) : 0;
       let teamId = `TEAM${(count + 1).toString().padStart(3, "0")}`;
 
       // Generate a simple password for the team (can be changed later)
