@@ -1048,7 +1048,7 @@ export default function AdminDashboard() {
                               <div className="text-center">
                                 <p className="text-hackx text-2xl font-semibold tracking-tight tabular-nums">
                                   {
-                                    mentor.mentorshipQueue.filter(
+                                    (mentor.mentorshipQueue || []).filter(
                                       (q) => q.status === "WAITING",
                                     ).length
                                   }
@@ -1073,7 +1073,8 @@ export default function AdminDashboard() {
                               <DialogContent className="h-auto w-[95vw] max-w-md overflow-y-scroll">
                                 <DialogHeader>
                                   <DialogTitle className="text-lg">
-                                    {mentor.user.username}&#39;s Queue Details
+                                    {mentor.user?.username || mentor.name}&#39;s
+                                    Queue Details
                                   </DialogTitle>
                                   <DialogDescription className="text-sm">
                                     Current teams in mentorship queue
@@ -1081,7 +1082,8 @@ export default function AdminDashboard() {
                                 </DialogHeader>
                                 <div className="space-y-2">
                                   <div className="text-muted-foreground text-sm">
-                                    {mentor.mentorshipQueue.length === 0
+                                    {!mentor.mentorshipQueue ||
+                                    mentor.mentorshipQueue.length === 0
                                       ? "No teams in the queue."
                                       : mentor.mentorshipQueue.map((item) => (
                                           <div

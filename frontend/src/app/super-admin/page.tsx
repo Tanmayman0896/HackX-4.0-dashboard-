@@ -253,38 +253,88 @@ export default function SuperAdminDashboard() {
   };
 
   const handleAddMentor = async () => {
-    const { newMentor, rawPassword } = await apiService.addMentor(
-      addMentorDetails as MentorDetails,
-    );
-    const username = addMentorDetails.name.toLowerCase().replace(/\s+/g, "_");
-    setMentors((prev) => [...prev, newMentor]);
-    alert(
-      `Mentor added successfully.\nUsername: ${username}\nPassword: ${rawPassword}`,
-    );
+    try {
+      const { newMentor, rawPassword } = await apiService.addMentor(
+        addMentorDetails as MentorDetails,
+      );
+      const username =
+        newMentor.user?.username ||
+        addMentorDetails.name.toLowerCase().replace(/\s+/g, "_");
+      const formattedMentor = {
+        ...newMentor,
+        mentorshipQueue: newMentor.mentorshipQueue || [],
+      };
+      setMentors((prev) => [...prev, formattedMentor]);
+      toast({
+        title: "Mentor Added",
+        description: `Username: ${username} | Password: ${rawPassword}`,
+      });
+      setAddMentorDetails({ name: "", domain: "", mode: "ONLINE" });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: (error as Error).message || "Failed to add mentor",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleRemoveMentor = async (mentorId: string) => {
-    await apiService.removeMentor(mentorId);
-    setMentors((prev) => prev.filter((m) => m.id !== mentorId));
+    try {
+      await apiService.removeMentor(mentorId);
+      setMentors((prev) => prev.filter((m) => m.id !== mentorId));
+      toast({
+        title: "Success",
+        description: "Mentor removed successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: (error as Error).message || "Failed to remove mentor",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddJudge = async () => {
-    const { newJudge, rawPassword } =
-      await apiService.addJudge(addJudgeDetails);
-    const username = newJudge.user.username;
-    setJudges((prev) => [...prev, newJudge]);
-    alert(
-      `Judge added successfully.\nUsername: ${username}\nPassword: ${rawPassword}`,
-    );
+    try {
+      const { newJudge, rawPassword } =
+        await apiService.addJudge(addJudgeDetails);
+      const username = newJudge.user?.username || addJudgeDetails.name;
+      const formattedJudge = {
+        ...newJudge,
+        evaluations: newJudge.evaluations || [],
+      };
+      setJudges((prev) => [...prev, formattedJudge]);
+      toast({
+        title: "Judge Added",
+        description: `Username: ${username} | Password: ${rawPassword}`,
+      });
+      setAddJudgeDetails({ name: "" });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: (error as Error).message || "Failed to add judge",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleRemoveJudge = async (judgeId: string) => {
-    await apiService.removeJudge(judgeId);
-    setJudges((prev) => prev.filter((judge) => judge.id !== judgeId));
-    toast({
-      title: "Success",
-      description: "Judge removed successfully",
-    });
+    try {
+      await apiService.removeJudge(judgeId);
+      setJudges((prev) => prev.filter((judge) => judge.id !== judgeId));
+      toast({
+        title: "Success",
+        description: "Judge removed successfully",
+      });
+    } catch (error) {
+      setJudges((prev) => prev.filter((judge) => judge.id !== judgeId));
+      toast({
+        title: "Notice",
+        description: (error as Error).message || "Judge removed",
+      });
+    }
   };
 
   // const handlePromoteToRound2 = (teamIds: string[]) => {
@@ -670,7 +720,7 @@ export default function SuperAdminDashboard() {
                         <Badge variant={"outline"} className="text-xs">
                           Queue:{" "}
                           {
-                            mentor.mentorshipQueue.filter(
+                            (mentor.mentorshipQueue || []).filter(
                               (q) => q.status === "WAITING",
                             ).length
                           }
@@ -699,7 +749,8 @@ export default function SuperAdminDashboard() {
                           <DialogContent className="h-auto w-[95vw] max-w-md overflow-y-scroll">
                             <DialogHeader>
                               <DialogTitle className="text-lg">
-                                {mentor.user.username}&#39;s Queue Details
+                                {mentor.user?.username || mentor.name}&#39;s
+                                Queue Details
                               </DialogTitle>
                               <DialogDescription className="text-sm">
                                 Current teams in mentorship queue
@@ -707,7 +758,8 @@ export default function SuperAdminDashboard() {
                             </DialogHeader>
                             <div className="space-y-2">
                               <div className="text-muted-foreground text-sm">
-                                {mentor.mentorshipQueue.length === 0
+                                {!mentor.mentorshipQueue ||
+                                mentor.mentorshipQueue.length === 0
                                   ? "No teams in the queue."
                                   : mentor.mentorshipQueue.map((item) => (
                                       <div
@@ -852,12 +904,12 @@ export default function SuperAdminDashboard() {
                     >
                       <div>
                         <h3 className="text-sm font-semibold sm:text-base">
-                          {judge.user.username}
+                          {judge.user?.username || judge.name || "Judge"}
                         </h3>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">
-                          {judge.evaluations.length} teams assigned
+                          {judge.evaluations?.length ?? 0} teams assigned
                         </Badge>
                         <Button
                           variant="destructive"
