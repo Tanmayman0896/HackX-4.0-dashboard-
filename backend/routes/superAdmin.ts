@@ -1,5 +1,6 @@
 import {Router} from "express";
 import {superAdminService} from "../services/superAdminService";
+import {adminService} from "../services/adminService";
 import type {AuthRequest} from "../middleware/auth";
 import {requireSuperAdmin} from "../middleware/auth";
 import {modifyLimiter} from "../middleware/rateLimiter";
@@ -116,6 +117,26 @@ router.get("/teams/:teamId", async (req: AuthRequest, res, next) => {
   try {
     const team = await superAdminService.getTeamDetails(req.params.teamId);
     res.json(team);
+  } catch (error: any) {
+    next(error)
+  }
+});
+
+// Create a new team manually
+router.post("/teams/create", modifyLimiter, logActivity("CREATE_TEAM"), async (req: AuthRequest, res, next) => {
+  try {
+    const result = await adminService.createTeam(req.body);
+    res.json(result);
+  } catch (error: any) {
+    next(error)
+  }
+});
+
+// Delete a team
+router.delete("/teams/:teamId", modifyLimiter, logActivity("DELETE_TEAM"), async (req: AuthRequest, res, next) => {
+  try {
+    const result = await adminService.deleteTeam(req.params.teamId);
+    res.json(result);
   } catch (error: any) {
     next(error)
   }
