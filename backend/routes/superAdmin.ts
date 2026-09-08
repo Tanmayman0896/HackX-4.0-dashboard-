@@ -376,7 +376,7 @@ router.post("/round2/rooms", modifyLimiter, logActivity("CREATE_ROUND2_ROOM"), a
   }
 });
 
-router.post("/round2/assign-judge", modifyLimiter, logActivity("ASSIGN_JUDGE_TO_ROOM"), async (req: AuthRequest, res, next) => {
+router.post(["/round2/assign-judge", "/round2/map-judge"], modifyLimiter, logActivity("ASSIGN_JUDGE_TO_ROOM"), async (req: AuthRequest, res, next) => {
   try {
     await superAdminService.assignJudgeToRoom(req.body.judgeId, req.body.roomId);
     res.json({message: "Judge assigned to room successfully"});
