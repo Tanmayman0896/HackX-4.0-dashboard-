@@ -317,11 +317,25 @@ export interface TeamScore {
 
 export interface Round2Room {
   id: string;
-  roomNumber: string;
-  floor: string;
+  name: string;
+  roomNumber?: string;
+  floor?: string;
+  block?: string;
   capacity: number;
   assignedJudge?: string;
-  assignedTeams: string[];
+  judges?: {
+    id: string;
+    name: string;
+    user?: { username: string };
+    evaluations?: { id: string; status: string }[];
+  }[];
+  assignedTeams?: string[];
+  teams?: {
+    id: string;
+    name: string;
+    teamId: string;
+    status?: string;
+  }[];
 }
 
 export interface Round3Candidate {

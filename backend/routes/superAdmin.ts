@@ -372,23 +372,41 @@ router.post("/round2/rooms", modifyLimiter, logActivity("CREATE_ROUND2_ROOM"), a
     const room = await superAdminService.createRound2Room(req.body);
     res.status(201).json(room);
   } catch (error: any) {
-    next(error)
+    next(error);
+  }
+});
+
+router.delete("/round2/rooms/:roomId", modifyLimiter, logActivity("DELETE_ROUND2_ROOM"), async (req: AuthRequest, res, next) => {
+  try {
+    await superAdminService.deleteRound2Room(req.params.roomId);
+    res.json({ message: "Round 2 room deleted successfully" });
+  } catch (error: any) {
+    next(error);
   }
 });
 
 router.post(["/round2/assign-judge", "/round2/map-judge"], modifyLimiter, logActivity("ASSIGN_JUDGE_TO_ROOM"), async (req: AuthRequest, res, next) => {
   try {
-    await superAdminService.assignJudgeToRoom(req.body.judgeId, req.body.roomId);
-    res.json({message: "Judge assigned to room successfully"});
+    const judge = await superAdminService.assignJudgeToRoom(req.body.judgeId, req.body.roomId);
+    res.json({message: "Judge assigned to room successfully", judge});
   } catch (error: any) {
     next(error)
   }
 });
 
+router.delete("/round2/judges/:judgeId", modifyLimiter, logActivity("REMOVE_JUDGE_FROM_ROUND2_ROOM"), async (req: AuthRequest, res, next) => {
+  try {
+    await superAdminService.removeJudgeFromRound2Room(req.params.judgeId);
+    res.json({message: "Judge removed from Round 2 room successfully"});
+  } catch (error: any) {
+    next(error);
+  }
+});
+
 router.post("/round2/assign-team", modifyLimiter, logActivity("ASSIGN_TEAM_TO_ROOM"), async (req: AuthRequest, res, next) => {
   try {
-    await superAdminService.assignTeamToRoom(req.body.teamId, req.body.roomId);
-    res.json({message: "Team assigned to room successfully"});
+    const team = await superAdminService.assignTeamToRoom(req.body.teamId, req.body.roomId);
+    res.json({message: "Team assigned to room successfully", team});
   } catch (error: any) {
     next(error)
   }

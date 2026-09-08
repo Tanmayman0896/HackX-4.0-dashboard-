@@ -67,43 +67,68 @@ describe("Round 2 Semi-Finals & Workflow Tests", () => {
       expect(created.name).toBe("AB2-301");
     });
 
-    it("should retrieve Round 2 rooms including assigned teams", async () => {
+    it("should retrieve Round 2 rooms including assigned teams and judges", async () => {
       const mockRooms = [
         {
           id: "r2-1",
           name: "AB2-301",
-          teams: [{ id: "t1", name: "Team Rocket", teamId: "T001" }],
+          teams: [{ id: "t1", name: "Team Rocket", teamId: "T001", status: "ROUND1_QUALIFIED" }],
+          judges: [{ id: "j1", name: "Judge 1", user: { username: "judge1" }, evaluations: [] }],
         },
         {
           id: "r2-2",
           name: "AB2-302",
           teams: [],
+          judges: [],
         },
       ];
 
+      mockPrisma.round2Room.createMany.mockResolvedValue({ count: 6 });
       mockPrisma.round2Room.findMany.mockResolvedValue(mockRooms);
 
       const rooms = await superAdminService.getRound2Rooms();
 
       expect(mockPrisma.round2Room.findMany).toHaveBeenCalledWith({
+        orderBy: { name: "asc" },
         include: {
           teams: {
-            select: { id: true, name: true, teamId: true },
+            orderBy: { name: "asc" },
+            select: { id: true, name: true, teamId: true, status: true },
+          },
+          judges: {
+            orderBy: { name: "asc" },
+            select: {
+              id: true,
+              name: true,
+              user: { select: { username: true } },
+              evaluations: { where: { round: 2 }, select: { id: true, status: true } },
+            },
           },
         },
       });
       expect(rooms).toHaveLength(2);
       expect(rooms[0].teams).toHaveLength(1);
+      expect(rooms[0].judges).toHaveLength(1);
     });
   });
 
   describe("Round 2 Team Room Assignment", () => {
     it("should assign a team to a Round 2 room by setting round2RoomId", async () => {
+      mockPrisma.team.findFirst.mockResolvedValue({
+        id: "t1",
+        name: "Team Rocket",
+      });
+      mockPrisma.round2Room.findFirst.mockResolvedValue({
+        id: "r2-1",
+        name: "AB2-301",
+      });
       mockPrisma.team.update.mockResolvedValue({
         id: "t1",
         name: "Team Rocket",
         round2RoomId: "r2-1",
       });
+      mockPrisma.evaluation.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.judge.findMany.mockResolvedValue([]);
 
       const result = await superAdminService.assignTeamToRoom("t1", "r2-1");
 
@@ -116,23 +141,40 @@ describe("Round 2 Semi-Finals & Workflow Tests", () => {
   });
 
   describe("Round 2 Judge Assignment Audit & Behavior", () => {
-    it("should execute judge assignment function (reflecting current schema limitation)", async () => {
-      // In the current codebase, Judge schema does not have round2RoomId,
-      // so assignJudgeToRoom updates judge with empty data {}.
+    it("should assign judge to room by setting round2RoomId and creating round 2 evaluations", async () => {
       mockPrisma.judge.findFirst.mockResolvedValue({
         id: "judge-1",
       });
+      mockPrisma.round2Room.findFirst.mockResolvedValue({
+        id: "r2-1",
+        name: "AB2-301",
+      });
+      mockPrisma.evaluation.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.judge.update.mockResolvedValue({
         id: "judge-1",
+        round2RoomId: "r2-1",
       });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-1" },
+        { id: "team-2" },
+      ]);
+      mockPrisma.evaluation.createMany.mockResolvedValue({ count: 2 });
 
       const result = await superAdminService.assignJudgeToRoom("judge-1", "r2-1");
 
       expect(mockPrisma.judge.update).toHaveBeenCalledWith({
         where: { id: "judge-1" },
-        data: {},
+        data: { round2RoomId: "r2-1" },
+      });
+      expect(mockPrisma.evaluation.createMany).toHaveBeenCalledWith({
+        data: [
+          { teamId: "team-1", judgeId: "judge-1", round: 2 },
+          { teamId: "team-2", judgeId: "judge-1", round: 2 },
+        ],
+        skipDuplicates: true,
       });
       expect(result.id).toBe("judge-1");
+      expect(result.round2RoomId).toBe("r2-1");
     });
   });
 

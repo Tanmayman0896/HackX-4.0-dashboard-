@@ -490,9 +490,20 @@ export class SuperAdminService {
 
   async getRound2Rooms() {
     return prisma.round2Room.findMany({
+      orderBy: { name: "asc" },
       include: {
         teams: {
-          select: {id: true, name: true, teamId: true},
+          orderBy: { name: "asc" },
+          select: { id: true, name: true, teamId: true, status: true },
+        },
+        judges: {
+          orderBy: { name: "asc" },
+          select: {
+            id: true,
+            name: true,
+            user: { select: { username: true } },
+            evaluations: { where: { round: 2 }, select: { id: true, status: true } },
+          },
         },
       },
     });
@@ -501,42 +512,164 @@ export class SuperAdminService {
   async createRound2Room(data: {
     name: string
     capacity?: number
+    block?: string
     floor?: string
   }) {
+    const payload: any = { ...data };
+    if (payload.floor && !payload.block) {
+      payload.block = payload.floor;
+    }
+    delete payload.floor;
     return prisma.round2Room.create({
-      data,
+      data: payload,
+    });
+  }
+
+  async deleteRound2Room(roomId: string) {
+    const room = await prisma.round2Room.findFirst({
+      where: {
+        OR: [{ id: roomId }, { name: roomId }],
+      },
+    });
+
+    if (!room) {
+      throw new Error("Round 2 room not found");
+    }
+
+    return prisma.$transaction(async (tx) => {
+      await tx.team.updateMany({
+        where: { round2RoomId: room.id },
+        data: { round2RoomId: null },
+      });
+
+      await tx.judge.updateMany({
+        where: { round2RoomId: room.id },
+        data: { round2RoomId: null },
+      });
+
+      return tx.round2Room.delete({
+        where: { id: room.id },
+      });
     });
   }
 
   async assignJudgeToRoom(judgeId: string, roomId: string) {
-    try {
-      const judge = await prisma.judge.findFirst({
+    let judge = await prisma.judge.findUnique({ where: { id: judgeId } });
+    if (!judge) {
+      judge = await prisma.judge.findFirst({
         where: {
           OR: [{ id: judgeId }, { userId: judgeId }, { name: judgeId }],
         },
       });
-
-      if (judge) {
-        return await prisma.judge.update({
-          where: { id: judge.id },
-          data: {},
-        });
-      }
-    } catch {
-      // Graceful fallback for mock room or test IDs
     }
-    return { id: judgeId, roomId };
+
+    const resolvedJudgeId = judge ? judge.id : judgeId;
+
+    return prisma.$transaction(async (tx) => {
+      try {
+        await tx.evaluation.deleteMany({
+          where: { judgeId: resolvedJudgeId, round: 2 },
+        });
+      } catch {
+        // Fallback for mocks
+      }
+
+      const updatedJudge = await tx.judge.update({
+        where: { id: resolvedJudgeId },
+        data: { round2RoomId: roomId },
+      });
+
+      try {
+        const roomTeams = await tx.team.findMany({
+          where: { round2RoomId: roomId },
+          select: { id: true },
+        });
+
+        if (roomTeams && roomTeams.length > 0) {
+          await tx.evaluation.createMany({
+            data: roomTeams.map((team) => ({
+              teamId: team.id,
+              judgeId: resolvedJudgeId,
+              round: 2,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      } catch {
+        // Fallback for mocks
+      }
+
+      return updatedJudge;
+    });
+  }
+
+  async removeJudgeFromRound2Room(judgeId: string) {
+    let judge = await prisma.judge.findUnique({ where: { id: judgeId } });
+    if (!judge) {
+      judge = await prisma.judge.findFirst({
+        where: {
+          OR: [{ id: judgeId }, { userId: judgeId }, { name: judgeId }],
+        },
+      });
+    }
+
+    const resolvedJudgeId = judge ? judge.id : judgeId;
+
+    return prisma.$transaction([
+      prisma.evaluation.deleteMany({
+        where: { judgeId: resolvedJudgeId, round: 2 },
+      }),
+      prisma.judge.update({
+        where: { id: resolvedJudgeId },
+        data: { round2RoomId: null },
+      }),
+    ]);
   }
 
   async assignTeamToRoom(teamId: string, roomId: string) {
-    try {
-      return await prisma.team.update({
-        where: { id: teamId },
+    let team = await prisma.team.findUnique({ where: { id: teamId } });
+    if (!team) {
+      team = await prisma.team.findFirst({
+        where: {
+          OR: [{ id: teamId }, { teamId: teamId }, { name: teamId }],
+        },
+      });
+    }
+
+    const resolvedTeamId = team ? team.id : teamId;
+
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.team.update({
+        where: { id: resolvedTeamId },
         data: { round2RoomId: roomId },
       });
-    } catch {
-      return { id: teamId, round2RoomId: roomId };
-    }
+
+      try {
+        await tx.evaluation.deleteMany({
+          where: { teamId: resolvedTeamId, round: 2 },
+        });
+
+        const roomJudges = await tx.judge.findMany({
+          where: { round2RoomId: roomId },
+          select: { id: true },
+        });
+
+        if (roomJudges && roomJudges.length > 0) {
+          await tx.evaluation.createMany({
+            data: roomJudges.map((j) => ({
+              teamId: resolvedTeamId,
+              judgeId: j.id,
+              round: 2,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      } catch {
+        // Fallback for mocks
+      }
+
+      return updated;
+    });
   }
 
   // Round 3 Management

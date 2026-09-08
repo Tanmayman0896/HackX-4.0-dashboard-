@@ -36,6 +36,7 @@ import {
   Search,
   Trophy,
 } from "lucide-react";
+import { TableSkeleton } from "@/components/ui/dashboard-skeletons";
 import type { Judge, Team } from "@/lib/types";
 
 interface TeamPageProps {
@@ -89,13 +90,14 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
   if (!teams || !judges) {
     return (
       <div className="space-y-6">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-muted-foreground text-center">
-              Loading team data...
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-base font-semibold tracking-tight">
+              Team Management
+            </h2>
+          </div>
+        </div>
+        <TableSkeleton rows={6} />
       </div>
     );
   }

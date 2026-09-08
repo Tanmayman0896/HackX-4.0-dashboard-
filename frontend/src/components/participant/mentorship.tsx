@@ -23,6 +23,7 @@ import {
 import { RefreshCw } from "lucide-react";
 import { apiService } from "@/lib/service";
 import { useToast } from "@/hooks/use-toast";
+import { CardListSkeleton } from "@/components/ui/dashboard-skeletons";
 import type { Mentor, MentorshipSession } from "@/lib/types";
 import {
   Dialog,
@@ -212,81 +213,96 @@ export function Mentorship({
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-3 gap-4">
-        {filteredMentors.map((mentor) => (
-          <Card key={mentor.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>{mentor.user.username}</CardTitle>
-                  <CardDescription>
-                    {mentor.domains.join(", ")} • Mode: {mentor.mode}
-                  </CardDescription>
-                </div>
-                <div className="text-right">
-                  <Badge
-                    variant={
-                      mentor.waitingTeamsCount >= 5 ? "destructive" : "default"
-                    }
-                  >
-                    {mentor.waitingTeamsCount}/{5} slots
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <Dialog
-              open={activeMentorId === mentor.id}
-              onOpenChange={(open) =>
-                setActiveMentorId(open ? mentor.id : null)
-              }
-            >
-              <DialogTrigger asChild>
-                <Button
-                  className="mx-5"
-                  disabled={mentor.waitingTeamsCount >= 5}
-                >
-                  {mentor.waitingTeamsCount >= 5 ? "Queue Full" : "Book Mentor"}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    Book {mentor.user.username} for mentorship session
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`query-${mentor.id}`}>Your Query</Label>
-                    <Input
-                      id={`query-${mentor.id}`}
-                      placeholder="Describe what you want to discuss..."
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                    />
+      {mentors.length === 0 ? (
+        <CardListSkeleton count={3} />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredMentors.map((mentor) => (
+            <Card key={mentor.id}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{mentor.user.username}</CardTitle>
+                    <CardDescription>
+                      {mentor.domains.join(", ")} • Mode: {mentor.mode}
+                    </CardDescription>
+                  </div>
+                  <div className="text-right">
+                    <Badge
+                      variant={
+                        mentor.waitingTeamsCount >= 5
+                          ? "destructive"
+                          : "default"
+                      }
+                    >
+                      {mentor.waitingTeamsCount}/{5} slots
+                    </Badge>
                   </div>
                 </div>
-                <DialogFooter>
+              </CardHeader>
+              <Dialog
+                open={activeMentorId === mentor.id}
+                onOpenChange={(open) =>
+                  setActiveMentorId(open ? mentor.id : null)
+                }
+              >
+                <DialogTrigger asChild>
                   <Button
-                    variant="outline"
-                    onClick={() => setActiveMentorId(null)}
+                    className="mx-5 mb-5"
+                    disabled={mentor.waitingTeamsCount >= 5}
                   >
-                    Cancel
+                    {mentor.waitingTeamsCount >= 5
+                      ? "Queue Full"
+                      : "Book Mentor"}
                   </Button>
-                  <Button
-                    onClick={() => {
-                      handleBookMentor(mentor.id);
-                      setActiveMentorId(null);
-                    }}
-                    disabled={!query.trim()}
-                  >
-                    Confirm Booking
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </Card>
-        ))}
-      </div>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Book Mentorship Session</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p>
+                      <strong>Mentor:</strong> {mentor.user.username}
+                    </p>
+                    <p>
+                      <strong>Domains:</strong> {mentor.domains.join(", ")}
+                    </p>
+                    <p>
+                      <strong>Mode:</strong> {mentor.mode}
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="query">Your Query</Label>
+                      <Input
+                        id="query"
+                        placeholder="What would you like help with?"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveMentorId(null)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        handleBookMentor(mentor.id);
+                        setActiveMentorId(null);
+                      }}
+                      disabled={!query.trim()}
+                    >
+                      Confirm Booking
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

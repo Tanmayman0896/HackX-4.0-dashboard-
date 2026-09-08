@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { CheckCircle, Clock, Eye, Filter, MapPin, Search } from "lucide-react";
 import { apiService } from "@/lib/service";
+import { CardListSkeleton } from "@/components/ui/dashboard-skeletons";
 // import { useToast } from "@/hooks/use-toast";
 import type { Judge, Team, TeamJudgeMapping } from "@/lib/types";
 
@@ -187,117 +188,121 @@ export function JudgeTeamMappingTab({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredJudges.map((judge) => {
-              const stats = getJudgeStats(judge.id);
-              const assignedTeams = mappings.filter(
-                (m) => m.judge.id === judge.id,
-              );
+          {judges.length === 0 ? (
+            <CardListSkeleton count={3} />
+          ) : (
+            <div className="space-y-4">
+              {filteredJudges.map((judge) => {
+                const stats = getJudgeStats(judge.id);
+                const assignedTeams = mappings.filter(
+                  (m) => m.judge.id === judge.id,
+                );
 
-              return (
-                <Card key={judge.id} className="border-l-hackx border-l-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="">{judge.name}</CardTitle>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">
-                          {stats.assigned} teams assigned
-                        </Badge>
-                        <Badge
-                          variant={
-                            stats.evaluated === stats.assigned
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
-                          {stats.evaluated}/{stats.assigned} evaluated
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      {/* Progress Bar */}
-                      <div>
-                        <div className="mb-1 flex items-center justify-between text-sm">
-                          <span>Evaluation Progress</span>
-                          <span>
-                            {stats.assigned > 0
-                              ? Math.round(
-                                  (stats.evaluated / stats.assigned) * 100,
-                                )
-                              : 0}
-                            %
-                          </span>
-                        </div>
-                        <div className="bg-muted h-2 w-full rounded-full">
-                          <div
-                            className="bg-ok h-2 rounded-full"
-                            style={{
-                              width:
-                                stats.assigned > 0
-                                  ? `${(stats.evaluated / stats.assigned) * 100}%`
-                                  : "0%",
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Quick Team Preview */}
-                      {assignedTeams.length > 0 && (
+                return (
+                  <Card key={judge.id} className="border-l-hackx border-l-2">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <Label className="text-muted-foreground text-sm">
-                            Assigned Teams:
-                          </Label>
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {assignedTeams.slice(0, 3).map((mapping) => {
-                              const isEvaluated = evaluatedTeams.includes(
-                                mapping.teamId,
-                              );
-                              return (
-                                <Badge
-                                  key={mapping.team.id}
-                                  variant={
-                                    isEvaluated ? "default" : "secondary"
-                                  }
-                                  className="text-xs"
-                                >
-                                  {isEvaluated ? (
-                                    <CheckCircle className="mr-1 h-3 w-3" />
-                                  ) : (
-                                    <Clock className="mr-1 h-3 w-3" />
-                                  )}
-                                  {getTeamName(mapping.team.id)}
-                                </Badge>
-                              );
-                            })}
-                            {assignedTeams.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{assignedTeams.length - 3} more
-                              </Badge>
-                            )}
+                          <CardTitle className="">{judge.name}</CardTitle>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            {stats.assigned} teams assigned
+                          </Badge>
+                          <Badge
+                            variant={
+                              stats.evaluated === stats.assigned
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {stats.evaluated}/{stats.assigned} evaluated
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                        {/* Progress Bar */}
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-sm">
+                            <span>Evaluation Progress</span>
+                            <span>
+                              {stats.assigned > 0
+                                ? Math.round(
+                                    (stats.evaluated / stats.assigned) * 100,
+                                  )
+                                : 0}
+                              %
+                            </span>
+                          </div>
+                          <div className="bg-muted h-2 w-full rounded-full">
+                            <div
+                              className="bg-ok h-2 rounded-full"
+                              style={{
+                                width:
+                                  stats.assigned > 0
+                                    ? `${(stats.evaluated / stats.assigned) * 100}%`
+                                    : "0%",
+                              }}
+                            />
                           </div>
                         </div>
-                      )}
 
-                      <div className="flex justify-end">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => viewJudgeTeams(judge.id)}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          View All Teams ({stats.assigned})
-                        </Button>
+                        {/* Quick Team Preview */}
+                        {assignedTeams.length > 0 && (
+                          <div>
+                            <Label className="text-muted-foreground text-sm">
+                              Assigned Teams:
+                            </Label>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {assignedTeams.slice(0, 3).map((mapping) => {
+                                const isEvaluated = evaluatedTeams.includes(
+                                  mapping.teamId,
+                                );
+                                return (
+                                  <Badge
+                                    key={mapping.team.id}
+                                    variant={
+                                      isEvaluated ? "default" : "secondary"
+                                    }
+                                    className="text-xs"
+                                  >
+                                    {isEvaluated ? (
+                                      <CheckCircle className="mr-1 h-3 w-3" />
+                                    ) : (
+                                      <Clock className="mr-1 h-3 w-3" />
+                                    )}
+                                    {getTeamName(mapping.team.id)}
+                                  </Badge>
+                                );
+                              })}
+                              {assignedTeams.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{assignedTeams.length - 3} more
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => viewJudgeTeams(judge.id)}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            View All Teams ({stats.assigned})
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 

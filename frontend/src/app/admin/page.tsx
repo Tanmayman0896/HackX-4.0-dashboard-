@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppShell } from "@/components/shell/app-shell";
 import { Metric, MetricRow } from "@/components/shell/primitives";
+import { AdminDashboardSkeleton } from "@/components/ui/dashboard-skeletons";
 import { GitBranch, LayoutGrid } from "lucide-react";
 import {
   Dialog,
@@ -87,6 +88,7 @@ function ago(dateString: string) {
 
 export default function AdminDashboard() {
   // const [passwordChanged, setPasswordChanged] = useState(true); // Bypass password change logic
+  const [isLoading, setIsLoading] = useState(true);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [announcement, setAnnouncement] = useState("");
   const [teamSearch, setTeamSearch] = useState("");
@@ -220,26 +222,30 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    apiService
-      .getTeams()
-      .then((res) => setTeams(Array.isArray(res) ? res : []))
-      .catch(() => setTeams([]));
-    apiService
-      .getJudges()
-      .then((res) => setJudges(Array.isArray(res) ? res : []))
-      .catch(() => setJudges([]));
-    apiService
-      .getMentors()
-      .then((res) => setMentors(Array.isArray(res) ? res : []))
-      .catch(() => setMentors([]));
-    apiService
-      .getProblemStatements()
-      .then((res) => setProblemStatements(Array.isArray(res) ? res : []))
-      .catch(() => setProblemStatements([]));
-    apiService
-      .getAnnouncements()
-      .then((res) => setAnnouncements(Array.isArray(res) ? res : []))
-      .catch(() => setAnnouncements([]));
+    Promise.allSettled([
+      apiService
+        .getTeams()
+        .then((res) => setTeams(Array.isArray(res) ? res : []))
+        .catch(() => setTeams([])),
+      apiService
+        .getJudges()
+        .then((res) => setJudges(Array.isArray(res) ? res : []))
+        .catch(() => setJudges([])),
+      apiService
+        .getMentors()
+        .then((res) => setMentors(Array.isArray(res) ? res : []))
+        .catch(() => setMentors([])),
+      apiService
+        .getProblemStatements()
+        .then((res) => setProblemStatements(Array.isArray(res) ? res : []))
+        .catch(() => setProblemStatements([])),
+      apiService
+        .getAnnouncements()
+        .then((res) => setAnnouncements(Array.isArray(res) ? res : []))
+        .catch(() => setAnnouncements([])),
+    ]).finally(() => {
+      setIsLoading(false);
+    });
 
     async function onWebsocketMessage(ws: WebSocket, ev: MessageEvent) {
       const data = JSON.parse(ev.data) as WebsocketData;
@@ -355,6 +361,11 @@ export default function AdminDashboard() {
     }
     return { variant: "secondary" as const, className: "text-xs" };
   }
+
+  if (isLoading) {
+    return <AdminDashboardSkeleton />;
+  }
+
   return (
     <>
       <Tabs defaultValue="overview">

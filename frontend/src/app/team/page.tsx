@@ -10,7 +10,8 @@ import { SubmissionsTab } from "@/components/participant/submissions-tab";
 import { BookmarksTab } from "@/components/participant/bookmarks-tab";
 import { apiService } from "@/lib/service";
 import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
-import { BootScreen, EmptyState } from "@/components/shell/primitives";
+import { EmptyState } from "@/components/shell/primitives";
+import { TeamDashboardSkeleton } from "@/components/ui/dashboard-skeletons";
 import {
   Bookmark,
   FileText,
@@ -31,6 +32,7 @@ import type {
 
 export default function TeamDashboard() {
   const [passwordChanged, setPasswordChanged] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [selectedPS, setSelectedPS] = useState<ProblemStatement | null>(null);
   const [bookmarkedPS, setBookmarkedPS] = useState<ProblemStatement[]>([]);
   const [selectedMentor, setSelectedMentor] =
@@ -105,6 +107,8 @@ export default function TeamDashboard() {
       setNotDonePreviousMentorship(notDonePreviousMentorshipData);
     } catch (error) {
       console.error("Failed to load data:", error);
+    } finally {
+      setIsInitialLoading(false);
     }
   };
 
@@ -143,8 +147,8 @@ export default function TeamDashboard() {
   //   return <PasswordChangeForm onPasswordChanged={() => setPasswordChanged(true)} />
   // }
 
-  if (!team) {
-    return <BootScreen label="Loading team data" />;
+  if (isInitialLoading || !team) {
+    return <TeamDashboardSkeleton />;
   }
 
   return (

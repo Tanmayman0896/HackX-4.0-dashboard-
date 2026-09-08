@@ -2,6 +2,7 @@
 
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
+import { TopLoadingBar } from "@/components/ui/loading-bar";
 import React from "react";
 
 export default function LayoutClient({
@@ -16,6 +17,7 @@ export default function LayoutClient({
       enableSystem={false}
       storageKey="hackx-theme"
     >
+      <TopLoadingBar />
       {children}
       <Toaster />
     </ThemeProvider>

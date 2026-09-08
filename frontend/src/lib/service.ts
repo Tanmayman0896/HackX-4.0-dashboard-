@@ -473,10 +473,34 @@ class ApiService {
     return this.request("/round2/rooms");
   }
 
+  async createRound2Room(data: {
+    name: string;
+    capacity?: number;
+    block?: string;
+    floor?: string;
+  }): Promise<Round2Room> {
+    return this.request("/round2/rooms", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteRound2Room(roomId: string): Promise<{ message: string }> {
+    return this.request(`/round2/rooms/${roomId}`, {
+      method: "DELETE",
+    });
+  }
+
   async mapJudgeToRoom(judgeId: string, roomId: string): Promise<void> {
     return this.request("/round2/map-judge", {
       method: "POST",
       body: JSON.stringify({ judgeId, roomId }),
+    });
+  }
+
+  async removeJudgeFromRound2Room(judgeId: string): Promise<void> {
+    return this.request(`/round2/judges/${judgeId}`, {
+      method: "DELETE",
     });
   }
 
