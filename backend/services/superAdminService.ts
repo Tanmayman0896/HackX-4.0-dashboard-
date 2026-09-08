@@ -1200,6 +1200,7 @@ export class SuperAdminService {
           username,
           password: hash,
           role: "TEAM",
+          teamId: payload.teamId,
         },
       });
       isNewUser = true;
@@ -1239,27 +1240,35 @@ export class SuperAdminService {
       },
     });
 
-    const emptyRoom = await prisma.round1Room.findFirst({
+    const availableRoom = await prisma.round1Room.findFirst({
       where: {
-        teams: {
-          none: {},
-        },
+        filled: {lt: prisma.round1Room.fields.capacity},
       },
-    })
+      orderBy: {id: "asc"},
+    });
+
+    if (!availableRoom) {
+      throw new Error("No available Round1Room found");
+    }
 
     const t3 = prisma.team.update({
       where: {id: payload.teamId},
       data: {
         round1Room: {
           connect: {
-            name: "001",
+            id: availableRoom.id,
           },
         },
       },
       select: {round1Room: true},
     });
 
-    const [checkpoint, round1Room] = await prisma.$transaction([t2, t3]);
+    const t4 = prisma.round1Room.update({
+      where: {id: availableRoom.id},
+      data: {filled: {increment: 1}},
+    });
+
+    const [checkpoint, round1Room] = await prisma.$transaction([t2, t3, t4]);
     return {
       username: username,
       round1Room: round1Room.round1Room,
