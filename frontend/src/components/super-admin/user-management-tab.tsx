@@ -22,6 +22,7 @@ import {
 import { Filter, RotateCcw, Search, UserCheck, UserX } from "lucide-react";
 import { apiService } from "@/lib/service";
 import { useToast } from "@/hooks/use-toast";
+import { TableSkeleton } from "@/components/ui/dashboard-skeletons";
 import type { User } from "@/lib/types";
 
 interface UserManagementTabProps {
@@ -223,85 +224,89 @@ export function UserManagementTab({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="hover:bg-muted/60 flex items-center justify-between rounded-lg border p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`h-3 w-3 rounded-full ${getRoleColor(user.role || "")}`}
-                    />
-                    <div>
-                      <h4 className="font-medium">
-                        {user.username || "Unknown User"}
-                      </h4>
-                      <div className="mt-1 flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          {formatRole(user.role)}
-                        </Badge>
-                        <Badge variant="secondary" className="text-xs">
-                          ID: {user.id}
-                        </Badge>
-                        {user.teamId && (
-                          <Badge variant="secondary" className="text-xs">
-                            Team Name: {user.participantTeam.name}
+          {users.length === 0 ? (
+            <TableSkeleton rows={5} />
+          ) : (
+            <div className="space-y-3">
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <div
+                    key={user.id}
+                    className="hover:bg-muted/60 flex items-center justify-between rounded-lg border p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`h-3 w-3 rounded-full ${getRoleColor(user.role || "")}`}
+                      />
+                      <div>
+                        <h4 className="font-medium">
+                          {user.username || "Unknown User"}
+                        </h4>
+                        <div className="mt-1 flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {formatRole(user.role)}
                           </Badge>
-                        )}
+                          <Badge variant="secondary" className="text-xs">
+                            ID: {user.id}
+                          </Badge>
+                          {user.teamId && (
+                            <Badge variant="secondary" className="text-xs">
+                              Team Name: {user.participantTeam.name}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={
+                          user.status === "ACTIVE" ? "default" : "destructive"
+                        }
+                      >
+                        {user.status === "ACTIVE" ? (
+                          <UserCheck className="mr-1 h-3 w-3" />
+                        ) : (
+                          <UserX className="mr-1 h-3 w-3" />
+                        )}
+                        {user.status || "Unknown"}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleResetUserPassword(user.id)}
+                      >
+                        Reset Password
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={
+                          user.status === "ACTIVE" ? "destructive" : "default"
+                        }
+                        onClick={() => handleToggleUserStatus(user.id)}
+                      >
+                        {user.status === "ACTIVE" ? "Disable" : "Enable"}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant={
-                        user.status === "ACTIVE" ? "default" : "destructive"
-                      }
-                    >
-                      {user.status === "ACTIVE" ? (
-                        <UserCheck className="mr-1 h-3 w-3" />
-                      ) : (
-                        <UserX className="mr-1 h-3 w-3" />
-                      )}
-                      {user.status || "Unknown"}
-                    </Badge>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleResetUserPassword(user.id)}
-                    >
-                      Reset Password
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={
-                        user.status === "ACTIVE" ? "destructive" : "default"
-                      }
-                      onClick={() => handleToggleUserStatus(user.id)}
-                    >
-                      {user.status === "ACTIVE" ? "Disable" : "Enable"}
-                    </Button>
-                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center">
+                  <Search className="text-muted-foreground/60 mx-auto mb-4 h-12 w-12" />
+                  <p className="text-muted-foreground">
+                    No users found matching the current filters
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 bg-transparent"
+                    onClick={clearFilters}
+                  >
+                    Clear Filters
+                  </Button>
                 </div>
-              ))
-            ) : (
-              <div className="py-8 text-center">
-                <Search className="text-muted-foreground/60 mx-auto mb-4 h-12 w-12" />
-                <p className="text-muted-foreground">
-                  No users found matching the current filters
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 bg-transparent"
-                  onClick={clearFilters}
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

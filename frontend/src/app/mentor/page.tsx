@@ -8,12 +8,13 @@ import { MentorInfoTab } from "@/components/mentor/mentor-info-tab";
 import { QueueManagement } from "@/components/mentor/queue-management";
 import { apiService } from "@/lib/service";
 import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
-import { BootScreen } from "@/components/shell/primitives";
+import { MentorDashboardSkeleton } from "@/components/ui/dashboard-skeletons";
 import { LayoutGrid, ListOrdered } from "lucide-react";
 import type { Mentor, QueueItem } from "@/lib/types";
 
 export default function MentorDashboard() {
   const [passwordChanged, setPasswordChanged] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [mentorInfo, setMentorInfo] = useState<Mentor | null>(null);
@@ -42,6 +43,8 @@ export default function MentorDashboard() {
       setMentorInfo(profile);
     } catch (error) {
       console.error("Failed to load data:", error);
+    } finally {
+      setIsInitialLoading(false);
     }
   };
 
@@ -61,8 +64,8 @@ export default function MentorDashboard() {
   //   return <PasswordChangeForm onPasswordChanged={() => setPasswordChanged(true)} />
   // }
 
-  if (!mentorInfo) {
-    return <BootScreen label="Loading mentor data" />;
+  if (isInitialLoading || !mentorInfo) {
+    return <MentorDashboardSkeleton />;
   }
 
   return (

@@ -400,12 +400,16 @@ export class AdminService {
   // Round 2 Management (Limited)
   async getRound2Rooms() {
     return prisma.round2Room.findMany({
+      orderBy: { name: "asc" },
       include: {
         teams: {
-          select: {id: true, name: true, teamId: true},
+          select: { id: true, name: true, teamId: true },
+        },
+        judges: {
+          select: { id: true, name: true },
         },
         _count: {
-          select: {teams: true},
+          select: { teams: true, judges: true },
         },
       },
     });

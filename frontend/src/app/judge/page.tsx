@@ -29,7 +29,6 @@ import { Evaluation, Judge } from "@/lib/types";
 import { apiService } from "@/lib/service";
 import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
 import {
-  BootScreen,
   EmptyState,
   Metric,
   MetricRow,
@@ -39,6 +38,10 @@ import {
   PanelTitle,
   Section,
 } from "@/components/shell/primitives";
+import {
+  JudgeDashboardSkeleton,
+  EvaluationCardsSkeleton,
+} from "@/components/ui/dashboard-skeletons";
 import { useToast } from "@/hooks/use-toast";
 
 type ScoreKeys =
@@ -71,6 +74,7 @@ export default function JudgeDashboard() {
   const [assignedTeams, setAssignedTeams] = useState<Evaluation[]>([]);
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
   const [activeRound, setActiveRound] = useState<1 | 3>(1);
+  const [isTeamsLoading, setIsTeamsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -81,10 +85,12 @@ export default function JudgeDashboard() {
   }, []);
 
   useEffect(() => {
+    setIsTeamsLoading(true);
     apiService
       .getEvaluations(activeRound)
       .then((res) => setAssignedTeams(Array.isArray(res) ? res : []))
-      .catch(() => setAssignedTeams([]));
+      .catch(() => setAssignedTeams([]))
+      .finally(() => setIsTeamsLoading(false));
   }, [activeRound]);
 
   const scoringCriteria: Criterion[] = [
@@ -214,7 +220,7 @@ export default function JudgeDashboard() {
   // }
 
   if (!judge) {
-    return <BootScreen label="Loading judge data" />;
+    return <JudgeDashboardSkeleton />;
   }
 
   const evaluatedCount = assignedTeams.filter((t) => t.evaluated).length;
@@ -299,7 +305,9 @@ export default function JudgeDashboard() {
           title="Teams assigned for evaluation"
           description={`Round ${activeRound} · showing ${filteredEvaluations.length} of ${assignedTeams.length}`}
         >
-          {filteredEvaluations.length === 0 ? (
+          {isTeamsLoading ? (
+            <EvaluationCardsSkeleton count={3} />
+          ) : filteredEvaluations.length === 0 ? (
             <EmptyState
               icon={<MapPin />}
               title="Nothing to evaluate"

@@ -24,6 +24,7 @@ import {
 import { RefreshCw, Star, StarOff } from "lucide-react";
 import { apiService } from "@/lib/service";
 import { useToast } from "@/hooks/use-toast";
+import { ProblemStatementsSkeleton } from "@/components/ui/dashboard-skeletons";
 import type { Domain, ProblemStatement } from "@/lib/types";
 
 interface ProblemStatementsProps {
@@ -89,6 +90,10 @@ export function ProblemStatements({
       });
     }
   };
+
+  if (domains.length === 0) {
+    return <ProblemStatementsSkeleton />;
+  }
 
   return (
     <div className="space-y-6">

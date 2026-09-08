@@ -22,6 +22,7 @@ import {
 import { Download, FileText, Filter, RefreshCw, Search } from "lucide-react";
 import { apiService } from "@/lib/service";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { LogEntry, LogFilter } from "@/lib/types";
 
 interface ActivityLogsProps {
@@ -248,7 +249,25 @@ export function ActivityLogs({
         </CardHeader>
         <CardContent>
           <div className="max-h-96 space-y-3 overflow-y-auto">
-            {filteredLogs.length > 0 ? (
+            {isLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="border-border space-y-2 rounded-lg border p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-24 rounded" />
+                        <Skeleton className="h-4 w-28" />
+                      </div>
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                    <Skeleton className="h-3.5 w-3/4" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredLogs.length > 0 ? (
               filteredLogs.map((log) => (
                 <div
                   key={log.id}

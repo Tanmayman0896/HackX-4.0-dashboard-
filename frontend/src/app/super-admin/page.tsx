@@ -63,6 +63,7 @@ import {
   PanelHeader,
   PanelTitle,
 } from "@/components/shell/primitives";
+import { SuperAdminDashboardSkeleton } from "@/components/ui/dashboard-skeletons";
 import {
   DoorOpen,
   Gavel,
@@ -94,6 +95,7 @@ interface MentorDetails {
 
 export default function SuperAdminDashboard() {
   const [passwordChanged, setPasswordChanged] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [psLocked, setPsLocked] = useState(false);
   const [mentorshipLocked, setMentorshipLocked] = useState(false);
   const [round1Locked, setRound1Locked] = useState(false);
@@ -122,46 +124,49 @@ export default function SuperAdminDashboard() {
   const { toast } = useToast();
 
   useEffect(function getAllData() {
-    apiService
-      .getSystemStatus()
-      .then((data) => {
-        if (data) {
-          setPsLocked(data.problem_statements_locked === "true");
-          setMentorshipLocked(data.mentorship_locked === "true");
-          setRound1Locked(data.round1_locked === "true");
-          setRound2Locked(data.round2_locked === "true");
-        }
-      })
-      .catch((err) => console.error("Error fetching system status:", err));
-
-    apiService
-      .getAllUsers()
-      .then((res) => setUsers(Array.isArray(res) ? res : []))
-      .catch(() => setUsers([]));
-    apiService
-      .getTeams()
-      .then((res) => setTeams(Array.isArray(res) ? res : []))
-      .catch(() => setTeams([]));
-    apiService
-      .getJudges()
-      .then((res) => setJudges(Array.isArray(res) ? res : []))
-      .catch(() => setJudges([]));
-    apiService
-      .getLogs()
-      .then((res) => setLogs(Array.isArray(res) ? res : []))
-      .catch(() => setLogs([]));
-    apiService
-      .getProblemStatements()
-      .then((res) => setProblemStatements(Array.isArray(res) ? res : []))
-      .catch(() => setProblemStatements([]));
-    apiService
-      .getAnnouncements()
-      .then((res) => setAnnouncements(Array.isArray(res) ? res : []))
-      .catch(() => setAnnouncements([]));
-    apiService
-      .getMentors()
-      .then((res) => setMentors(Array.isArray(res) ? res : []))
-      .catch(() => setMentors([]));
+    Promise.allSettled([
+      apiService
+        .getSystemStatus()
+        .then((data) => {
+          if (data) {
+            setPsLocked(data.problem_statements_locked === "true");
+            setMentorshipLocked(data.mentorship_locked === "true");
+            setRound1Locked(data.round1_locked === "true");
+            setRound2Locked(data.round2_locked === "true");
+          }
+        })
+        .catch((err) => console.error("Error fetching system status:", err)),
+      apiService
+        .getAllUsers()
+        .then((res) => setUsers(Array.isArray(res) ? res : []))
+        .catch(() => setUsers([])),
+      apiService
+        .getTeams()
+        .then((res) => setTeams(Array.isArray(res) ? res : []))
+        .catch(() => setTeams([])),
+      apiService
+        .getJudges()
+        .then((res) => setJudges(Array.isArray(res) ? res : []))
+        .catch(() => setJudges([])),
+      apiService
+        .getLogs()
+        .then((res) => setLogs(Array.isArray(res) ? res : []))
+        .catch(() => setLogs([])),
+      apiService
+        .getProblemStatements()
+        .then((res) => setProblemStatements(Array.isArray(res) ? res : []))
+        .catch(() => setProblemStatements([])),
+      apiService
+        .getAnnouncements()
+        .then((res) => setAnnouncements(Array.isArray(res) ? res : []))
+        .catch(() => setAnnouncements([])),
+      apiService
+        .getMentors()
+        .then((res) => setMentors(Array.isArray(res) ? res : []))
+        .catch(() => setMentors([])),
+    ]).finally(() => {
+      setIsLoading(false);
+    });
   }, []);
 
   // Add refresh functions
@@ -426,6 +431,10 @@ export default function SuperAdminDashboard() {
         </Card>
       </div>
     );
+  }
+
+  if (isLoading) {
+    return <SuperAdminDashboardSkeleton />;
   }
 
   return (

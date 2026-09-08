@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { apiService } from "@/lib/service";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Judge, Round3Candidate, Round3Room } from "@/lib/types";
 
 const TOP_TEAMS_COUNT = 30;
@@ -210,8 +211,39 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <RefreshCw className="text-muted-foreground h-6 w-6 animate-spin" />
+      <div className="space-y-6">
+        <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <Skeleton className="h-6 w-56" />
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-24 rounded-md" />
+            <Skeleton className="h-8 w-36 rounded-md" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="space-y-2 p-4">
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-7 w-16" />
+              <Skeleton className="h-3 w-32" />
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="space-y-3 p-4">
+              <div className="border-border flex items-center justify-between border-b pb-3">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+              <div className="space-y-2 pt-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-52" />
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
