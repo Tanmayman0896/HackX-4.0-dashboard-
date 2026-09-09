@@ -24,7 +24,11 @@ dotenv.config();
 const app = express();
 // Running behind nginx: trust the first proxy hop for req.ip / X-Forwarded-*
 app.set("trust proxy", 1);
-const wss = new WebSocketServer({port: 9000})
+const WS_PORT = process.env.WS_PORT ? parseInt(process.env.WS_PORT, 10) : 9000;
+const wss = new WebSocketServer({ port: WS_PORT, host: "0.0.0.0" });
+wss.on("error", (error) => {
+  console.error("WebSocket server error:", error);
+});
 const PORT = process.env.PORT || 4000;
 const prisma = new PrismaClient();
 
@@ -146,22 +150,37 @@ async function startServer() {
 
 wss.on("connection", (ws: AuthenticatedWebSocket) => {
   console.log("New WebSocket connection");
-  setTimeout(function check() {
+  const authTimeout = setTimeout(function check() {
     if (!ws.id) {
       ws.close();
       console.log("WebSocket connection closed due to authentication timeout");
     }
-  }, 2000);
+  }, 10000);
 
   ws.on("message", async (message: Buffer) => {
     try {
-      const parsedMessage: WebSocketMessage = JSON.parse(message.toString())
+      const parsedMessage: WebSocketMessage = JSON.parse(message.toString());
 
-      if (parsedMessage.type === "authenticate" && parsedMessage.token) {
+      if (parsedMessage.type === "authenticate") {
+        if (!parsedMessage.token) {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              data: { message: "Authentication token required" },
+            }),
+          );
+          ws.close();
+          return;
+        }
+
         try {
-          const decoded = jwt.verify(parsedMessage.token, process.env.JWT_SECRET!) as any
+          const decoded = jwt.verify(
+            parsedMessage.token,
+            process.env.JWT_SECRET!,
+          ) as any;
           ws.id = decoded.id;
           ws.userRole = decoded.role;
+          clearTimeout(authTimeout);
 
           // Store authenticated client
           clients.set(decoded.id, ws);
@@ -169,7 +188,7 @@ wss.on("connection", (ws: AuthenticatedWebSocket) => {
           ws.send(
             JSON.stringify({
               type: "authenticated",
-              data: {userId: decoded.id, role: decoded.role},
+              data: { userId: decoded.id, role: decoded.role },
             }),
           );
 
@@ -179,17 +198,24 @@ wss.on("connection", (ws: AuthenticatedWebSocket) => {
           ws.send(
             JSON.stringify({
               type: "error",
-              data: {message: "Authentication failed"},
+              data: { message: "Authentication failed" },
             }),
           );
           ws.close();
         }
+        return;
       }
 
       // Handle other message types based on user role
       if (ws.id && ws.userRole) {
         await handleMessage(ws, parsedMessage);
       } else {
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            data: { message: "Unauthorized" },
+          }),
+        );
         ws.close();
       }
     } catch (error) {
@@ -197,15 +223,16 @@ wss.on("connection", (ws: AuthenticatedWebSocket) => {
       ws.send(
         JSON.stringify({
           type: "error",
-          data: {message: "Invalid message format"},
+          data: { message: "Invalid message format" },
         }),
       );
     }
-  })
+  });
 
   ws.on("close", () => {
+    clearTimeout(authTimeout);
     if (ws.id) {
-      clients.delete(ws.id)
+      clients.delete(ws.id);
     }
     if (admins.includes(ws)) {
       const index = admins.indexOf(ws);
@@ -213,16 +240,18 @@ wss.on("connection", (ws: AuthenticatedWebSocket) => {
         admins.splice(index, 1);
       }
     }
-    console.log(`User ${ws.id} disconnected`);
+    console.log(`User ${ws.id || "unauthenticated"} disconnected`);
   });
-})
+});
 
 async function handleMessage(ws: AuthenticatedWebSocket, message: WebSocketMessage) {
   switch (message.type) {
     case "subscribe_checkpoints":
       if (ws.userRole === "ADMIN" || ws.userRole === "SUPER_ADMIN") {
         // Subscribe to real-time notifications
-        admins.push(ws);
+        if (!admins.includes(ws)) {
+          admins.push(ws);
+        }
         ws.send(
           JSON.stringify({
             type: "subscribed",

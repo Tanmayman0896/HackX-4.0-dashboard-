@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:ws": "tsx scripts/test-websocket-live.ts",
     "test:e2e-sim": "tsx scripts/run-e2e-simulation.ts",
     "db:seed": "tsx scripts/seed.ts",
     "db:seed-admins": "tsx scripts/seed-admins.ts",

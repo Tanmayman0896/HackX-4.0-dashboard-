@@ -54,7 +54,7 @@ import { ActivityLogs } from "@/components/super-admin/activity-logs";
 import { UserManagementTab } from "@/components/super-admin/user-management-tab";
 import { TeamPage } from "@/components/super-admin/team-page";
 import { apiService } from "@/lib/service";
-import { AppShell } from "@/components/shell/app-shell";
+import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
 import {
   Metric,
   MetricRow,
@@ -120,10 +120,18 @@ export default function SuperAdminDashboard() {
   const [addJudgeDetails, setAddJudgeDetails] = useState({
     name: "",
   });
+  const [currentUser, setCurrentUser] = useState<{ username: string } | null>(
+    null,
+  );
 
   const { toast } = useToast();
 
   useEffect(function getAllData() {
+    const user = authService.getUser();
+    if (user) {
+      setCurrentUser(user);
+    }
+
     Promise.allSettled([
       apiService
         .getSystemStatus()
@@ -443,6 +451,12 @@ export default function SuperAdminDashboard() {
         role="Super Admin"
         title="Super Admin Dashboard"
         subtitle="Complete system control and monitoring"
+        identity={
+          <ShellIdentity
+            name={currentUser?.username || "Super Admin"}
+            meta="Elevated access"
+          />
+        }
         actions={
           <span className="border-danger/25 bg-danger/10 text-danger-ink hidden h-8.5 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium sm:inline-flex">
             <Shield className="size-3.5" />

@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AppShell } from "@/components/shell/app-shell";
+import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
 import { Metric, MetricRow } from "@/components/shell/primitives";
 import { AdminDashboardSkeleton } from "@/components/ui/dashboard-skeletons";
 import { GitBranch, LayoutGrid } from "lucide-react";
@@ -113,6 +113,9 @@ export default function AdminDashboard() {
   const [problemStatements, setProblemStatements] = useState<
     ProblemStatement[]
   >([]);
+  const [currentUser, setCurrentUser] = useState<{ username: string } | null>(
+    null,
+  );
   const { toast } = useToast();
 
   // Add filtered teams logic
@@ -131,7 +134,7 @@ export default function AdminDashboard() {
   }
 
   function updateWebsocketCheckpoint(checkpoint: Checkpoint) {
-    if (!socket) return;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
 
     socket.send(
       JSON.stringify({
@@ -222,6 +225,11 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    const user = authService.getUser();
+    if (user) {
+      setCurrentUser(user);
+    }
+
     Promise.allSettled([
       apiService
         .getTeams()
@@ -248,18 +256,22 @@ export default function AdminDashboard() {
     });
 
     async function onWebsocketMessage(ws: WebSocket, ev: MessageEvent) {
-      const data = JSON.parse(ev.data) as WebsocketData;
-      if (data.type === "authenticated") {
-        setAuthenticated(true);
-      }
+      try {
+        const data = JSON.parse(ev.data) as WebsocketData;
+        if (data.type === "authenticated") {
+          setAuthenticated(true);
+        }
 
-      if (data.type === "checkpoint") {
-        updateTeamCheckpoint(data.teamId, data.checkpoint);
-      } else if (data.type === "subscribed") {
-        toast({
-          title: "Event subscribed!",
-          description: `Updating ${data.channel} in real time`,
-        });
+        if (data.type === "checkpoint") {
+          updateTeamCheckpoint(data.teamId, data.checkpoint);
+        } else if (data.type === "subscribed") {
+          toast({
+            title: "Event subscribed!",
+            description: `Updating ${data.channel} in real time`,
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to parse websocket message:", err);
       }
     }
 
@@ -276,17 +288,27 @@ export default function AdminDashboard() {
     async function handleWebsocket(ws: WebSocket) {
       setSocket(ws);
       await waitForOpen(ws);
-      console.log("sending");
-      ws.send(
-        JSON.stringify({
-          type: "authenticate",
-          token: authService.getToken(),
-        }),
-      );
+      if (ws.readyState === WebSocket.OPEN) {
+        console.log("sending authentication");
+        ws.send(
+          JSON.stringify({
+            type: "authenticate",
+            token: authService.getToken(),
+          }),
+        );
+      }
       ws.onmessage = (data) => onWebsocketMessage(ws, data);
     }
 
-    wsService.connect().then(handleWebsocket);
+    wsService
+      .connect()
+      .then(handleWebsocket)
+      .catch((err) => {
+        console.warn(
+          "Real-time updates connection skipped or failed:",
+          err?.message || err,
+        );
+      });
 
     return () => {
       wsService.disconnect();
@@ -295,7 +317,8 @@ export default function AdminDashboard() {
 
   // 🔑 second effect reacts when authenticated/socket changes
   useEffect(() => {
-    if (!socket || !authenticated) return;
+    if (!socket || !authenticated || socket.readyState !== WebSocket.OPEN)
+      return;
 
     socket.send(
       JSON.stringify({
@@ -373,6 +396,12 @@ export default function AdminDashboard() {
           role="Admin"
           title="Admin Dashboard"
           subtitle="MUJ HackX 4.0 · operations"
+          identity={
+            <ShellIdentity
+              name={currentUser?.username || "Admin"}
+              meta="Operations Admin"
+            />
+          }
           actions={
             <Badge variant="green" className="h-8.5 px-2.5" data-dot={false}>
               <span className="relative flex size-1.5">

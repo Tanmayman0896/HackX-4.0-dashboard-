@@ -1,16 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, LogOut, Menu } from "lucide-react";
 
 import { BrandLockup } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { authService } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 interface AppShellProps {
@@ -29,6 +39,8 @@ interface AppShellProps {
   actions?: React.ReactNode;
   /** Signed-in identity, pinned to the foot of the rail. */
   identity?: React.ReactNode;
+  /** Whether to show the logout action. Defaults to true. */
+  showLogout?: boolean;
   children: React.ReactNode;
 }
 
@@ -81,11 +93,17 @@ export function AppShell({
   nav,
   actions,
   identity,
+  showLogout = true,
   children,
 }: AppShellProps) {
   const railRef = React.useRef<HTMLElement>(null);
   const activeLabel = useActiveNavLabel(railRef);
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [logoutOpen, setLogoutOpen] = React.useState(false);
+
+  const handleLogout = React.useCallback(() => {
+    authService.logout();
+  }, []);
 
   // Selecting a destination should dismiss the drawer. Delegated so the pages
   // can keep passing a plain <TabsList> with no extra wiring.
@@ -107,9 +125,28 @@ export function AppShell({
           {nav}
         </nav>
 
-        {identity ? (
-          <div className="border-hairline shrink-0 border-t px-5 py-3.5">
-            {identity}
+        {identity || showLogout ? (
+          <div className="border-hairline flex shrink-0 items-center justify-between gap-2 border-t px-4 py-3">
+            {identity ? (
+              <div className="min-w-0 flex-1">{identity}</div>
+            ) : (
+              <div className="text-muted-foreground min-w-0 flex-1 truncate text-xs font-medium">
+                {role}
+              </div>
+            )}
+            {showLogout && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setLogoutOpen(true)}
+                className="text-muted-foreground hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive size-8 shrink-0 rounded-md transition-colors"
+                title="Log out"
+                aria-label="Log out"
+              >
+                <LogOut className="size-3.5" />
+              </Button>
+            )}
           </div>
         ) : null}
       </aside>
@@ -133,6 +170,20 @@ export function AppShell({
             <div className="ml-auto flex min-w-0 shrink-0 items-center gap-2">
               {actions}
               <ThemeToggle />
+              {showLogout && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLogoutOpen(true)}
+                  className="border-border bg-card text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive h-8.5 gap-1.5 px-2.5 text-xs font-medium transition-colors"
+                  title="Log out"
+                  aria-label="Log out"
+                >
+                  <LogOut className="size-3.5" />
+                  <span className="hidden sm:inline">Log out</span>
+                </Button>
+              )}
             </div>
           </div>
 
@@ -172,15 +223,70 @@ export function AppShell({
                   {nav}
                 </nav>
 
-                {identity ? (
-                  <div className="border-hairline shrink-0 border-t px-5 py-3.5">
-                    {identity}
+                {identity || showLogout ? (
+                  <div className="border-hairline flex shrink-0 items-center justify-between gap-2 border-t px-4 py-3">
+                    {identity ? (
+                      <div className="min-w-0 flex-1">{identity}</div>
+                    ) : (
+                      <div className="text-muted-foreground min-w-0 flex-1 truncate text-xs font-medium">
+                        {role}
+                      </div>
+                    )}
+                    {showLogout && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setLogoutOpen(true);
+                        }}
+                        className="text-muted-foreground hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive size-8 shrink-0 rounded-md transition-colors"
+                        title="Log out"
+                        aria-label="Log out"
+                      >
+                        <LogOut className="size-3.5" />
+                      </Button>
+                    )}
                   </div>
                 ) : null}
               </SheetContent>
             </Sheet>
           </div>
         </header>
+
+        <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+                <LogOut className="text-destructive size-4" />
+                Log out
+              </DialogTitle>
+              <DialogDescription className="text-sm">
+                Are you sure you want to log out of HackX 4.0? You will need to
+                sign in again to access the dashboard.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-row justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLogoutOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleLogout}
+                className="gap-1.5"
+              >
+                <LogOut className="size-3.5" />
+                Log out
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8">
           <div className="mx-auto w-full max-w-[86rem]">
