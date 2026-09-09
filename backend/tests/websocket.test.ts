@@ -1,9 +1,20 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, afterAll } from "vitest";
 import WebSocket from "ws";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "hackx3_super_secret_jwt_key_2026";
 const WS_URL = process.env.WS_URL || "ws://localhost:9000/ws";
+
+interface WebSocketTestMessage {
+  type: string;
+  data?: {
+    userId?: string;
+    role?: string;
+    message?: string;
+  };
+  channel?: string;
+  checkpoint?: Record<string, any>;
+}
 
 function createToken(payload: { id: string; username: string; role: string }) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
@@ -31,9 +42,9 @@ function connectClient(): Promise<WebSocket> {
 
 function waitForMessage(
   ws: WebSocket,
-  predicate?: (msg: any) => boolean,
+  predicate?: (msg: WebSocketTestMessage) => boolean,
   timeoutMs = 4000
-): Promise<any> {
+): Promise<WebSocketTestMessage> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       ws.off("message", onMsg);

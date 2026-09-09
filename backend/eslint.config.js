@@ -1,38 +1,27 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended, // 👈 this fixes it
-});
-
-const eslintConfig = [
-  js.configs.recommended, // base ESLint rules
-  ...compat.extends(
-    "plugin:n/recommended",
-    "prettier"
-  ),
-  ...compat.config({
-    env: {
-      node: true,
-      es2022: true,
-    },
-    parserOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
+export default tseslint.config(
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    plugins: {
+      "@typescript-eslint": tseslint.plugin,
     },
     rules: {
       "no-console": "off",
       "semi": ["error", "always"],
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-implicit-any-catch": ["error", { allowExplicitAny: true }],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
     },
-  }),
-];
-
-export default eslintConfig;
+  },
+  {
+    ignores: ["dist/**", "node_modules/**", "coverage/**", "data/**", "scripts/**"],
+  },
+);

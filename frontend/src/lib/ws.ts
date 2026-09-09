@@ -98,9 +98,11 @@ class WebsocketService {
             }, 3000);
           }
         };
-      } catch (err: any) {
+      } catch (err: unknown) {
         this.connectingPromise = null;
-        reject(new Error(err?.message || "Failed to initialize WebSocket"));
+        const msg =
+          err instanceof Error ? err.message : "Failed to initialize WebSocket";
+        reject(new Error(msg));
       }
     });
 
