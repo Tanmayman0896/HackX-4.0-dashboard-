@@ -143,7 +143,6 @@ async function startServer() {
     console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
   });
 }
-
 wss.on("connection", (ws: AuthenticatedWebSocket) => {
   console.log("New WebSocket connection");
   setTimeout(function check() {
