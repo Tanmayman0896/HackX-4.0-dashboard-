@@ -224,11 +224,12 @@ describe("HackX 4.0 WebSocket Server Integration Tests", () => {
 
       const received = await receivePromise;
       expect(received.type).toBe("checkpoint");
-      expect(received.checkpoint.teamId).toBe("HX-101");
-      expect(received.checkpoint.teamName).toBe("CyberKnights");
-      expect(received.checkpoint.checkpointNumber).toBe(1);
-      expect(received.checkpoint.attendance.present).toBe(4);
-      expect(received.checkpoint.tableAssigned).toBe("T-04");
+      expect(received.checkpoint).toBeDefined();
+      expect(received.checkpoint?.teamId).toBe("HX-101");
+      expect(received.checkpoint?.teamName).toBe("CyberKnights");
+      expect(received.checkpoint?.checkpointNumber).toBe(1);
+      expect(received.checkpoint?.attendance?.present).toBe(4);
+      expect(received.checkpoint?.tableAssigned).toBe("T-04");
     });
 
     it("should broadcast Checkpoint 2 (credentials & room) data across admins", async () => {
@@ -280,9 +281,10 @@ describe("HackX 4.0 WebSocket Server Integration Tests", () => {
 
       const received = await receivePromise;
       expect(received.type).toBe("checkpoint");
-      expect(received.checkpoint.teamId).toBe("HX-102");
-      expect(received.checkpoint.round1Room).toBe("AB1-102");
-      expect(received.checkpoint.domain).toBe("Cybersecurity & Web3");
+      expect(received.checkpoint).toBeDefined();
+      expect(received.checkpoint?.teamId).toBe("HX-102");
+      expect(received.checkpoint?.round1Room).toBe("AB1-102");
+      expect(received.checkpoint?.domain).toBe("Cybersecurity & Web3");
     });
   });
 });
