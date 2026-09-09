@@ -1,4 +1,4 @@
-import {PrismaClient} from "@prisma/client";
+import {Prisma, PrismaClient, UserRole} from "@prisma/client";
 import {hashPassword} from "../utils/password";
 import type {LogFilter} from "../types";
 
@@ -25,6 +25,21 @@ interface Checkpoint1Data {
 
 interface Checkpoint2Data {
   teamId: string;
+}
+
+interface CheckpointStoredParticipant {
+  id?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  isPresent?: boolean;
+}
+
+interface CheckpointStoredData {
+  wifi?: boolean;
+  participants?: CheckpointStoredParticipant[];
+  password?: string;
 }
 
 export class SuperAdminService {
@@ -73,7 +88,7 @@ export class SuperAdminService {
         username,
         password: hashedPassword,
         email,
-        role: role as any,
+        role: role as UserRole,
         ...(role === "MENTOR" && {
           mentorProfile: {
             create: {
@@ -361,7 +376,7 @@ export class SuperAdminService {
 
   // Activity Logs
   async getActivityLogs(filters?: LogFilter) {
-    const where: any = {};
+    const where: Prisma.ActivityLogWhereInput = {};
 
     if (filters?.action && filters.action !== "all") {
       where.action = {contains: filters.action, mode: "insensitive"};
@@ -515,11 +530,11 @@ export class SuperAdminService {
     block?: string
     floor?: string
   }) {
-    const payload: any = { ...data };
-    if (payload.floor && !payload.block) {
-      payload.block = payload.floor;
-    }
-    delete payload.floor;
+    const {floor, ...rest} = data;
+    const payload: Prisma.Round2RoomCreateInput = {
+      ...rest,
+      ...(floor && !rest.block ? {block: floor} : {}),
+    };
     return prisma.round2Room.create({
       data: payload,
     });
@@ -1263,14 +1278,14 @@ export class SuperAdminService {
 
     // Get existing checkpoint 1 data if it exists
     const checkpoint1 = team.checkpoints.find(cp => cp.checkpoint === 1);
-    const existingData = checkpoint1?.data as any;
+    const existingData = checkpoint1?.data as unknown as CheckpointStoredData | undefined;
 
     // If checkpoint exists, use the participants from checkpoint data (which includes isPresent)
     // Otherwise, use participants from teamParticipants table
     let participantsData;
     if (existingData?.participants && Array.isArray(existingData.participants)) {
       // Use checkpoint data which has isPresent status
-      participantsData = existingData.participants.map((p: any) => ({
+      participantsData = existingData.participants.map((p: CheckpointStoredParticipant) => ({
         id: p.id || `cp-${p.email}`, // Use checkpoint participant id or generate one
         name: p.name,
         email: p.email,
@@ -1416,11 +1431,10 @@ export class SuperAdminService {
     });
 
     let password = "";
-    let isNewUser = false;
 
     if (existingUser && existingCheckpoint?.data && typeof existingCheckpoint.data === 'object' && 'password' in existingCheckpoint.data) {
       // User and checkpoint exist, retrieve stored password
-      password = (existingCheckpoint.data as any).password;
+      password = (existingCheckpoint.data as {password: string}).password;
     } else if (!existingUser) {
       // Create new user with credentials
       password = Math.random().toString(36).slice(-6);
@@ -1434,7 +1448,6 @@ export class SuperAdminService {
           teamId: payload.teamId,
         },
       });
-      isNewUser = true;
     } else {
       // User exists but no checkpoint with password - generate new password and update user
       password = Math.random().toString(36).slice(-6);
@@ -1505,7 +1518,7 @@ export class SuperAdminService {
       round1Room: round1Room.round1Room,
       password: password,
       checkpoint,
-    }
+    };
   }
 
   async updateTeamCheckpoint3(data: { teamId: string }) {

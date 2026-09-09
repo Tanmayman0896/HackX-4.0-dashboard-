@@ -1,4 +1,4 @@
-import {PrismaClient} from "@prisma/client";
+import {Prisma, PrismaClient} from "@prisma/client";
 import type {LogFilter} from "../types";
 import {hashPassword} from "../utils/password";
 
@@ -25,6 +25,21 @@ interface ParticipantData {
   name: string;
   email: string;
   phone?: string;
+}
+
+interface CheckpointStoredParticipant {
+  id?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  isPresent?: boolean;
+}
+
+interface CheckpointStoredData {
+  wifi?: boolean;
+  participants?: CheckpointStoredParticipant[];
+  password?: string;
 }
 
 export class AdminService {
@@ -278,7 +293,7 @@ export class AdminService {
 
   // Activity Logs (Read Only)
   async getActivityLogs(filters?: LogFilter) {
-    const where: any = {};
+    const where: Prisma.ActivityLogWhereInput = {};
 
     if (filters?.action && filters.action !== "all") {
       where.action = {contains: filters.action, mode: "insensitive"};
@@ -288,12 +303,17 @@ export class AdminService {
       where.userId = filters.userId;
     }
 
+    let createdAt: Prisma.DateTimeFilter | undefined;
     if (filters?.startDate) {
-      where.createdAt = {...where.createdAt, gte: new Date(filters.startDate)};
+      createdAt = {...createdAt, gte: new Date(filters.startDate)};
     }
 
     if (filters?.endDate) {
-      where.createdAt = {...where.createdAt, lte: new Date(filters.endDate)};
+      createdAt = {...createdAt, lte: new Date(filters.endDate)};
+    }
+
+    if (createdAt) {
+      where.createdAt = createdAt;
     }
 
     return prisma.activityLog.findMany({
@@ -469,14 +489,14 @@ export class AdminService {
 
     // Get existing checkpoint 1 data if it exists
     const checkpoint1 = team.checkpoints.find(cp => cp.checkpoint === 1);
-    const existingData = checkpoint1?.data as any;
+    const existingData = checkpoint1?.data as unknown as CheckpointStoredData | undefined;
 
     // If checkpoint exists, use the participants from checkpoint data (which includes isPresent)
     // Otherwise, use participants from teamParticipants table
     let participantsData;
     if (existingData?.participants && Array.isArray(existingData.participants)) {
       // Use checkpoint data which has isPresent status
-      participantsData = existingData.participants.map((p: any) => ({
+      participantsData = existingData.participants.map((p: CheckpointStoredParticipant) => ({
         id: p.id || `cp-${p.email}`, // Use checkpoint participant id or generate one
         name: p.name,
         email: p.email,
@@ -630,7 +650,6 @@ export class AdminService {
 
     const username = team.teamId;
     let password = "";
-    let isNewUser = false;
 
     // 1️⃣ Check user
     const existingUser = await prisma.user.findUnique({where: {username}});
@@ -644,14 +663,13 @@ export class AdminService {
       typeof existingCheckpoint.data === "object" &&
       "password" in existingCheckpoint.data
     ) {
-      password = (existingCheckpoint.data as any).password;
+      password = (existingCheckpoint.data as {password: string}).password;
     } else if (!existingUser) {
       password = Math.random().toString(36).slice(-6);
       const hash = await hashPassword(password);
       await prisma.user.create({
         data: {username, password: hash, role: "TEAM", teamId: payload.teamId},
       });
-      isNewUser = true;
     } else {
       password = Math.random().toString(36).slice(-6);
       const hash = await hashPassword(password);
@@ -677,7 +695,7 @@ export class AdminService {
     console.log('---------------------------------------------');
 
     // 3️⃣ Create checkpoint + assign room atomically
-    const [checkpoint, updatedTeam, updatedRoom] = await prisma.$transaction([
+    const [checkpoint, , updatedRoom] = await prisma.$transaction([
       prisma.teamCheckpoint.upsert({
         where: {teamId_checkpoint: {teamId: payload.teamId, checkpoint: 2}},
         update: {
@@ -764,7 +782,7 @@ export class AdminService {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       judge['teamsCompleted'] = judge.evaluations.filter(e => e.status === 'COMPLETED').length;
-    })
+    });
 
     return judges;
   }
@@ -896,11 +914,7 @@ export class AdminService {
         orderBy: {createdAt: "desc"},
       });
       const count = lastTeam ? parseInt(lastTeam.teamId.replace("TEAM", "")) : 0;
-      let teamId = `TEAM${(count + 1).toString().padStart(3, "0")}`;
-
-      // Generate a simple password for the team (can be changed later)
-      const teamPassword = Math.random().toString(36).slice(-6);
-      const hashedPassword = await hashPassword(teamPassword);
+      const teamId = `TEAM${(count + 1).toString().padStart(3, "0")}`;
 
       // Create the team
       const team = await tx.team.create({

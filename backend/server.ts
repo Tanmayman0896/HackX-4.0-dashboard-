@@ -39,12 +39,12 @@ interface AuthenticatedWebSocket extends WebSocket {
 
 interface WebSocketMessage {
   type: "authenticate" | "checkpoint" | "subscribe_checkpoints";
-  data?: any;
+  data?: unknown;
   token?: string;
-  checkpoint?: any;
+  checkpoint?: unknown;
 }
 
-const clients = new Map<string, AuthenticatedWebSocket>()
+const clients = new Map<string, AuthenticatedWebSocket>();
 const admins: AuthenticatedWebSocket[] = [];
 // Security middleware
 app.use(
@@ -177,7 +177,7 @@ wss.on("connection", (ws: AuthenticatedWebSocket) => {
           const decoded = jwt.verify(
             parsedMessage.token,
             process.env.JWT_SECRET!,
-          ) as any;
+          ) as { id: string; role: string };
           ws.id = decoded.id;
           ws.userRole = decoded.role;
           clearTimeout(authTimeout);
@@ -275,33 +275,33 @@ async function handleMessage(ws: AuthenticatedWebSocket, message: WebSocketMessa
 }
 
 // Broadcast functions for different events
-export function broadcastToRole(role: string, message: any) {
+export function broadcastToRole(role: string, message: unknown) {
   clients.forEach((client) => {
     if (client.userRole === role && client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(message))
+      client.send(JSON.stringify(message));
     }
-  })
+  });
 }
 
-export function broadcastToUser(userId: string, message: any) {
-  const client = clients.get(userId)
+export function broadcastToUser(userId: string, message: unknown) {
+  const client = clients.get(userId);
   if (client && client.readyState === WebSocket.OPEN) {
-    client.send(JSON.stringify(message))
+    client.send(JSON.stringify(message));
   }
 }
 
-export function broadcastToAll(message: any) {
+export function broadcastToAll(message: unknown) {
   clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(message))
+      client.send(JSON.stringify(message));
     }
-  })
+  });
 }
 
-export function broadcastToOtherAdmins(message: any, host: AuthenticatedWebSocket) {
+export function broadcastToOtherAdmins(message: unknown, host: AuthenticatedWebSocket) {
   for (const admin of admins) {
     if (admin.id !== host.id && admin.readyState === WebSocket.OPEN) {
-      admin.send(JSON.stringify(message))
+      admin.send(JSON.stringify(message));
     }
   }
 }

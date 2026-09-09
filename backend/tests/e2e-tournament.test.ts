@@ -5,19 +5,19 @@ import { judgeService } from "../services/judgeService";
 import { teamService } from "../services/teamService";
 
 interface DbState {
-  users: any[];
-  teams: any[];
-  teamParticipants: any[];
-  problemStatements: any[];
-  submissions: any[];
-  checkpoints: any[];
-  evaluations: any[];
-  teamScores: any[];
-  judges: any[];
-  round1Rooms: any[];
-  round2Rooms: any[];
-  round3Rooms: any[];
-  systemSettings: any[];
+  users: Record<string, unknown>[];
+  teams: Record<string, unknown>[];
+  teamParticipants: Record<string, unknown>[];
+  problemStatements: Record<string, unknown>[];
+  submissions: Record<string, unknown>[];
+  checkpoints: Record<string, unknown>[];
+  evaluations: Record<string, unknown>[];
+  teamScores: Record<string, unknown>[];
+  judges: Record<string, unknown>[];
+  round1Rooms: Record<string, unknown>[];
+  round2Rooms: Record<string, unknown>[];
+  round3Rooms: Record<string, unknown>[];
+  systemSettings: Record<string, unknown>[];
 }
 
 describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
@@ -50,7 +50,7 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
     };
 
     // Wire up Prisma mocks to operate on our in-memory database state
-    mockPrisma.user.findUnique.mockImplementation(async ({ where }: any) => {
+    mockPrisma.user.findUnique.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
       const user = db.users.find(
         (u) => (where.id && u.id === where.id) || (where.username && u.username === where.username),
       );
@@ -59,13 +59,13 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       return { ...user, participantTeam: team ? { ...team } : null };
     });
 
-    mockPrisma.user.create.mockImplementation(async ({ data }: any) => {
+    mockPrisma.user.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
       const newUser = { id: `u-${Date.now()}-${Math.random()}`, ...data };
       db.users.push(newUser);
       return newUser;
     });
 
-    mockPrisma.team.findUnique.mockImplementation(async ({ where }: any) => {
+    mockPrisma.team.findUnique.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
       const team = db.teams.find((t) => (where.id && t.id === where.id) || (where.teamId && t.teamId === where.teamId));
       if (!team) return null;
       const participants = db.teamParticipants.filter((p) => p.teamId === team.id);
@@ -73,15 +73,17 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       return { ...team, participants, checkpoints: teamCheckpoints };
     });
 
-    mockPrisma.team.findMany.mockImplementation(async ({ where }: any = {}) => {
+    mockPrisma.team.findMany.mockImplementation(async ({ where }: { where?: Record<string, unknown> } = {}) => {
       let result = [...db.teams];
-      if (where?.status?.in) {
-        result = result.filter((t) => where.status.in.includes(t.status));
+      const statusFilter = where?.status as { in?: unknown[] } | undefined;
+      if (statusFilter?.in) {
+        result = result.filter((t) => (statusFilter.in as unknown[]).includes(t.status));
       }
-      if (where?.round3RoomId?.not === null) {
+      const roomFilter = where?.round3RoomId as { not?: unknown } | string | undefined;
+      if (typeof roomFilter === "object" && roomFilter !== null && "not" in roomFilter && roomFilter.not === null) {
         result = result.filter((t) => t.round3RoomId !== null);
       }
-      if (where?.round3RoomId && typeof where.round3RoomId === "string") {
+      if (typeof where?.round3RoomId === "string") {
         result = result.filter((t) => t.round3RoomId === where.round3RoomId);
       }
       return result.map((t) => {
@@ -90,15 +92,16 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       });
     });
 
-    mockPrisma.team.count.mockImplementation(async ({ where }: any = {}) => {
+    mockPrisma.team.count.mockImplementation(async ({ where }: { where?: Record<string, unknown> } = {}) => {
       let count = db.teams.length;
-      if (where?.round3RoomId?.not === null) {
+      const roomFilter = where?.round3RoomId as { not?: unknown } | undefined;
+      if (roomFilter?.not === null) {
         count = db.teams.filter((t) => t.round3RoomId !== null && t.round3RoomId !== undefined).length;
       }
       return count;
     });
 
-    mockPrisma.team.update.mockImplementation(async ({ where, data }: any) => {
+    mockPrisma.team.update.mockImplementation(async ({ where, data }: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
       const index = db.teams.findIndex((t) => t.id === where.id);
       if (index === -1) throw new Error("Team not found");
       db.teams[index] = { ...db.teams[index], ...data };
@@ -106,10 +109,11 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       return { ...db.teams[index], round1Room: room };
     });
 
-    mockPrisma.team.updateMany.mockImplementation(async ({ where, data }: any) => {
+    mockPrisma.team.updateMany.mockImplementation(async ({ where, data }: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
       let updatedCount = 0;
+      const idFilter = where?.id as { in?: unknown[] } | undefined;
       db.teams = db.teams.map((t) => {
-        if (!where?.id?.in || where.id.in.includes(t.id)) {
+        if (!idFilter?.in || (idFilter.in as unknown[]).includes(t.id)) {
           updatedCount++;
           return { ...t, ...data };
         }
@@ -118,25 +122,25 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       return { count: updatedCount };
     });
 
-    mockPrisma.teamParticipant.deleteMany.mockImplementation(async ({ where }: any) => {
+    mockPrisma.teamParticipant.deleteMany.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
       const before = db.teamParticipants.length;
       db.teamParticipants = db.teamParticipants.filter((p) => p.teamId !== where.teamId);
       return { count: before - db.teamParticipants.length };
     });
 
-    mockPrisma.teamParticipant.create.mockImplementation(async ({ data }: any) => {
+    mockPrisma.teamParticipant.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
       const newPart = { id: `tp-${Date.now()}-${Math.random()}`, ...data };
       db.teamParticipants.push(newPart);
       return newPart;
     });
 
-    mockPrisma.teamCheckpoint.findUnique.mockImplementation(async ({ where }: any) => {
-      const { teamId, checkpoint } = where.teamId_checkpoint;
+    mockPrisma.teamCheckpoint.findUnique.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
+      const { teamId, checkpoint } = where.teamId_checkpoint as { teamId: unknown; checkpoint: unknown };
       return db.checkpoints.find((c) => c.teamId === teamId && c.checkpoint === checkpoint) || null;
     });
 
-    mockPrisma.teamCheckpoint.upsert.mockImplementation(async ({ where, create, update }: any) => {
-      const { teamId, checkpoint } = where.teamId_checkpoint;
+    mockPrisma.teamCheckpoint.upsert.mockImplementation(async ({ where, create, update }: { where: Record<string, unknown>; create: Record<string, unknown>; update: Record<string, unknown> }) => {
+      const { teamId, checkpoint } = where.teamId_checkpoint as { teamId: unknown; checkpoint: unknown };
       const index = db.checkpoints.findIndex((c) => c.teamId === teamId && c.checkpoint === checkpoint);
       if (index > -1) {
         db.checkpoints[index] = { ...db.checkpoints[index], ...update, teamId, checkpoint };
@@ -148,11 +152,11 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       }
     });
 
-    mockPrisma.systemSettings.findUnique.mockImplementation(async ({ where }: any) => {
+    mockPrisma.systemSettings.findUnique.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
       return db.systemSettings.find((s) => s.key === where.key) || null;
     });
 
-    mockPrisma.submission.create.mockImplementation(async ({ data }: any) => {
+    mockPrisma.submission.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
       const newSub = { id: `sub-${Date.now()}-${Math.random()}`, ...data, submittedAt: new Date() };
       db.submissions.push(newSub);
       return newSub;
@@ -160,15 +164,16 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
 
     mockPrisma.round1Room.findFirst.mockImplementation(async () => db.round1Rooms[0] || null);
 
-    mockPrisma.round1Room.update.mockImplementation(async ({ where, data }: any) => {
+    mockPrisma.round1Room.update.mockImplementation(async ({ where, data }: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
       const room = db.round1Rooms.find((r) => r.id === where.id);
-      if (room && data?.filled?.increment) {
-        room.filled += data.filled.increment;
+      const filledUpdate = data?.filled as { increment?: unknown } | undefined;
+      if (room && typeof filledUpdate?.increment === "number") {
+        room.filled = (room.filled as number) + filledUpdate.increment;
       }
       return room || { id: where.id, filled: 1 };
     });
 
-    mockPrisma.round2Room.create.mockImplementation(async ({ data }: any) => {
+    mockPrisma.round2Room.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
       const newRoom = { id: `r2-${Date.now()}-${Math.random()}`, ...data, teams: [] };
       db.round2Rooms.push(newRoom);
       return newRoom;
@@ -181,11 +186,11 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       }));
     });
 
-    mockPrisma.round3Room.createMany.mockImplementation(async ({ data }: any) => {
+    mockPrisma.round3Room.createMany.mockImplementation(async ({ data }: { data: Record<string, unknown>[] }) => {
       for (const roomData of data) {
         if (!db.round3Rooms.find((r) => r.name === roomData.name)) {
           db.round3Rooms.push({
-            id: `r3-${roomData.name.replace(/\s+/g, "-").toLowerCase()}`,
+            id: `r3-${(roomData.name as string).replace(/\s+/g, "-").toLowerCase()}`,
             ...roomData,
             teams: [],
             judges: [],
@@ -203,43 +208,43 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       }));
     });
 
-    mockPrisma.round3Room.findUnique.mockImplementation(async ({ where }: any) => {
+    mockPrisma.round3Room.findUnique.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
       const room = db.round3Rooms.find((r) => r.id === where.id);
       if (!room) return null;
       const roomTeams = db.teams.filter((t) => t.round3RoomId === room.id);
       return { ...room, _count: { teams: roomTeams.length } };
     });
 
-    mockPrisma.judge.findUnique.mockImplementation(async ({ where }: any) => {
+    mockPrisma.judge.findUnique.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
       return db.judges.find((j) => (where.id && j.id === where.id) || (where.userId && j.userId === where.userId)) || null;
     });
 
-    mockPrisma.judge.findMany.mockImplementation(async ({ where }: any = {}) => {
+    mockPrisma.judge.findMany.mockImplementation(async ({ where }: { where?: Record<string, unknown> } = {}) => {
       if (where?.round3RoomId) {
         return db.judges.filter((j) => j.round3RoomId === where.round3RoomId);
       }
       return [...db.judges];
     });
 
-    mockPrisma.judge.update.mockImplementation(async ({ where, data }: any) => {
+    mockPrisma.judge.update.mockImplementation(async ({ where, data }: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
       const index = db.judges.findIndex((j) => j.id === where.id);
       if (index === -1) throw new Error("Judge not found");
       db.judges[index] = { ...db.judges[index], ...data };
       return db.judges[index];
     });
 
-    mockPrisma.evaluation.findUnique.mockImplementation(async ({ where }: any) => {
-      const { teamId, judgeId, round } = where.teamId_judgeId_round;
+    mockPrisma.evaluation.findUnique.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
+      const { teamId, judgeId, round } = where.teamId_judgeId_round as { teamId: unknown; judgeId: unknown; round: unknown };
       return db.evaluations.find((e) => e.teamId === teamId && e.judgeId === judgeId && e.round === round) || null;
     });
 
-    mockPrisma.evaluation.create.mockImplementation(async ({ data }: any) => {
+    mockPrisma.evaluation.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => {
       const newEval = { id: `eval-${Date.now()}-${Math.random()}`, status: "PENDING", ...data };
       db.evaluations.push(newEval);
       return newEval;
     });
 
-    mockPrisma.evaluation.createMany.mockImplementation(async ({ data }: any) => {
+    mockPrisma.evaluation.createMany.mockImplementation(async ({ data }: { data: Record<string, unknown>[] }) => {
       for (const item of data) {
         const exists = db.evaluations.find(
           (e) => e.teamId === item.teamId && e.judgeId === item.judgeId && e.round === item.round,
@@ -251,7 +256,7 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       return { count: data.length };
     });
 
-    mockPrisma.evaluation.update.mockImplementation(async ({ where, data }: any) => {
+    mockPrisma.evaluation.update.mockImplementation(async ({ where, data }: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
       const index = db.evaluations.findIndex((e) => e.id === where.id);
       if (index > -1) {
         db.evaluations[index] = { ...db.evaluations[index], ...data };
@@ -260,7 +265,7 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       return null;
     });
 
-    mockPrisma.evaluation.deleteMany.mockImplementation(async ({ where }: any) => {
+    mockPrisma.evaluation.deleteMany.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
       const before = db.evaluations.length;
       db.evaluations = db.evaluations.filter((e) => {
         if (where?.judgeId && where?.round && e.judgeId === where.judgeId && e.round === where.round) return false;
@@ -271,8 +276,8 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       return { count: before - db.evaluations.length };
     });
 
-    mockPrisma.teamScore.upsert.mockImplementation(async ({ where, create, update }: any) => {
-      const { teamId, judgeId, round } = where.teamId_judgeId_round;
+    mockPrisma.teamScore.upsert.mockImplementation(async ({ where, create, update }: { where: Record<string, unknown>; create: Record<string, unknown>; update: Record<string, unknown> }) => {
+      const { teamId, judgeId, round } = where.teamId_judgeId_round as { teamId: unknown; judgeId: unknown; round: unknown };
       const index = db.teamScores.findIndex(
         (s) => s.teamId === teamId && s.judgeId === judgeId && s.round === round,
       );
@@ -286,26 +291,39 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
       }
     });
 
-    mockPrisma.teamScore.count.mockImplementation(async ({ where }: any = {}) => {
+    mockPrisma.teamScore.count.mockImplementation(async ({ where }: { where?: Record<string, unknown> } = {}) => {
       if (where?.round !== undefined) {
         return db.teamScores.filter((s) => s.round === where.round).length;
       }
       return db.teamScores.length;
     });
 
-    mockPrisma.teamScore.groupBy.mockImplementation(async ({ by, where, _avg, _count }: any) => {
+    mockPrisma.teamScore.groupBy.mockImplementation(
+      async ({
+        by: _by,
+        where,
+        _avg,
+        _count,
+      }: {
+        by: unknown;
+        where: Record<string, unknown>;
+        _avg: unknown;
+        _count: unknown;
+      }) => {
       const filtered = db.teamScores.filter((s) => {
         if (where?.round && s.round !== where.round) return false;
-        if (where?.totalScore?.not === null && s.totalScore === null) return false;
+        const totalScoreFilter = where?.totalScore as { not?: unknown } | undefined;
+        if (totalScoreFilter?.not === null && s.totalScore === null) return false;
         return true;
       });
 
       const map = new Map<string, { total: number; count: number }>();
       for (const s of filtered) {
-        const current = map.get(s.teamId) || { total: 0, count: 0 };
-        current.total += s.totalScore;
+        const teamId = s.teamId as string;
+        const current = map.get(teamId) || { total: 0, count: 0 };
+        current.total += s.totalScore as number;
         current.count += 1;
-        map.set(s.teamId, current);
+        map.set(teamId, current);
       }
 
       return Array.from(map.entries()).map(([teamId, data]) => ({
@@ -494,7 +512,10 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
     // Team 1 (CyberKnights): Inn: 9,   Tech: 9,   Pres: 8.5, Feas: 8.5, Imp: 9   -> Total: 8.9
     // Team 5 (HeliosAI):     Inn: 8.5, Tech: 8.5, Pres: 8,   Feas: 8,   Imp: 8.5 -> Total: 8.4
     // Team 2 (QuantumCore):  Inn: 7.5, Tech: 7.5, Pres: 7,   Feas: 7,   Imp: 7.5 -> Total: 7.3
-    const r2Scores: Record<string, any> = {
+    const r2Scores: Record<
+      string,
+      { innovation: number; technical: number; presentation: number; feasibility: number; impact: number }
+    > = {
       "team-3": { innovation: 9.5, technical: 10, presentation: 9.5, feasibility: 9, impact: 9.5 },
       "team-1": { innovation: 9, technical: 9, presentation: 8.5, feasibility: 8.5, impact: 9 },
       "team-5": { innovation: 8.5, technical: 8.5, presentation: 8, feasibility: 8, impact: 8.5 },
@@ -596,7 +617,7 @@ describe("End-to-End Tournament Lifecycle: Rounds 1, 2, and 3", () => {
     // Verify tournament champion
     const finalScores = db.teamScores
       .filter((s) => s.round === 3)
-      .sort((a, b) => (b.totalScore ?? 0) - (a.totalScore ?? 0));
+      .sort((a, b) => ((b.totalScore as number) ?? 0) - ((a.totalScore as number) ?? 0));
 
     expect(finalScores).toHaveLength(3);
     expect(finalScores[0].teamId).toBe("team-3"); // NeuralSync wins!

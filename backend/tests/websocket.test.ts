@@ -13,7 +13,24 @@ interface WebSocketTestMessage {
     message?: string;
   };
   channel?: string;
-  checkpoint?: Record<string, any>;
+  checkpoint?: {
+    teamId?: string;
+    teamName?: string;
+    checkpointNumber?: number;
+    status?: string;
+    attendance?: {
+      present?: number;
+      total?: number;
+      members?: string[];
+    };
+    tableAssigned?: string;
+    round1Room?: string;
+    domain?: string;
+    verifiedAt?: string;
+    updatedAt?: string;
+    credentials?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
 }
 
 function createToken(payload: { id: string; username: string; role: string }) {

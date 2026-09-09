@@ -1,4 +1,4 @@
-import {PrismaClient} from "@prisma/client";
+import {PrismaClient, UserRole} from "@prisma/client";
 import {comparePassword, generateRandomPassword, hashPassword} from "../utils/password";
 import {generateToken} from "../utils/jwt";
 import type {ChangePasswordRequest, JWTPayload, LoginRequest} from "../types";
@@ -137,7 +137,7 @@ export class AuthService {
         username,
         password: hashedPassword,
         email,
-        role: role as any,
+        role: role as UserRole,
       },
     });
 

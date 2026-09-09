@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { mockPrisma, resetPrismaMocks } from "./helpers/mockPrisma";
 import { superAdminService } from "../services/superAdminService";
 import { judgeService } from "../services/judgeService";

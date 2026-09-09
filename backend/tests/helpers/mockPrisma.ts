@@ -41,12 +41,12 @@ export const mockPrisma = {
   activityLog: createModelMock(),
   domain: createModelMock(),
 
-  $transaction: vi.fn(async (arg: any) => {
+  $transaction: vi.fn(async (arg: unknown) => {
     if (Array.isArray(arg)) {
       return Promise.all(arg);
     }
     if (typeof arg === "function") {
-      return arg(mockPrisma);
+      return (arg as (tx: typeof mockPrisma) => unknown)(mockPrisma);
     }
     return arg;
   }),
@@ -57,25 +57,29 @@ export const mockPrisma = {
 
 // Reset all mocks helper
 export function resetPrismaMocks() {
-  Object.values(mockPrisma).forEach((mockVal: any) => {
+  Object.values(mockPrisma).forEach((mockVal: unknown) => {
     if (typeof mockVal === "object" && mockVal !== null) {
-      Object.values(mockVal).forEach((fn: any) => {
-        if (typeof fn?.mockReset === "function") {
-          fn.mockReset();
+      Object.values(mockVal as Record<string, unknown>).forEach((fn: unknown) => {
+        const maybeMock = fn as { mockReset?: () => void };
+        if (typeof maybeMock?.mockReset === "function") {
+          maybeMock.mockReset();
         }
       });
-    } else if (typeof mockVal?.mockReset === "function") {
-      mockVal.mockReset();
+    } else {
+      const maybeMock = mockVal as { mockReset?: () => void };
+      if (typeof maybeMock?.mockReset === "function") {
+        maybeMock.mockReset();
+      }
     }
   });
 
   // Re-establish default $transaction behavior
-  mockPrisma.$transaction.mockImplementation(async (arg: any) => {
+  mockPrisma.$transaction.mockImplementation(async (arg: unknown) => {
     if (Array.isArray(arg)) {
       return Promise.all(arg);
     }
     if (typeof arg === "function") {
-      return arg(mockPrisma);
+      return (arg as (tx: typeof mockPrisma) => unknown)(mockPrisma);
     }
     return arg;
   });

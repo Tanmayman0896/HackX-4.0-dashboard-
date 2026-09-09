@@ -25,7 +25,7 @@ export const logActivity = (action: string) => {
   };
 };
 
-export const logError = (error: any, req: Request, res: Response, next: NextFunction) => {
+export const logError = (error: unknown, req: Request, res: Response, _next: NextFunction) => {
   console.error({
     url: req.originalUrl,
     method: req.method,
@@ -34,8 +34,9 @@ export const logError = (error: any, req: Request, res: Response, next: NextFunc
   });
   console.error(error);
 
+  const message = error instanceof Error ? error.message : String(error);
   res.status(500).json({
     error: "Internal server error",
-    ...(process.env.NODE_ENV === "development" && { details: error.message }),
+    ...(process.env.NODE_ENV === "development" && { details: message }),
   });
 };

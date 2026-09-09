@@ -1,4 +1,4 @@
-import {PrismaClient} from "@prisma/client";
+import {Prisma, PrismaClient} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -229,7 +229,7 @@ export class TeamService {
     if (data.githubLink) {
       try {
         new URL(data.githubLink);
-      } catch (_) {
+      } catch {
         throw new Error("Invalid GitHub URL");
       }
     }
@@ -240,7 +240,7 @@ export class TeamService {
     if (data.pptLink) {
       try {
         new URL(data.pptLink);
-      } catch (_) {
+      } catch {
         throw new Error("Invalid PPT URL");
       }
     }
@@ -395,7 +395,7 @@ export class TeamService {
         (entry) => entry.status === "WAITING"
       ).length;
 
-      const {mentorshipQueue, ...rest} = mentor;
+      const {mentorshipQueue: _mentorshipQueue, ...rest} = mentor;
       return {
         ...rest,
         waitingTeamsCount,
@@ -477,10 +477,14 @@ export class TeamService {
       (entry) => entry.status === "WAITING"
     ).length;
 
-    const {notes, ...rest} = session;
-    // @ts-ignore
-    rest.mentor['waitingTeamsCount'] = waitingTeamsCount;
-    return rest;
+    const {notes: _notes, ...rest} = session;
+    return {
+      ...rest,
+      mentor: {
+        ...rest.mentor,
+        waitingTeamsCount,
+      },
+    };
   }
 
   // Get announcements
@@ -618,7 +622,7 @@ export class TeamService {
   }
 
   // Complete checkpoint with participant validation
-  async completeCheckpoint(teamId: string, checkpoint: number, data?: any) {
+  async completeCheckpoint(teamId: string, checkpoint: number, data?: Prisma.InputJsonObject) {
     // Check if minimum participants are present
     const hasMinimumPresent = await this.checkMinimumParticipantsPresent(teamId);
     
