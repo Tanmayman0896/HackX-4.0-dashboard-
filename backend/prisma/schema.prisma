@@ -117,6 +117,7 @@ model TeamParticipant {
   email     String
   phone     String?
   verified  Boolean         @default(false)
+  residence String          @default("inhouse")
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 }

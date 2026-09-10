@@ -21,6 +21,7 @@ export interface Participant {
   role?: "MEMBER" | "LEADER";
   isPresent?: boolean;
   verified?: boolean;
+  residence?: "inhouse" | "outhouse";
 }
 
 export interface TeamCheckpoint1Data {

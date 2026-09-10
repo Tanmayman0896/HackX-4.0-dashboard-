@@ -20,6 +20,7 @@ interface Checkpoint1Data {
     phone?: string;
     role?: "MEMBER" | "LEADER";
     isPresent: boolean;
+    residence?: "inhouse" | "outhouse";
   }[];
 }
 
@@ -1047,6 +1048,7 @@ export class SuperAdminService {
         role: p.role,
         isPresent: p.isPresent || false,
         verified: p.isPresent || false,
+        residence: p.residence || 'inhouse',
       }));
     } else {
       // Use teamParticipants table data
@@ -1058,6 +1060,7 @@ export class SuperAdminService {
         role: p.role,
         isPresent: p.verified || false, // Use verified field as initial isPresent
         verified: p.verified,
+        residence: (p as any).residence || 'inhouse',
       }));
     }
 
@@ -1107,6 +1110,7 @@ export class SuperAdminService {
             phone: participant.phone,
             role: participant.role || "MEMBER",
             verified: participant.isPresent || false, // Use Verified field to track presence
+            residence: participant.residence || "inhouse",
           },
         });
       }
@@ -1128,9 +1132,12 @@ export class SuperAdminService {
               phone: p.phone,
               role: p.role,
               isPresent: p.isPresent,
+              residence: p.residence || 'inhouse',
             })),
             totalParticipants: participants.length,
             presentCount: presentParticipants.length,
+            inhouseCount: participants.filter(p => (p.residence || 'inhouse') === 'inhouse').length,
+            outhouseCount: participants.filter(p => p.residence === 'outhouse').length,
             notes: notes,
           },
           status: status,
@@ -1147,9 +1154,12 @@ export class SuperAdminService {
               phone: p.phone,
               role: p.role,
               isPresent: p.isPresent,
+              residence: p.residence || 'inhouse',
             })),
             totalParticipants: participants.length,
             presentCount: presentParticipants.length,
+            inhouseCount: participants.filter(p => (p.residence || 'inhouse') === 'inhouse').length,
+            outhouseCount: participants.filter(p => p.residence === 'outhouse').length,
             notes: notes,
           },
           status: status,

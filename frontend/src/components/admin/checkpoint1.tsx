@@ -56,6 +56,7 @@ export function Checkpoint1Modal({
     email: "",
     phone: "",
     role: "MEMBER" as "MEMBER" | "LEADER",
+    residence: "inhouse" as "inhouse" | "outhouse",
   });
   const { toast } = useToast();
 
@@ -125,7 +126,13 @@ export function Checkpoint1Modal({
     };
 
     setParticipants([...participants, newParticipantWithId]);
-    setNewParticipant({ name: "", email: "", phone: "", role: "MEMBER" });
+    setNewParticipant({
+      name: "",
+      email: "",
+      phone: "",
+      role: "MEMBER",
+      residence: "inhouse",
+    });
 
     toast({
       title: "Success",
@@ -196,6 +203,12 @@ export function Checkpoint1Modal({
   };
 
   const presentCount = participants.filter((p) => p.isPresent).length;
+  const inhouseCount = participants.filter(
+    (p) => (p.residence || "inhouse") === "inhouse",
+  ).length;
+  const outhouseCount = participants.filter(
+    (p) => p.residence === "outhouse",
+  ).length;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -251,12 +264,17 @@ export function Checkpoint1Modal({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
                   <div>
                     <Label className="text-muted-foreground text-sm font-medium">
                       Team Name:
                     </Label>
-                    <p className="mt-1 text-base font-semibold">{teamName}</p>
+                    <p
+                      className="mt-1 truncate text-base font-semibold"
+                      title={teamName}
+                    >
+                      {teamName}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground text-sm font-medium">
@@ -280,9 +298,31 @@ export function Checkpoint1Modal({
                     </Label>
                     <Badge
                       variant={presentCount > 0 ? "default" : "secondary"}
-                      className="mt-1 w-fit px-3 py-1 text-sm"
+                      className="mt-1 block w-fit px-3 py-1 text-sm"
                     >
                       {presentCount} present
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-sm font-medium">
+                      Inhouse:
+                    </Label>
+                    <Badge
+                      variant="outline"
+                      className="mt-1 block w-fit border-emerald-500/40 px-3 py-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400"
+                    >
+                      {inhouseCount} inhouse
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground text-sm font-medium">
+                      Outhouse:
+                    </Label>
+                    <Badge
+                      variant="outline"
+                      className="mt-1 block w-fit border-blue-500/40 px-3 py-1 text-sm font-semibold text-blue-600 dark:text-blue-400"
+                    >
+                      {outhouseCount} outhouse
                     </Badge>
                   </div>
                 </div>
@@ -324,7 +364,7 @@ export function Checkpoint1Modal({
                               e.target.value,
                             )
                           }
-                          className="h-9 text-sm"
+                          className="h-9 flex-1 text-sm"
                         />
                         <Input
                           placeholder="Email"
@@ -336,7 +376,7 @@ export function Checkpoint1Modal({
                               e.target.value,
                             )
                           }
-                          className="h-9 text-sm"
+                          className="h-9 flex-1 text-sm"
                         />
                         <Input
                           placeholder="Phone (optional)"
@@ -348,8 +388,22 @@ export function Checkpoint1Modal({
                               e.target.value,
                             )
                           }
-                          className="h-9 text-sm"
+                          className="h-9 w-36 text-sm"
                         />
+                        <Select
+                          value={participant.residence || "inhouse"}
+                          onValueChange={(value: "inhouse" | "outhouse") =>
+                            handleParticipantChange(index, "residence", value)
+                          }
+                        >
+                          <SelectTrigger className="h-9 w-32 text-xs font-medium">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="inhouse">Inhouse</SelectItem>
+                            <SelectItem value="outhouse">Outhouse</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <Button
@@ -433,6 +487,28 @@ export function Checkpoint1Modal({
                           </SelectItem>
                         </SelectContent>
                       </Select>
+
+                      <Label className="ml-2 text-sm font-medium whitespace-nowrap">
+                        Type:
+                      </Label>
+                      <Select
+                        value={newParticipant.residence}
+                        onValueChange={(value: "inhouse" | "outhouse") =>
+                          setNewParticipant({
+                            ...newParticipant,
+                            residence: value,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="h-9 w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="inhouse">Inhouse</SelectItem>
+                          <SelectItem value="outhouse">Outhouse</SelectItem>
+                        </SelectContent>
+                      </Select>
+
                       <Button
                         size="sm"
                         onClick={addParticipant}
