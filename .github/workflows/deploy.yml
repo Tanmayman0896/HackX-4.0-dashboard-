@@ -3,7 +3,7 @@ name: deploy
 # Every push to main deploys to the VM over SSH:
 # pull the commit, rebuild the images on the VM, restart the stack.
 # Secrets: VM_HOST, VM_USER, VM_SSH_KEY (private key whose public half is in
-# ~/.ssh/authorized_keys on the VM). Runtime config lives in ~/HackX4Dashboard/.env
+# ~/.ssh/authorized_keys on the VM). Runtime config lives in ~/HackX-4.0-dashboard-/.env
 # on the VM and is not touched by CI.
 
 on:
@@ -31,11 +31,11 @@ jobs:
           command_timeout: 25m
           script: |
             set -euo pipefail
-            cd ~/HackX4Dashboard
+            cd ~/HackX-4.0-dashboard-
             git remote set-url origin "https://github.com/${{ github.repository }}.git"
             git fetch origin main
             git reset --hard ${{ github.sha }}
-            test -f .env || { echo "missing ~/HackX4Dashboard/.env on the VM"; exit 1; }
+            test -f .env || { echo "missing ~/HackX-4.0-dashboard-/.env on the VM"; exit 1; }
             docker compose up -d --build --remove-orphans
             docker image prune -f
             docker compose ps
