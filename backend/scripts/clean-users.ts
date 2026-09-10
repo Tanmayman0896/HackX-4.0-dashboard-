@@ -22,7 +22,6 @@ async function main() {
     console.log("🌱 Re-seeding clean standard accounts...");
     await seedAdmins();
     await seedSuperAdmins();
-    await seedTeams(20);
 
     console.log("🎉 Database cleaned and re-seeded successfully!");
   } catch (error) {

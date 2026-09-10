@@ -6,30 +6,9 @@ import { fileURLToPath } from "url";
 
 const prisma = new PrismaClient();
 
-export async function seedTeams(count = 20) {
-  console.log(`🌱 Seeding ${count} teams (TEAM001 to TEAM${count.toString().padStart(3, "0")})...`);
-  const createdTeams = [];
-
-  for (let i = 1; i <= count; i++) {
-    const teamId = `TEAM${i.toString().padStart(3, "0")}`;
-    const name = `Team ${i.toString().padStart(3, "0")}`;
-
-    const team = await prisma.team.upsert({
-      where: { teamId },
-      update: {},
-      create: {
-        teamId,
-        name,
-        status: "REGISTERED",
-        submissionStatus: "NOT_SUBMITTED",
-      },
-    });
-
-    createdTeams.push(team);
-  }
-
-  console.log(`✅ Successfully seeded/verified ${createdTeams.length} teams`);
-  return createdTeams;
+export async function seedTeams(count = 0) {
+  console.log("ℹ️ No hardcoded teams created.");
+  return [];
 }
 
 const CUSTOM_SUPER_ADMINS = [
@@ -126,24 +105,17 @@ export async function seedAdminsAndSuperAdmins() {
 export async function seedAll() {
   console.log("🚀 Starting idempotent database seed process...");
 
-  // 1. Foundational data (domains, problem statements, rooms, default users, settings)
+  // 1. Foundational data (domains, rooms, default users, settings)
   await createBasicData();
   await createRooms();
 
-  // 2. 20 Teams (TEAM001 - TEAM020)
-  await seedTeams(20);
-
-  // 3. Custom Admins
+  // 2. Custom Admins
   await seedAdmins();
 
-  // 4. Custom Super Admins
+  // 3. Custom Super Admins
   await seedSuperAdmins();
 
   console.log("🎉 Database seeding completed successfully!");
-  console.log("\n📋 Seeded Summary:");
-  console.log("• Teams: TEAM001 through TEAM020 (Status: REGISTERED)");
-  console.log("• Admins: admin01 through admin15 (Role: ADMIN, Status: ACTIVE, Password: admin123)");
-  console.log("• Super Admins: superadmin01 through superadmin05 (Role: SUPER_ADMIN, Status: ACTIVE, Password: admin123)");
 }
 
 async function main() {

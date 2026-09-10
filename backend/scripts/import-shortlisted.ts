@@ -157,45 +157,6 @@ export async function createBasicData() {
 
   console.log("✅ Created domains");
 
-  // Create problem statements
-  const problemStatements = await Promise.all([
-    prisma.problemStatement.upsert({
-      where: {id: "ps1"},
-      update: {},
-      create: {
-        id: "ps1",
-        title: "E-commerce Platform for Local Businesses",
-        description:
-          "Build a comprehensive e-commerce platform that helps local businesses establish their online presence with features like inventory management, order processing, and customer analytics.",
-        domainId: domains[0].id,
-      },
-    }),
-    prisma.problemStatement.upsert({
-      where: {id: "ps2"},
-      update: {},
-      create: {
-        id: "ps2",
-        title: "Mental Health Support Mobile App",
-        description:
-          "Develop a mobile application that provides mental health resources, mood tracking, and connects users with professional counselors through secure messaging and video calls.",
-        domainId: domains[1].id,
-      },
-    }),
-    prisma.problemStatement.upsert({
-      where: {id: "ps3"},
-      update: {},
-      create: {
-        id: "ps3",
-        title: "AI-Powered Learning Assistant",
-        description:
-          "Create an AI-powered educational platform that personalizes learning experiences, provides intelligent tutoring, and adapts to individual student learning patterns.",
-        domainId: domains[2].id,
-      },
-    }),
-  ]);
-
-  console.log("✅ Created problem statements");
-
   // Create super admin user
   const superAdminPassword = await hashPassword("admin123");
   const superAdmin = await prisma.user.upsert({
@@ -366,75 +327,7 @@ function trimString(v?: string) {
 }
 
 export async function createSampleTeams() {
-  console.log("🤖 Creating sample demo teams...");
-  const defaultPassword = await hashPassword("team123");
-
-  const problemStatements = await prisma.problemStatement.findMany();
-  const sampleData = [
-    {
-      name: "Alpha Coders",
-      teamId: "TEAM001",
-      psId: problemStatements[0]?.id,
-      members: [
-        { name: "Alex Johnson", email: "alex@example.com", phone: "9876543210", role: "LEADER" as const },
-        { name: "Sam Smith", email: "sam@example.com", phone: "9876543211", role: "MEMBER" as const },
-      ],
-    },
-    {
-      name: "Byte Builders",
-      teamId: "TEAM002",
-      psId: problemStatements[1]?.id,
-      members: [
-        { name: "Chris Lee", email: "chris@example.com", phone: "9876543212", role: "LEADER" as const },
-        { name: "Morgan Davis", email: "morgan@example.com", phone: "9876543213", role: "MEMBER" as const },
-      ],
-    },
-    {
-      name: "Cyber Mavericks",
-      teamId: "TEAM003",
-      psId: problemStatements[2]?.id,
-      members: [
-        { name: "Jordan Taylor", email: "jordan@example.com", phone: "9876543214", role: "LEADER" as const },
-        { name: "Taylor White", email: "taylor@example.com", phone: "9876543215", role: "MEMBER" as const },
-      ],
-    },
-  ];
-
-  for (const t of sampleData) {
-    const team = await prisma.team.upsert({
-      where: { teamId: t.teamId },
-      update: {},
-      create: {
-        name: t.name,
-        teamId: t.teamId,
-        status: "REGISTERED",
-        problemStatementId: t.psId,
-        participants: {
-          create: t.members.map(m => ({
-            name: m.name,
-            email: m.email,
-            phone: m.phone,
-            role: m.role,
-            verified: true,
-          })),
-        },
-      },
-    });
-
-    await prisma.user.upsert({
-      where: { username: t.teamId },
-      update: {},
-      create: {
-        username: t.teamId,
-        password: defaultPassword,
-        email: `${t.teamId.toLowerCase()}@hackathon.com`,
-        role: "TEAM",
-        teamId: team.id,
-      },
-    });
-
-    console.log(`✅ Created/verified sample team: ${t.name} (${t.teamId})`);
-  }
+  console.log("ℹ️ No sample demo teams created.");
 }
 
 // ---------- Main import ----------
