@@ -656,14 +656,14 @@ export class AdminService {
     ) {
       password = (existingCheckpoint.data as any).password;
     } else if (!existingUser) {
-      password = Math.random().toString(36).slice(-6);
+      password = Math.random().toString(36).slice(-6).toUpperCase();
       const hash = await hashPassword(password);
       await prisma.user.create({
         data: {username, password: hash, role: "TEAM", teamId: payload.teamId},
       });
       isNewUser = true;
     } else {
-      password = Math.random().toString(36).slice(-6);
+      password = Math.random().toString(36).slice(-6).toUpperCase();
       const hash = await hashPassword(password);
       await prisma.user.update({
         where: {username},
