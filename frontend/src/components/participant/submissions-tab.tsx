@@ -68,7 +68,8 @@ export function SubmissionsTab({
       console.error(error);
       toast({
         title: "Error",
-        description: "Failed to submit project",
+        description:
+          error instanceof Error ? error.message : "Failed to submit project",
         variant: "destructive",
       });
     } finally {

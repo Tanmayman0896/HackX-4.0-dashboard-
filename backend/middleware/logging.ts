@@ -34,8 +34,10 @@ export const logError = (error: any, req: Request, res: Response, next: NextFunc
   });
   console.error(error);
 
-  res.status(500).json({
-    error: "Internal server error",
+  const statusCode = typeof error?.statusCode === "number" ? error.statusCode : 500;
+
+  res.status(statusCode).json({
+    error: statusCode < 500 ? error.message : "Internal server error",
     ...(process.env.NODE_ENV === "development" && { details: error.message }),
   });
 };

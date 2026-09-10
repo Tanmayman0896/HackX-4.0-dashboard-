@@ -661,7 +661,14 @@ class ApiService {
     }
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status} at ${endpoint}`);
+      let message = `HTTP error! status: ${response.status} at ${endpoint}`;
+      try {
+        const body = await response.json();
+        if (body?.error) message = body.error;
+      } catch {
+        // response had no JSON body; keep the generic message
+      }
+      throw new Error(message);
     }
 
     return response.json();

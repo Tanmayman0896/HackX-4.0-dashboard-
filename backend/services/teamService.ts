@@ -1,4 +1,5 @@
 import {PrismaClient} from "@prisma/client";
+import {AppError} from "../utils/errors";
 
 const prisma = new PrismaClient();
 
@@ -204,7 +205,7 @@ export class TeamService {
   // Submit project
   async submitProject(userId: string, data: { githubLink: string; pptLink: string }) {
     if (!data.githubLink && !data.pptLink) {
-      throw new Error("Submission link (GitHub and PPT) is required");
+      throw new AppError("Submission link (GitHub and PPT) is required", 400);
     }
 
     const user = await prisma.user.findUnique({
@@ -213,7 +214,7 @@ export class TeamService {
     });
 
     if (!user || !user.participantTeam) {
-      throw new Error("Team not found for this participant");
+      throw new AppError("Team not found for this participant", 404);
     }
 
     // Check if round 1 is locked
@@ -222,7 +223,7 @@ export class TeamService {
     });
 
     if (round1LockSetting && round1LockSetting.value === "true") {
-      throw new Error("Round 1 submissions are currently locked");
+      throw new AppError("Round 1 submissions are currently locked", 400);
     }
 
     // check if githubLink is a valid URL
@@ -230,18 +231,18 @@ export class TeamService {
       try {
         new URL(data.githubLink);
       } catch (_) {
-        throw new Error("Invalid GitHub URL");
+        throw new AppError("Invalid GitHub URL", 400);
       }
     }
     if (!data.githubLink.startsWith('https://github.com/')) {
-      throw new Error("GitHub link is invalid");
+      throw new AppError("GitHub link is invalid", 400);
     }
     // check if pptLink is a valid URL
     if (data.pptLink) {
       try {
         new URL(data.pptLink);
       } catch (_) {
-        throw new Error("Invalid PPT URL");
+        throw new AppError("Invalid PPT URL", 400);
       }
     }
 
