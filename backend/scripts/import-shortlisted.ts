@@ -145,6 +145,14 @@ export async function createBasicData() {
         description: "Internet of Things and embedded systems",
       },
     }),
+    prisma.domain.upsert({
+      where: {name: "Open Innovation"},
+      update: {},
+      create: {
+        name: "Open Innovation",
+        description: "Open Innovation and cross-domain solutions",
+      },
+    }),
   ]);
 
   console.log("✅ Created domains");

@@ -247,3 +247,30 @@ INSERT INTO "User" ("id", "username", "password", "email", "role", "status", "te
 VALUES ('cmtvv7mac004v76vmfttjfo7s', 'superadmin05', '$2a$12$WaQRE/hitnXCJV5/jM1SveEha75wR6JLjhCPxFymmfHUFZY.zFfnC', 'superadmin05@hackathon.com', 'SUPER_ADMIN', 'ACTIVE', NULL, NOW(), NOW())
 ON CONFLICT ("username") DO UPDATE SET "password" = EXCLUDED."password", "role" = EXCLUDED."role", "status" = EXCLUDED."status", "teamId" = EXCLUDED."teamId";
 
+-- ===========================================
+-- 4. SEED DOMAINS INTO "Domain" TABLE
+-- ===========================================
+
+INSERT INTO "Domain" ("id", "name", "description", "createdAt")
+VALUES ('cmsxjsgy0000076w2cw8rqfy8', 'Mobile Development', 'iOS and Android mobile applications', NOW())
+ON CONFLICT ("name") DO NOTHING;
+
+INSERT INTO "Domain" ("id", "name", "description", "createdAt")
+VALUES ('cmsxjshi1000376w2ot67vqfp', 'IoT', 'Internet of Things and embedded systems', NOW())
+ON CONFLICT ("name") DO NOTHING;
+
+INSERT INTO "Domain" ("id", "name", "description", "createdAt")
+VALUES ('cmsxjshi6000476w2qbtvh3y8', 'Web Development', 'Frontend and backend web applications', NOW())
+ON CONFLICT ("name") DO NOTHING;
+
+INSERT INTO "Domain" ("id", "name", "description", "createdAt")
+VALUES ('cmsxjshi0000176w2uyipyh5q', 'AI/ML', 'Artificial Intelligence and Machine Learning solutions', NOW())
+ON CONFLICT ("name") DO NOTHING;
+
+INSERT INTO "Domain" ("id", "name", "description", "createdAt")
+VALUES ('cmsxjshi1000276w20us4fo2d', 'Blockchain', 'Decentralized applications and blockchain solutions', NOW())
+ON CONFLICT ("name") DO NOTHING;
+
+INSERT INTO "Domain" ("id", "name", "description", "createdAt")
+VALUES ('cmtvykvam000076u9umrp0jc6', 'Open Innovation', 'Open Innovation and cross-domain solutions', NOW())
+ON CONFLICT ("name") DO NOTHING;

@@ -172,9 +172,13 @@ export function Mentorship({
                 <SelectContent>
                   <SelectItem value="all">All Domains</SelectItem>
                   <SelectItem value="ai-ml">AI/ML</SelectItem>
-                  <SelectItem value="web-dev">Web Development</SelectItem>
-                  <SelectItem value="mobile">Mobile Development</SelectItem>
                   <SelectItem value="blockchain">Blockchain</SelectItem>
+                  <SelectItem value="iot">IoT</SelectItem>
+                  <SelectItem value="mobile">Mobile Development</SelectItem>
+                  <SelectItem value="open-innovation">
+                    Open Innovation
+                  </SelectItem>
+                  <SelectItem value="web-dev">Web Development</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -115,11 +115,13 @@ function ProblemStatementForm({
             <SelectValue placeholder="Select domain" />
           </SelectTrigger>
           <SelectContent>
-            {domains.map((domain) => (
-              <SelectItem key={domain.id} value={domain.name}>
-                {domain.name}
-              </SelectItem>
-            ))}
+            {[...domains]
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((domain) => (
+                <SelectItem key={domain.id} value={domain.name}>
+                  {domain.name}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>

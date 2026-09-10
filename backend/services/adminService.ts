@@ -424,6 +424,7 @@ export class AdminService {
           },
         },
       },
+      orderBy: {name: "asc"},
     });
   }
 
