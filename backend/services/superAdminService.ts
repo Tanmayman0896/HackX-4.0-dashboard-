@@ -936,10 +936,12 @@ export class SuperAdminService {
       throw new Error("Mentor not found");
     }
 
-    // Delete the user, which will cascade to delete the mentor profile
-    return prisma.user.delete({
-      where: {id: mentor.userId},
-    });
+    // MentorshipQueue rows reference the mentor without cascade delete, so
+    // clear those first or the user delete fails with a FK constraint error.
+    await prisma.$transaction([
+      prisma.mentorshipQueue.deleteMany({where: {mentorId}}),
+      prisma.user.delete({where: {id: mentor.userId}}),
+    ]);
   }
 
   async addJudge(payload: { name: string; }) {

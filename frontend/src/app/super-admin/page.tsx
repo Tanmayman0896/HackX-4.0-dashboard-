@@ -274,8 +274,21 @@ export default function SuperAdminDashboard() {
   };
 
   const handleRemoveMentor = async (mentorId: string) => {
-    await apiService.removeMentor(mentorId);
-    setMentors((prev) => prev.filter((m) => m.id !== mentorId));
+    try {
+      await apiService.removeMentor(mentorId);
+      setMentors((prev) => prev.filter((m) => m.id !== mentorId));
+      toast({
+        title: "Success",
+        description: "Mentor removed successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to remove mentor",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddJudge = async () => {

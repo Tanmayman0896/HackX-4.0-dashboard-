@@ -105,7 +105,18 @@ export function Mentorship({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{mentorshipSession.mentor.user.username}</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>{mentorshipSession.mentor.user.username}</CardTitle>
+            <Badge
+              variant={
+                mentorshipSession.status === "WAITING" ? "secondary" : "default"
+              }
+            >
+              {mentorshipSession.status === "WAITING"
+                ? "Waiting for mentor"
+                : "Resolved"}
+            </Badge>
+          </div>
           <CardDescription>
             {mentorshipSession.mentor.domains.join(", ")} • Mentorship Mode:{" "}
             {mentorshipSession.mentor.mode}
@@ -113,10 +124,32 @@ export function Mentorship({
         </CardHeader>
         <CardContent>
           <div className="">
-            <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-              <p className="mb-4">
-                <strong>Query:</strong> {mentorshipSession.query}
+            <p className="mb-2">
+              <strong>Query:</strong> {mentorshipSession.query}
+            </p>
+            {mentorshipSession.status === "WAITING" && (
+              <p className="text-muted-foreground mb-4 text-sm">
+                {mentorshipSession.mentor.mode === "ONLINE" &&
+                mentorshipSession.mentor.meetLink
+                  ? "You're in the mentor's queue. Join the call below when it's your turn."
+                  : "You're in the mentor's queue. The mentor will reach out or call your team when it's your turn."}
               </p>
+            )}
+            {mentorshipSession.mentor.mode === "ONLINE" &&
+              mentorshipSession.mentor.meetLink && (
+                <p className="mb-4">
+                  <strong>Meet link:</strong>{" "}
+                  <a
+                    href={mentorshipSession.mentor.meetLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 underline"
+                  >
+                    {mentorshipSession.mentor.meetLink}
+                  </a>
+                </p>
+              )}
+            <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
               <DialogTrigger asChild>
                 <Button variant="destructive">Cancel Booking</Button>
               </DialogTrigger>
