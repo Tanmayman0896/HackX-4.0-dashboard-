@@ -32,24 +32,48 @@ export async function seedTeams(count = 20) {
   return createdTeams;
 }
 
-export async function seedAdmins(count = 15) {
-  console.log(`🌱 Seeding ${count} admin users (admin01 to admin${count.toString().padStart(2, "0")})...`);
-  const defaultPasswordHash = await hashPassword("admin123");
+const CUSTOM_SUPER_ADMINS = [
+  { username: "Tanmay", hash: "$2a$12$YYKrARPcJ34h5TNOTpn2POYns6RGvaj4Bzd2CaeV2qjMZZsyg9O8K" },
+  { username: "Aryan", hash: "$2a$12$bb9ggqrb/V97soxyNcLoQO80uVGWViqkER/H0pICyfrXMg1z0TsvG" },
+  { username: "Dolly", hash: "$2a$12$Rt0LAjo/Ed3GpOVIcdAJ.eCQ1EQxj.LZmbyu6Civtb/JgV0Tx5hRa" },
+  { username: "Vidhyanshu", hash: "$2a$12$0h1YK7w6ZwaXDGoBW3djLuxQtQNrTbpQxopSch7zc8uV7YWTNbMrq" },
+];
+
+const CUSTOM_ADMINS = [
+  { username: "Tanmay-Admin", hash: "$2a$12$AVLC/ezobXg9UMejGtAIsewbhGfAtyXHYpjCobk5fJ0NYCKQ0ll8O" },
+  { username: "Dolly-Admin", hash: "$2a$12$Shj1gh2Txqnfcg7.UiAQPePh7G7fcxZi23FS6somZlyIarrOT0xhe" },
+  { username: "Srijan", hash: "$2a$12$UGBveL499ivca3Ck4/ndCu8nf79SdJR7LHi64eb4QWHBxazvOQ/8G" },
+  { username: "Pushkar", hash: "$2a$12$DDW8VngrVXKf9VW0H2bABu3sHGd2nBvvfDCgbkEHF4WeahlbZ6mUC" },
+  { username: "Arindam", hash: "$2a$12$Cf9KbnUWte3tLlBBdFqXyeyF/9Mz0yyFvfvbPACZ.mty0D11fQWH." },
+  { username: "Anshuman", hash: "$2a$12$yiaBGtF1mvVnmcfF4TmxPOqlf0PmfNgtP3BlBb5s50Qi7MX5XYASm" },
+  { username: "Aarush-Chandra", hash: "$2a$12$wLlO/CoPRcn3kTU.Skw37.34IK6HL6LA7Lj9lnX1rOwLvju9qOiLy" },
+  { username: "Aarush-Dayal", hash: "$2a$12$E/YMRL6HIhvcQnfyI4CYiuVEBE.Jl.s60B.6cu20ugM8DMlNfDcBO" },
+  { username: "Abhishek", hash: "$2a$12$I7GouMpS5hZr/Kh1KUt/XeB1Yr1DJtSpPUm86E3pyPhhfX/7IytzS" },
+  { username: "Ayush", hash: "$2a$12$lcEH.l4vldZhDtzS55Y.1.FPLBki1lvq6Alv7BRJF7kH6QvFNju7C" },
+  { username: "Dev", hash: "$2a$12$a5M6R/wN1hnjx.x8nCs3ZuYiGmKzpJx7yDdR/T.zDPRDTdNnQHnZO" },
+  { username: "Harsh", hash: "$2a$12$cVLe6LagYv7vpPh8UQx7.ek83FNwUkHscTEz8VRUOXQtGWaVa/iuq" },
+  { username: "Saksham", hash: "$2a$12$4MjjIOBKAqQNdZR4CrnTHe6qHUseWS2BzZzmOKqZxE4dEqmfIdSfW" },
+  { username: "Admin01", hash: "$2a$12$i5ceZ0V1Aorxh0DqJvyehe23eN9ZYJVsZlVttDxA4JVY7L/WxkIRG" },
+  { username: "Admin02", hash: "$2a$12$Ze0WUTicy.xUYgBl2XrH0.dqHdxKA9ZvGQ0pcesyjG/VXSN4ARkhC" },
+];
+
+export async function seedAdmins() {
+  console.log(`🌱 Seeding ${CUSTOM_ADMINS.length} admin users...`);
   const admins = [];
 
-  for (let i = 1; i <= count; i++) {
-    const username = `admin${i.toString().padStart(2, "0")}`;
-    const email = `${username}@hackathon.com`;
+  for (const item of CUSTOM_ADMINS) {
+    const email = `${item.username.toLowerCase()}@hackathon.com`;
 
     const user = await prisma.user.upsert({
-      where: { username },
+      where: { username: item.username },
       update: {
+        password: item.hash,
         role: "ADMIN",
         status: "ACTIVE",
       },
       create: {
-        username,
-        password: defaultPasswordHash,
+        username: item.username,
+        password: item.hash,
         email,
         role: "ADMIN",
         status: "ACTIVE",
@@ -63,24 +87,23 @@ export async function seedAdmins(count = 15) {
   return admins;
 }
 
-export async function seedSuperAdmins(count = 5) {
-  console.log(`🌱 Seeding ${count} superadmin users (superadmin01 to superadmin${count.toString().padStart(2, "0")})...`);
-  const defaultPasswordHash = await hashPassword("admin123");
+export async function seedSuperAdmins() {
+  console.log(`🌱 Seeding ${CUSTOM_SUPER_ADMINS.length} superadmin users...`);
   const superAdmins = [];
 
-  for (let i = 1; i <= count; i++) {
-    const username = `superadmin${i.toString().padStart(2, "0")}`;
-    const email = `${username}@hackathon.com`;
+  for (const item of CUSTOM_SUPER_ADMINS) {
+    const email = `${item.username.toLowerCase()}@hackathon.com`;
 
     const user = await prisma.user.upsert({
-      where: { username },
+      where: { username: item.username },
       update: {
+        password: item.hash,
         role: "SUPER_ADMIN",
         status: "ACTIVE",
       },
       create: {
-        username,
-        password: defaultPasswordHash,
+        username: item.username,
+        password: item.hash,
         email,
         role: "SUPER_ADMIN",
         status: "ACTIVE",
@@ -95,8 +118,8 @@ export async function seedSuperAdmins(count = 5) {
 }
 
 export async function seedAdminsAndSuperAdmins() {
-  const admins = await seedAdmins(15);
-  const superAdmins = await seedSuperAdmins(5);
+  const admins = await seedAdmins();
+  const superAdmins = await seedSuperAdmins();
   return { admins, superAdmins };
 }
 
@@ -110,11 +133,11 @@ export async function seedAll() {
   // 2. 20 Teams (TEAM001 - TEAM020)
   await seedTeams(20);
 
-  // 3. 15 Admins (admin01 - admin15)
-  await seedAdmins(15);
+  // 3. Custom Admins
+  await seedAdmins();
 
-  // 4. 5 Super Admins (superadmin01 - superadmin05)
-  await seedSuperAdmins(5);
+  // 4. Custom Super Admins
+  await seedSuperAdmins();
 
   console.log("🎉 Database seeding completed successfully!");
   console.log("\n📋 Seeded Summary:");
