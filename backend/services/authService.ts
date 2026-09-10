@@ -10,9 +10,14 @@ export class AuthService {
     const { username, password } = credentials;
     console.log(`Attempting login for username: ${username} with password ${password}`);
     
-    // Find user by username
-    const user = await prisma.user.findUnique({
-      where: { username },
+    // Find user by username (case-insensitive)
+    const user = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: username.trim(),
+          mode: "insensitive",
+        },
+      },
       include: {
         participantTeam: true,
         mentorProfile: true,
