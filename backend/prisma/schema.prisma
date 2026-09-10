@@ -179,6 +179,8 @@ model Judge {
   updatedAt   DateTime     @updatedAt
   evaluations Evaluation[]
   teamScores  TeamScore[]
+  round2Room  Round2Room?  @relation(fields: [round2RoomId], references: [id])
+  round2RoomId String?
   round3Room  Round3Room?  @relation(fields: [round3RoomId], references: [id])
   round3RoomId String?
 }
@@ -277,6 +279,7 @@ model Round2Room {
   capacity  Int      @default(10)
   createdAt DateTime @default(now())
   teams     Team[]
+  judges    Judge[]
 }
 
 model Round3Room {

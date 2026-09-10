@@ -38,6 +38,10 @@ interface Round2RoomMappingProps {
 
 export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
   const [rooms, setRooms] = useState<Round2Room[]>([]);
+  // Judge-room mapping isn't persisted by the backend yet; tracked client-side only.
+  const [assignedJudges, setAssignedJudges] = useState<Record<string, string>>(
+    {},
+  );
   const [selectedJudge, setSelectedJudge] = useState<string>("");
   const [selectedRoom, setSelectedRoom] = useState<string>("");
   const [selectedTeam, setSelectedTeam] = useState<string>("");
@@ -46,53 +50,22 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
   const [isTeamAssignOpen, setIsTeamAssignOpen] = useState(false);
   const { toast } = useToast();
 
-  // Mock Round 2 rooms data - in real app, this would come from API
+  const loadRooms = async () => {
+    try {
+      const data = await apiService.getRound2Rooms();
+      setRooms(data);
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: "Error",
+        description: "Failed to load Round 2 rooms",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
-    const mockRooms: Round2Room[] = [
-      {
-        id: "r1",
-        roomNumber: "AB2-301",
-        floor: "Third Floor",
-        capacity: 1,
-        assignedTeams: [],
-      },
-      {
-        id: "r2",
-        roomNumber: "AB2-302",
-        floor: "Third Floor",
-        capacity: 1,
-        assignedTeams: [],
-      },
-      {
-        id: "r3",
-        roomNumber: "AB2-303",
-        floor: "Third Floor",
-        capacity: 1,
-        assignedTeams: [],
-      },
-      {
-        id: "r4",
-        roomNumber: "AB2-304",
-        floor: "Third Floor",
-        capacity: 1,
-        assignedTeams: [],
-      },
-      {
-        id: "r5",
-        roomNumber: "AB2-305",
-        floor: "Third Floor",
-        capacity: 1,
-        assignedTeams: [],
-      },
-      {
-        id: "r6",
-        roomNumber: "AB2-306",
-        floor: "Third Floor",
-        capacity: 1,
-        assignedTeams: [],
-      },
-    ];
-    setRooms(mockRooms);
+    loadRooms();
   }, []);
 
   const handleMapJudgeToRoom = async () => {
@@ -101,14 +74,7 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
     try {
       await apiService.mapJudgeToRoom(selectedJudge, selectedRoom);
 
-      // Update local state
-      setRooms((prev) =>
-        prev.map((room) =>
-          room.id === selectedRoom
-            ? { ...room, assignedJudge: selectedJudge }
-            : room,
-        ),
-      );
+      setAssignedJudges((prev) => ({ ...prev, [selectedRoom]: selectedJudge }));
 
       toast({
         title: "Success",
@@ -132,15 +98,7 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
 
     try {
       await apiService.assignTeamToRoom(selectedTeam, selectedRoomForTeam);
-
-      // Update local state
-      setRooms((prev) =>
-        prev.map((room) =>
-          room.id === selectedRoomForTeam
-            ? { ...room, assignedTeams: [...room.assignedTeams, selectedTeam] }
-            : room,
-        ),
-      );
+      await loadRooms();
 
       toast({
         title: "Success",
@@ -163,17 +121,13 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
     return judges.find((j) => j.id === judgeId)?.name || "Unknown Judge";
   };
 
-  const getTeamName = (teamId: string) => {
-    return teams.find((t) => t.id === teamId)?.name || "Unknown Team";
-  };
-
   const round2Teams = teams.filter((team) => team.round2Status === "Selected");
   const availableJudges = judges.filter(
-    (judge) => !rooms.some((room) => room.assignedJudge === judge.id),
+    (judge) => !Object.values(assignedJudges).includes(judge.id),
   );
-  const availableRooms = rooms.filter((room) => !room.assignedJudge);
+  const availableRooms = rooms.filter((room) => !assignedJudges[room.id]);
   const availableTeams = round2Teams.filter(
-    (team) => !rooms.some((room) => room.assignedTeams.includes(team.id)),
+    (team) => !rooms.some((room) => room.teams.some((t) => t.id === team.id)),
   );
 
   return (
@@ -225,7 +179,7 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
                     <SelectContent>
                       {availableRooms.map((room) => (
                         <SelectItem key={room.id} value={room.id}>
-                          {room.roomNumber} - {room.floor}
+                          {room.block}-{room.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -287,13 +241,13 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
                       {rooms
                         .filter(
                           (room) =>
-                            room.assignedJudge &&
-                            room.assignedTeams.length < room.capacity,
+                            assignedJudges[room.id] &&
+                            room.teams.length < room.capacity,
                         )
                         .map((room) => (
                           <SelectItem key={room.id} value={room.id}>
-                            {room.roomNumber} - Judge:{" "}
-                            {getJudgeName(room.assignedJudge!)}
+                            {room.block}-{room.name} - Judge:{" "}
+                            {getJudgeName(assignedJudges[room.id])}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -318,31 +272,35 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
         {rooms.map((room) => (
           <Card
             key={room.id}
-            className={`border-l-2 ${room.assignedJudge ? "border-l-ok" : "border-l-border"}`}
+            className={`border-l-2 ${assignedJudges[room.id] ? "border-l-ok" : "border-l-border"}`}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="">{room.roomNumber}</CardTitle>
-                  <CardDescription>{room.floor}</CardDescription>
+                  <CardTitle className="">
+                    {room.block}-{room.name}
+                  </CardTitle>
+                  <CardDescription>Capacity {room.capacity}</CardDescription>
                 </div>
-                <Badge variant={room.assignedJudge ? "default" : "secondary"}>
-                  {room.assignedJudge ? "Assigned" : "Available"}
+                <Badge
+                  variant={assignedJudges[room.id] ? "default" : "secondary"}
+                >
+                  {assignedJudges[room.id] ? "Assigned" : "Available"}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-2">
-                {room.assignedJudge ? (
+                {assignedJudges[room.id] ? (
                   <div>
                     <div className="mb-2 flex items-center gap-2">
                       <UserCheck className="text-ok-ink h-4 w-4" />
                       <span className="text-sm font-medium">
-                        Judge: {getJudgeName(room.assignedJudge)}
+                        Judge: {getJudgeName(assignedJudges[room.id])}
                       </span>
                     </div>
 
-                    {room.assignedTeams.length > 0 ? (
+                    {room.teams.length > 0 ? (
                       <div>
                         <div className="mb-1 flex items-center gap-2">
                           <Users className="text-hackx h-4 w-4" />
@@ -350,13 +308,13 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
                             Assigned Teams:
                           </span>
                         </div>
-                        {room.assignedTeams.map((teamId) => (
+                        {room.teams.map((team) => (
                           <Badge
-                            key={teamId}
+                            key={team.id}
                             variant="outline"
                             className="mr-1 mb-1"
                           >
-                            {getTeamName(teamId)}
+                            {team.name}
                           </Badge>
                         ))}
                       </div>
@@ -389,16 +347,14 @@ export function Round2RoomMapping({ teams, judges }: Round2RoomMappingProps) {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="text-center">
               <div className="text-hackx text-2xl font-semibold tracking-tight tabular-nums">
-                {rooms.filter((r) => r.assignedJudge).length}/{rooms.length}
+                {rooms.filter((r) => assignedJudges[r.id]).length}/
+                {rooms.length}
               </div>
               <p className="text-muted-foreground text-sm">Rooms with Judges</p>
             </div>
             <div className="text-center">
               <div className="text-ok-ink text-2xl font-semibold tracking-tight tabular-nums">
-                {rooms.reduce(
-                  (sum, room) => sum + room.assignedTeams.length,
-                  0,
-                )}
+                {rooms.reduce((sum, room) => sum + room.teams.length, 0)}
               </div>
               <p className="text-muted-foreground text-sm">Teams Assigned</p>
             </div>
