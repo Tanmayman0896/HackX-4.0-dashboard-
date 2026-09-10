@@ -100,7 +100,7 @@ function hasAnyMemberInfo(extendedTeam: ExtendedRegistrationRow, memberIndex: nu
   return Boolean(name || email || phone || college);
 }
 
-async function createBasicData() {
+export async function createBasicData() {
   console.log("🌱 Creating basic system data...");
 
   // Create domains
@@ -311,7 +311,7 @@ async function createBasicData() {
   return {superAdmin, admin};
 }
 
-async function createRooms() {
+export async function createRooms() {
   console.log("🏢 Creating rooms...");
 
   const data: { name: string; capacity: number }[] = [];
@@ -357,7 +357,7 @@ function trimString(v?: string) {
   return typeof v === 'string' ? v.trim() : '';
 }
 
-async function createSampleTeams() {
+export async function createSampleTeams() {
   console.log("🤖 Creating sample demo teams...");
   const defaultPassword = await hashPassword("team123");
 
@@ -393,8 +393,10 @@ async function createSampleTeams() {
   ];
 
   for (const t of sampleData) {
-    const team = await prisma.team.create({
-      data: {
+    const team = await prisma.team.upsert({
+      where: { teamId: t.teamId },
+      update: {},
+      create: {
         name: t.name,
         teamId: t.teamId,
         status: "REGISTERED",
@@ -411,8 +413,10 @@ async function createSampleTeams() {
       },
     });
 
-    await prisma.user.create({
-      data: {
+    await prisma.user.upsert({
+      where: { username: t.teamId },
+      update: {},
+      create: {
         username: t.teamId,
         password: defaultPassword,
         email: `${t.teamId.toLowerCase()}@hackathon.com`,
@@ -421,7 +425,7 @@ async function createSampleTeams() {
       },
     });
 
-    console.log(`✅ Created sample team: ${t.name} (${t.teamId})`);
+    console.log(`✅ Created/verified sample team: ${t.name} (${t.teamId})`);
   }
 }
 
@@ -637,11 +641,22 @@ async function main() {
   }
 }
 
-main()
-  .catch((e) => {
-    console.error("❌ Import failed:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+export { main as runImportShortlisted };
+
+const isDirectRun = Boolean(
+  process.argv[1] && (
+    fileURLToPath(import.meta.url) === path.resolve(process.argv[1]) ||
+    process.argv[1].endsWith("import-shortlisted.ts")
+  )
+);
+
+if (isDirectRun) {
+  main()
+    .catch((e) => {
+      console.error("❌ Import failed:", e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
