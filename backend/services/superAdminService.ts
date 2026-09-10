@@ -491,9 +491,13 @@ export class SuperAdminService {
 
   async getRound2Rooms() {
     return prisma.round2Room.findMany({
+      orderBy: {name: "asc"},
       include: {
         teams: {
           select: {id: true, name: true, teamId: true},
+        },
+        judges: {
+          select: {id: true, name: true},
         },
       },
     });
@@ -512,7 +516,14 @@ export class SuperAdminService {
   async assignJudgeToRoom(judgeId: string, roomId: string) {
     return prisma.judge.update({
       where: {id: judgeId},
-      data: {},
+      data: {round2RoomId: roomId},
+    });
+  }
+
+  async removeJudgeFromRound2Room(judgeId: string) {
+    return prisma.judge.update({
+      where: {id: judgeId},
+      data: {round2RoomId: null},
     });
   }
 

@@ -474,9 +474,15 @@ class ApiService {
   }
 
   async mapJudgeToRoom(judgeId: string, roomId: string): Promise<void> {
-    return this.request("/round2/map-judge", {
+    return this.request("/round2/assign-judge", {
       method: "POST",
       body: JSON.stringify({ judgeId, roomId }),
+    });
+  }
+
+  async removeJudgeFromRound2Room(judgeId: string): Promise<void> {
+    return this.request(`/round2/judge/${judgeId}`, {
+      method: "DELETE",
     });
   }
 

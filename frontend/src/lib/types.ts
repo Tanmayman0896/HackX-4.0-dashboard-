@@ -327,6 +327,10 @@ export interface Round2Room {
     name: string;
     teamId: string;
   }[];
+  judges: {
+    id: string;
+    name: string;
+  }[];
 }
 
 export interface Round3Candidate {

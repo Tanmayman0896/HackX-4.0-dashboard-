@@ -385,6 +385,15 @@ router.post("/round2/assign-judge", modifyLimiter, logActivity("ASSIGN_JUDGE_TO_
   }
 });
 
+router.delete("/round2/judge/:judgeId", modifyLimiter, logActivity("REMOVE_JUDGE_FROM_ROUND2_ROOM"), async (req: AuthRequest, res, next) => {
+  try {
+    await superAdminService.removeJudgeFromRound2Room(req.params.judgeId);
+    res.json({message: "Judge removed from Round 2 room"});
+  } catch (error: any) {
+    next(error)
+  }
+});
+
 router.post("/round2/assign-team", modifyLimiter, logActivity("ASSIGN_TEAM_TO_ROOM"), async (req: AuthRequest, res, next) => {
   try {
     await superAdminService.assignTeamToRoom(req.body.teamId, req.body.roomId);

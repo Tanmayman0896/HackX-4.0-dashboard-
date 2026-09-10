@@ -405,6 +405,9 @@ export class AdminService {
         teams: {
           select: {id: true, name: true, teamId: true},
         },
+        judges: {
+          select: {id: true, name: true},
+        },
         _count: {
           select: {teams: true},
         },
