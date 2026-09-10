@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -93,6 +94,7 @@ interface MentorDetails {
 }
 
 export default function SuperAdminDashboard() {
+  const router = useRouter();
   const [passwordChanged, setPasswordChanged] = useState(true);
   const [psLocked, setPsLocked] = useState(false);
   const [mentorshipLocked, setMentorshipLocked] = useState(false);
@@ -121,48 +123,56 @@ export default function SuperAdminDashboard() {
 
   const { toast } = useToast();
 
-  useEffect(function getAllData() {
-    apiService
-      .getSystemStatus()
-      .then((data) => {
-        if (data) {
-          setPsLocked(data.problem_statements_locked === "true");
-          setMentorshipLocked(data.mentorship_locked === "true");
-          setRound1Locked(data.round1_locked === "true");
-          setRound2Locked(data.round2_locked === "true");
-        }
-      })
-      .catch((err) => console.error("Error fetching system status:", err));
+  useEffect(
+    function getAllData() {
+      const currentUser = authService.getUser();
+      if (!currentUser || currentUser.role !== "SUPER_ADMIN") {
+        router.push("/login");
+        return;
+      }
+      apiService
+        .getSystemStatus()
+        .then((data) => {
+          if (data) {
+            setPsLocked(data.problem_statements_locked === "true");
+            setMentorshipLocked(data.mentorship_locked === "true");
+            setRound1Locked(data.round1_locked === "true");
+            setRound2Locked(data.round2_locked === "true");
+          }
+        })
+        .catch((err) => console.error("Error fetching system status:", err));
 
-    apiService
-      .getAllUsers()
-      .then((res) => setUsers(Array.isArray(res) ? res : []))
-      .catch(() => setUsers([]));
-    apiService
-      .getTeams()
-      .then((res) => setTeams(Array.isArray(res) ? res : []))
-      .catch(() => setTeams([]));
-    apiService
-      .getJudges()
-      .then((res) => setJudges(Array.isArray(res) ? res : []))
-      .catch(() => setJudges([]));
-    apiService
-      .getLogs()
-      .then((res) => setLogs(Array.isArray(res) ? res : []))
-      .catch(() => setLogs([]));
-    apiService
-      .getProblemStatements()
-      .then((res) => setProblemStatements(Array.isArray(res) ? res : []))
-      .catch(() => setProblemStatements([]));
-    apiService
-      .getAnnouncements()
-      .then((res) => setAnnouncements(Array.isArray(res) ? res : []))
-      .catch(() => setAnnouncements([]));
-    apiService
-      .getMentors()
-      .then((res) => setMentors(Array.isArray(res) ? res : []))
-      .catch(() => setMentors([]));
-  }, []);
+      apiService
+        .getAllUsers()
+        .then((res) => setUsers(Array.isArray(res) ? res : []))
+        .catch(() => setUsers([]));
+      apiService
+        .getTeams()
+        .then((res) => setTeams(Array.isArray(res) ? res : []))
+        .catch(() => setTeams([]));
+      apiService
+        .getJudges()
+        .then((res) => setJudges(Array.isArray(res) ? res : []))
+        .catch(() => setJudges([]));
+      apiService
+        .getLogs()
+        .then((res) => setLogs(Array.isArray(res) ? res : []))
+        .catch(() => setLogs([]));
+      apiService
+        .getProblemStatements()
+        .then((res) => setProblemStatements(Array.isArray(res) ? res : []))
+        .catch(() => setProblemStatements([]));
+      apiService
+        .getAnnouncements()
+        .then((res) => setAnnouncements(Array.isArray(res) ? res : []))
+        .catch(() => setAnnouncements([]));
+      apiService
+        .getMentors()
+        .then((res) => setMentors(Array.isArray(res) ? res : []))
+        .catch(() => setMentors([]));
+    },
+    [router],
+  );
 
   // Add refresh functions
   const refreshProblemStatements = async () => {
