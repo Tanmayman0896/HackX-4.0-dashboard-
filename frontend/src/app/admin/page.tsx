@@ -495,6 +495,22 @@ export default function AdminDashboard() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="mt-3 flex items-center gap-3">
+                    <Badge variant="default" className="text-xs">
+                      Selected:{" "}
+                      {
+                        problemStatements.filter((ps) => ps.selectedCount > 0)
+                          .length
+                      }
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      Non Selected:{" "}
+                      {
+                        problemStatements.filter((ps) => ps.selectedCount === 0)
+                          .length
+                      }
+                    </Badge>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
