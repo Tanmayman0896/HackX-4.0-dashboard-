@@ -92,6 +92,7 @@ export class AdminService {
             email: true,
             phone: true,
             verified: true,
+            residence: true,
           },
         },
         problemStatement: {

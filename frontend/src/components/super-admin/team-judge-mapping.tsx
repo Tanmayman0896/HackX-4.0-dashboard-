@@ -57,6 +57,60 @@ type ScoreKeys =
   | "feasibility"
   | "impact";
 
+function isTeamInhouse(team: Team): boolean {
+  if (!team) return true;
+
+  // 1. Direct participant residence check
+  if (team.participants && team.participants.length > 0) {
+    const hasOuthouse = team.participants.some(
+      (p) => p.residence === "outhouse",
+    );
+    if (hasOuthouse) return false;
+    const hasInhouse = team.participants.some((p) => p.residence === "inhouse");
+    if (hasInhouse) return true;
+  }
+
+  // 2. Check checkpoint 1 data if present
+  const cp1 = team.checkpoints?.find((c) => c.checkpoint === 1);
+  const cp1Data = cp1?.data as
+    | {
+        inhouseCount?: number;
+        outhouseCount?: number;
+        participants?: { residence?: string }[];
+      }
+    | undefined;
+
+  if (cp1Data) {
+    if (
+      typeof cp1Data.outhouseCount === "number" &&
+      cp1Data.outhouseCount > 0
+    ) {
+      return false;
+    }
+    if (typeof cp1Data.inhouseCount === "number" && cp1Data.inhouseCount > 0) {
+      return true;
+    }
+    if (Array.isArray(cp1Data.participants)) {
+      if (cp1Data.participants.some((p) => p.residence === "outhouse")) {
+        return false;
+      }
+      if (cp1Data.participants.some((p) => p.residence === "inhouse")) {
+        return true;
+      }
+    }
+  }
+
+  // 3. Fallback: check email domain for Manipal University
+  if (team.participants && team.participants.length > 0) {
+    const hasMujEmail = team.participants.some((p) =>
+      p.email?.toLowerCase().includes("manipal.edu"),
+    );
+    if (hasMujEmail) return true;
+  }
+
+  return true;
+}
+
 export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
   const [mappings, setMappings] = useState<TeamJudgeMapping[]>([]);
   const [teamScores, setTeamScores] = useState<TeamScore[]>([]);
@@ -115,9 +169,9 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
     );
   }, [teams]);
 
-  // Filter teams based on search and filters
+  // Filter teams based on search and filters, and sort Inhouse first then Outhouse
   const filteredTeams = useMemo(() => {
-    return (teams || []).filter((team) => {
+    const filtered = (teams || []).filter((team) => {
       if (!team) return false;
       const matchesSearch =
         team.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,6 +186,15 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
       const matchesMappedFilter = !showMappedOnly || isMapped;
 
       return matchesSearch && matchesPS && matchesMappedFilter;
+    });
+
+    // Sort: Inhouse first, then Outhouse. Within each group, sort by team name.
+    return [...filtered].sort((a, b) => {
+      const aInhouse = isTeamInhouse(a);
+      const bInhouse = isTeamInhouse(b);
+      if (aInhouse && !bInhouse) return -1;
+      if (!aInhouse && bInhouse) return 1;
+      return (a.name || "").localeCompare(b.name || "");
     });
   }, [teams, searchTerm, selectedPS, showMappedOnly, mappings]);
 
@@ -386,10 +449,17 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Teams ({filteredTeams.length})
-                </CardTitle>
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Teams ({filteredTeams.length})
+                  </CardTitle>
+                  <CardDescription className="mt-0.5 text-xs">
+                    {filteredTeams.filter(isTeamInhouse).length} inhouse •{" "}
+                    {filteredTeams.filter((t) => !isTeamInhouse(t)).length}{" "}
+                    outhouse
+                  </CardDescription>
+                </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={handleSelectAll}>
                     <CheckSquare className="mr-1 h-4 w-4" />
@@ -413,6 +483,7 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                   const isMapped = !!mapping;
                   const isSelected = selectedTeams.includes(team.id);
                   const hasScore = !!getTeamScore(team.id);
+                  const inhouse = isTeamInhouse(team);
 
                   return (
                     <div
@@ -438,6 +509,12 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                           <div>
                             <div className="flex items-center gap-2">
                               <h4 className="font-medium">{team.name}</h4>
+                              <Badge
+                                variant={inhouse ? "green" : "secondary"}
+                                className="text-xs"
+                              >
+                                {inhouse ? "Inhouse" : "Outhouse"}
+                              </Badge>
                               {hasScore && (
                                 <Badge variant="default" className="text-xs">
                                   <Trophy className="mr-1 h-3 w-3" />

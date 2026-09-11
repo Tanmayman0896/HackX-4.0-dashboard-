@@ -244,7 +244,7 @@ export class SuperAdminService {
     return prisma.team.findMany({
       include: {
         participants: {
-          select: {id: true, name: true, email: true},
+          select: {id: true, name: true, email: true, residence: true},
         },
         problemStatement: {
           include: {domain: true},
