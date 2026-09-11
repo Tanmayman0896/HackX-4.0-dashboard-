@@ -90,16 +90,22 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
     }
   };
 
-  // Get unique problem statements and floors for filtering
-  const uniquePS = useMemo(() => {
-    const map = new Map<string, { id: string; title: string }>();
+  // Get unique themes (domains) with team counts for filtering
+  const uniqueThemes = useMemo(() => {
+    const map = new Map<string, { name: string; teamCount: number }>();
     (teams || []).forEach((team) => {
-      if (team && team.problemStatement && team.problemStatement.id) {
-        map.set(team.problemStatement.id, team.problemStatement);
+      if (team?.problemStatement?.domain) {
+        const domain = team.problemStatement.domain;
+        const existing = map.get(domain);
+        if (existing) {
+          existing.teamCount += 1;
+        } else {
+          map.set(domain, { name: domain, teamCount: 1 });
+        }
       }
     });
     return Array.from(map.values()).sort((a, b) =>
-      (a.title || "").localeCompare(b.title || ""),
+      (a.name || "").localeCompare(b.name || ""),
     );
   }, [teams]);
 
@@ -111,7 +117,7 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
         team.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         team.round1Room?.name?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesPS =
-        selectedPS === "all" || team.problemStatement?.title === selectedPS;
+        selectedPS === "all" || team.problemStatement?.domain === selectedPS;
       const isMapped = (mappings || []).some((m) => m.teamId === team.id);
       const matchesMappedFilter = !showMappedOnly || isMapped;
 
@@ -330,16 +336,16 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Problem Statement</Label>
+              <Label>Theme</Label>
               <Select value={selectedPS} onValueChange={setSelectedPS}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Problem Statements</SelectItem>
-                  {uniquePS.map((ps) => (
-                    <SelectItem key={ps.id} value={ps.title}>
-                      {ps.title}
+                  <SelectItem value="all">All Themes</SelectItem>
+                  {uniqueThemes.map((theme) => (
+                    <SelectItem key={theme.name} value={theme.name}>
+                      {theme.name} ({theme.teamCount} teams)
                     </SelectItem>
                   ))}
                 </SelectContent>
