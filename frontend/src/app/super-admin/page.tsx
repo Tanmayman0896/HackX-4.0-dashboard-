@@ -203,7 +203,7 @@ export default function SuperAdminDashboard() {
     // Add log entry
     const newLog = {
       id: logs.length + 1,
-      createdAt: new Date().toLocaleString(),
+      createdAt: new Date().toISOString(),
       action: "TOGGLE_PS_LOCK",
       user,
       payload: JSON.stringify({ locked: !psLocked }),
@@ -222,7 +222,7 @@ export default function SuperAdminDashboard() {
     setMentorshipLocked(locked);
     const newLog = {
       id: logs.length + 1,
-      createdAt: new Date().toLocaleString(),
+      createdAt: new Date().toISOString(),
       action: locked ? "Mentorship Unlocked" : "Mentorship Locked",
       user: user,
       details: `Mentorship booking ${mentorshipLocked ? "unlocked" : "locked"}`,
@@ -253,7 +253,7 @@ export default function SuperAdminDashboard() {
     setRound1Locked(locked);
     const newLog = {
       id: logs.length + 1,
-      createdAt: new Date().toLocaleString(),
+      createdAt: new Date().toISOString(),
       action: locked ? "Round 1 Unlocked" : "Round 1 Locked",
       user: user,
       details: `Round 1 evaluation ${round1Locked ? "unlocked" : "locked"}`,

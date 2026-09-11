@@ -24,6 +24,23 @@ import { apiService } from "@/lib/service";
 import { useToast } from "@/hooks/use-toast";
 import type { LogEntry, LogFilter } from "@/lib/types";
 
+const formatIST = (value: string) => {
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return value;
+  return (
+    date.toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    }) + " IST"
+  );
+};
+
 interface ActivityLogsProps {
   logs: LogEntry[];
   onRefreshAction: () => void;
@@ -106,9 +123,12 @@ export function ActivityLogs({
     const csvContent = [
       ["Timestamp", "Action", "Username", "Role"].join(","),
       ...filteredLogs.map((log) =>
-        [log.createdAt, log.action, log.user?.username, log.user?.role].join(
-          ",",
-        ),
+        [
+          `"${formatIST(log.createdAt)}"`,
+          log.action,
+          log.user?.username,
+          log.user?.role,
+        ].join(","),
       ),
     ].join("\n");
 
@@ -269,7 +289,7 @@ export function ActivityLogs({
                       </span>
                     </div>
                     <span className="text-muted-foreground text-xs">
-                      {log.createdAt}
+                      {formatIST(log.createdAt)}
                     </span>
                   </div>
                   <p className="text-muted-foreground text-sm">{log.payload}</p>
