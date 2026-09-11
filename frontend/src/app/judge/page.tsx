@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,7 @@ import {
 } from "lucide-react";
 import { Evaluation, Judge } from "@/lib/types";
 import { apiService } from "@/lib/service";
+import { authService } from "@/lib/auth";
 import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
 import {
   BootScreen,
@@ -72,13 +74,25 @@ export default function JudgeDashboard() {
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
   const [activeRound, setActiveRound] = useState<1 | 3>(1);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
+    const currentUser = authService.getUser();
+    if (
+      !currentUser ||
+      (currentUser.role !== "JUDGE" &&
+        currentUser.role !== "ADMIN" &&
+        currentUser.role !== "SUPER_ADMIN")
+    ) {
+      router.push("/login");
+      return;
+    }
+
     apiService
       .getProfile()
       .then((value) => setJudge(value as Judge))
       .catch(console.error);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     apiService

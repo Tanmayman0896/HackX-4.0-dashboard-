@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OverviewTab } from "@/components/participant/overview-tab";
 import { ProblemStatements } from "@/components/participant/problem-statements";
@@ -9,6 +10,7 @@ import { AnnouncementsTab } from "@/components/participant/announcements-tab";
 import { SubmissionsTab } from "@/components/participant/submissions-tab";
 import { BookmarksTab } from "@/components/participant/bookmarks-tab";
 import { apiService } from "@/lib/service";
+import { authService } from "@/lib/auth";
 import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
 import { BootScreen, EmptyState } from "@/components/shell/primitives";
 import {
@@ -30,6 +32,7 @@ import type {
 } from "@/lib/types";
 
 export default function TeamDashboard() {
+  const router = useRouter();
   const [passwordChanged, setPasswordChanged] = useState(true);
   const [selectedPS, setSelectedPS] = useState<ProblemStatement | null>(null);
   const [bookmarkedPS, setBookmarkedPS] = useState<ProblemStatement[]>([]);
@@ -46,6 +49,13 @@ export default function TeamDashboard() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [notDonePreviousMentorship, setNotDonePreviousMentorship] =
     useState(false);
+
+  useEffect(() => {
+    const currentUser = authService.getUser();
+    if (!currentUser || currentUser.role !== "TEAM") {
+      router.push("/login");
+    }
+  }, [router]);
 
   useEffect(() => {
     const timer = setInterval(() => {

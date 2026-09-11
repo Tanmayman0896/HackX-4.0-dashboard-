@@ -164,7 +164,10 @@ export function CreateTeamModal({
       console.error("Failed to create team:", error);
       toast({
         title: "Error",
-        description: "Failed to create team. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to create team. Please try again.",
         variant: "destructive",
       });
     } finally {

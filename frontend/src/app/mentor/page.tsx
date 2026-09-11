@@ -1,22 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MapPin, Video } from "lucide-react";
 import { MentorInfoTab } from "@/components/mentor/mentor-info-tab";
 import { QueueManagement } from "@/components/mentor/queue-management";
 import { apiService } from "@/lib/service";
+import { authService } from "@/lib/auth";
 import { AppShell, ShellIdentity } from "@/components/shell/app-shell";
 import { BootScreen } from "@/components/shell/primitives";
 import { LayoutGrid, ListOrdered } from "lucide-react";
 import type { Mentor, QueueItem } from "@/lib/types";
 
 export default function MentorDashboard() {
+  const router = useRouter();
   const [passwordChanged, setPasswordChanged] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [mentorInfo, setMentorInfo] = useState<Mentor | null>(null);
+
+  useEffect(() => {
+    const currentUser = authService.getUser();
+    if (
+      !currentUser ||
+      (currentUser.role !== "MENTOR" &&
+        currentUser.role !== "ADMIN" &&
+        currentUser.role !== "SUPER_ADMIN")
+    ) {
+      router.push("/login");
+    }
+  }, [router]);
 
   useEffect(() => {
     const timer = setInterval(() => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -86,6 +87,7 @@ function ago(dateString: string) {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
   // const [passwordChanged, setPasswordChanged] = useState(true); // Bypass password change logic
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [announcement, setAnnouncement] = useState("");
@@ -220,6 +222,15 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    const currentUser = authService.getUser();
+    if (
+      !currentUser ||
+      (currentUser.role !== "ADMIN" && currentUser.role !== "SUPER_ADMIN")
+    ) {
+      router.push("/login");
+      return;
+    }
+
     apiService
       .getTeams()
       .then((res) => setTeams(Array.isArray(res) ? res : []))
