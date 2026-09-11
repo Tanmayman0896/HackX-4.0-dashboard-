@@ -57,6 +57,60 @@ type ScoreKeys =
   | "feasibility"
   | "impact";
 
+function isTeamInhouse(team: Team): boolean {
+  if (!team) return true;
+
+  // 1. Direct participant residence check
+  if (team.participants && team.participants.length > 0) {
+    const hasOuthouse = team.participants.some(
+      (p) => p.residence === "outhouse",
+    );
+    if (hasOuthouse) return false;
+    const hasInhouse = team.participants.some((p) => p.residence === "inhouse");
+    if (hasInhouse) return true;
+  }
+
+  // 2. Check checkpoint 1 data if present
+  const cp1 = team.checkpoints?.find((c) => c.checkpoint === 1);
+  const cp1Data = cp1?.data as
+    | {
+        inhouseCount?: number;
+        outhouseCount?: number;
+        participants?: { residence?: string }[];
+      }
+    | undefined;
+
+  if (cp1Data) {
+    if (
+      typeof cp1Data.outhouseCount === "number" &&
+      cp1Data.outhouseCount > 0
+    ) {
+      return false;
+    }
+    if (typeof cp1Data.inhouseCount === "number" && cp1Data.inhouseCount > 0) {
+      return true;
+    }
+    if (Array.isArray(cp1Data.participants)) {
+      if (cp1Data.participants.some((p) => p.residence === "outhouse")) {
+        return false;
+      }
+      if (cp1Data.participants.some((p) => p.residence === "inhouse")) {
+        return true;
+      }
+    }
+  }
+
+  // 3. Fallback: check email domain for Manipal University
+  if (team.participants && team.participants.length > 0) {
+    const hasMujEmail = team.participants.some((p) =>
+      p.email?.toLowerCase().includes("manipal.edu"),
+    );
+    if (hasMujEmail) return true;
+  }
+
+  return true;
+}
+
 export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
   const [mappings, setMappings] = useState<TeamJudgeMapping[]>([]);
   const [teamScores, setTeamScores] = useState<TeamScore[]>([]);
@@ -90,32 +144,57 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
     }
   };
 
-  // Get unique problem statements and floors for filtering
-  const uniquePS = useMemo(() => {
-    const map = new Map<string, { id: string; title: string }>();
+  // Get unique themes (domains) with team counts for filtering
+  const uniqueThemes = useMemo(() => {
+    const map = new Map<string, { name: string; teamCount: number }>();
     (teams || []).forEach((team) => {
-      if (team && team.problemStatement && team.problemStatement.id) {
-        map.set(team.problemStatement.id, team.problemStatement);
+      if (team?.problemStatement?.domain) {
+        const raw = team.problemStatement.domain;
+        // domain can be a string or an object { id, name } depending on API
+        const domainName =
+          typeof raw === "string"
+            ? raw
+            : ((raw as { name?: string })?.name ?? "");
+        if (!domainName) return;
+        const existing = map.get(domainName);
+        if (existing) {
+          existing.teamCount += 1;
+        } else {
+          map.set(domainName, { name: domainName, teamCount: 1 });
+        }
       }
     });
     return Array.from(map.values()).sort((a, b) =>
-      (a.title || "").localeCompare(b.title || ""),
+      a.name.localeCompare(b.name),
     );
   }, [teams]);
 
-  // Filter teams based on search and filters
+  // Filter teams based on search and filters, and sort Inhouse first then Outhouse
   const filteredTeams = useMemo(() => {
-    return (teams || []).filter((team) => {
+    const filtered = (teams || []).filter((team) => {
       if (!team) return false;
       const matchesSearch =
         team.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         team.round1Room?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesPS =
-        selectedPS === "all" || team.problemStatement?.title === selectedPS;
+      const rawDomain = team.problemStatement?.domain;
+      const domainName =
+        typeof rawDomain === "string"
+          ? rawDomain
+          : ((rawDomain as { name?: string })?.name ?? "");
+      const matchesPS = selectedPS === "all" || domainName === selectedPS;
       const isMapped = (mappings || []).some((m) => m.teamId === team.id);
       const matchesMappedFilter = !showMappedOnly || isMapped;
 
       return matchesSearch && matchesPS && matchesMappedFilter;
+    });
+
+    // Sort: Inhouse first, then Outhouse. Within each group, sort by team name.
+    return [...filtered].sort((a, b) => {
+      const aInhouse = isTeamInhouse(a);
+      const bInhouse = isTeamInhouse(b);
+      if (aInhouse && !bInhouse) return -1;
+      if (!aInhouse && bInhouse) return 1;
+      return (a.name || "").localeCompare(b.name || "");
     });
   }, [teams, searchTerm, selectedPS, showMappedOnly, mappings]);
 
@@ -317,7 +396,7 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Label>Search Teams</Label>
               <div className="relative">
                 <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
@@ -329,25 +408,25 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Problem Statement</Label>
+            <div className="min-w-0 space-y-2">
+              <Label>Theme</Label>
               <Select value={selectedPS} onValueChange={setSelectedPS}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full min-w-0 truncate">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Problem Statements</SelectItem>
-                  {uniquePS.map((ps) => (
-                    <SelectItem key={ps.id} value={ps.title}>
-                      {ps.title}
+                  <SelectItem value="all">All Themes</SelectItem>
+                  {uniqueThemes.map((theme) => (
+                    <SelectItem key={theme.name} value={theme.name}>
+                      {theme.name} ({theme.teamCount} teams)
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Label>View Options</Label>
-              <div className="flex items-center space-x-2">
+              <div className="flex h-8.5 items-center space-x-2">
                 <Checkbox
                   id="show-mapped"
                   checked={showMappedOnly}
@@ -355,7 +434,7 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                     setShowMappedOnly(value as boolean)
                   }
                 />
-                <Label htmlFor="show-mapped" className="text-sm">
+                <Label htmlFor="show-mapped" className="cursor-pointer text-sm">
                   Show mapped only
                 </Label>
               </div>
@@ -370,10 +449,17 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Teams ({filteredTeams.length})
-                </CardTitle>
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Teams ({filteredTeams.length})
+                  </CardTitle>
+                  <CardDescription className="mt-0.5 text-xs">
+                    {filteredTeams.filter(isTeamInhouse).length} inhouse •{" "}
+                    {filteredTeams.filter((t) => !isTeamInhouse(t)).length}{" "}
+                    outhouse
+                  </CardDescription>
+                </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={handleSelectAll}>
                     <CheckSquare className="mr-1 h-4 w-4" />
@@ -397,6 +483,7 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                   const isMapped = !!mapping;
                   const isSelected = selectedTeams.includes(team.id);
                   const hasScore = !!getTeamScore(team.id);
+                  const inhouse = isTeamInhouse(team);
 
                   return (
                     <div
@@ -422,6 +509,12 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                           <div>
                             <div className="flex items-center gap-2">
                               <h4 className="font-medium">{team.name}</h4>
+                              <Badge
+                                variant={inhouse ? "green" : "secondary"}
+                                className="text-xs"
+                              >
+                                {inhouse ? "Inhouse" : "Outhouse"}
+                              </Badge>
                               {hasScore && (
                                 <Badge variant="default" className="text-xs">
                                   <Trophy className="mr-1 h-3 w-3" />

@@ -93,6 +93,7 @@ export interface TeamParticipant {
   phone: string;
   role: "MEMBER" | "LEADER";
   verified: boolean;
+  residence?: "inhouse" | "outhouse";
 }
 
 export interface Team {

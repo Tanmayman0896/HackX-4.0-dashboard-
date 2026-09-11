@@ -29,8 +29,16 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Clock,
   Eye,
+  Filter,
   Gavel,
   Megaphone,
   Plus,
@@ -92,6 +100,9 @@ export default function AdminDashboard() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [announcement, setAnnouncement] = useState("");
   const [teamSearch, setTeamSearch] = useState("");
+  const [psFilter, setPsFilter] = useState<"all" | "selected" | "non-selected">(
+    "all",
+  );
   const [checkpoint1DialogOpen, setCheckpoint1DialogOpen] = useState(false);
   const [selectedTeamForCheckpoint1, setSelectedTeamForCheckpoint1] = useState<{
     id: string;
@@ -119,6 +130,14 @@ export default function AdminDashboard() {
   const filteredTeams = teams.filter((team) =>
     team.name.toLowerCase().includes(teamSearch.toLowerCase()),
   );
+
+  // Filter problem statements based on selection status
+  const filteredProblemStatements = problemStatements.filter((ps) => {
+    const count = ps.selectedCount ?? 0;
+    if (psFilter === "selected") return count > 0;
+    if (psFilter === "non-selected") return count === 0;
+    return true;
+  });
 
   function updateTeamCheckpoint(teamId: string, checkpoint: Checkpoint) {
     setTeams((prev) =>
@@ -446,36 +465,85 @@ export default function AdminDashboard() {
             <div className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="">
-                    Problem Statement Statistics
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    Distribution of team selections across problem statements
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="">
+                        Problem Statement Statistics
+                      </CardTitle>
+                      <CardDescription className="text-sm">
+                        Distribution of team selections across problem
+                        statements
+                      </CardDescription>
+                    </div>
+                    <Select
+                      value={psFilter}
+                      onValueChange={(value) =>
+                        setPsFilter(
+                          value as "all" | "selected" | "non-selected",
+                        )
+                      }
+                    >
+                      <SelectTrigger className="w-[150px]">
+                        <Filter className="mr-1 h-3.5 w-3.5" />
+                        <SelectValue placeholder="Filter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="selected">Selected</SelectItem>
+                        <SelectItem value="non-selected">
+                          Non Selected
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="mt-3 flex items-center gap-3">
+                    <Badge variant="default" className="text-xs">
+                      Selected:{" "}
+                      {
+                        problemStatements.filter(
+                          (ps) => (ps.selectedCount ?? 0) > 0,
+                        ).length
+                      }
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      Non Selected:{" "}
+                      {
+                        problemStatements.filter(
+                          (ps) => (ps.selectedCount ?? 0) === 0,
+                        ).length
+                      }
+                    </Badge>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {problemStatements.map((ps) => (
-                      <div
-                        key={ps.id}
-                        className="bg-muted flex flex-col space-y-2 rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0"
-                      >
-                        <div className="flex-1">
-                          <span className="text-sm font-medium sm:text-base">
-                            {ps.title}
-                          </span>
-                          <p className="text-muted-foreground text-xs sm:text-sm">
-                            {ps.domain.name}
-                          </p>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          className="text-foreground w-fit text-xs"
+                    {filteredProblemStatements.length === 0 ? (
+                      <p className="text-muted-foreground py-4 text-center text-sm">
+                        No problem statements found for this filter.
+                      </p>
+                    ) : (
+                      filteredProblemStatements.map((ps) => (
+                        <div
+                          key={ps.id}
+                          className="bg-muted flex flex-col space-y-2 rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0"
                         >
-                          {ps.selectedCount} teams
-                        </Badge>
-                      </div>
-                    ))}
+                          <div className="flex-1">
+                            <span className="text-sm font-medium sm:text-base">
+                              {ps.title}
+                            </span>
+                            <p className="text-muted-foreground text-xs sm:text-sm">
+                              {ps.domain?.name ?? ""}
+                            </p>
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className="text-foreground w-fit text-xs"
+                          >
+                            {ps.selectedCount ?? 0} teams
+                          </Badge>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>
