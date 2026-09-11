@@ -984,10 +984,13 @@ export class SuperAdminService {
       throw new Error("Judge not found");
     }
 
-    // Delete the user, which will cascade to delete the judge profile
-    return prisma.user.delete({
-      where: {id: judge.userId},
-    });
+    // Evaluation/TeamScore rows reference judgeId without cascade, so they
+    // must be removed before the user (and its judge profile) can be deleted.
+    return prisma.$transaction([
+      prisma.evaluation.deleteMany({where: {judgeId}}),
+      prisma.teamScore.deleteMany({where: {judgeId}}),
+      prisma.user.delete({where: {id: judge.userId}}),
+    ]);
   }
 
   async getTeamScores() {

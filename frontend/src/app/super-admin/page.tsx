@@ -302,12 +302,21 @@ export default function SuperAdminDashboard() {
   };
 
   const handleRemoveJudge = async (judgeId: string) => {
-    await apiService.removeJudge(judgeId);
-    setJudges((prev) => prev.filter((judge) => judge.id !== judgeId));
-    toast({
-      title: "Success",
-      description: "Judge removed successfully",
-    });
+    try {
+      await apiService.removeJudge(judgeId);
+      setJudges((prev) => prev.filter((judge) => judge.id !== judgeId));
+      toast({
+        title: "Success",
+        description: "Judge removed successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to remove judge",
+        variant: "destructive",
+      });
+    }
   };
 
   // const handlePromoteToRound2 = (teamIds: string[]) => {
