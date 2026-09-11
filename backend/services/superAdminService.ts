@@ -1,5 +1,6 @@
 import {PrismaClient} from "@prisma/client";
 import {hashPassword} from "../utils/password";
+import {AppError} from "../utils/errors";
 import type {LogFilter} from "../types";
 
 const prisma = new PrismaClient();
@@ -209,7 +210,14 @@ export class SuperAdminService {
     });
 
     if (teamsCount > 0) {
-      throw new Error("Cannot delete problem statement that has been selected by teams");
+      throw new AppError("Cannot delete problem statement that has been selected by teams", 400);
+    }
+
+    const bookmarksCount = await prisma.pSBookmark.count({
+      where: {problemStatementId: id},
+    });
+    if (bookmarksCount > 0) {
+      await prisma.pSBookmark.deleteMany({where: {problemStatementId: id}});
     }
 
     return prisma.problemStatement.delete({

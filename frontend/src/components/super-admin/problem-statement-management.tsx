@@ -287,7 +287,10 @@ export function ProblemStatementManagement({
       console.error(error);
       toast({
         title: "Error",
-        description: "Failed to delete problem statement",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to delete problem statement",
         variant: "destructive",
       });
     }
