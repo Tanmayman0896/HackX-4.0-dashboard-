@@ -343,7 +343,7 @@ export function ProblemStatementManagement({
                 Add Problem Statement
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Problem Statement</DialogTitle>
                 <DialogDescription>
@@ -418,7 +418,7 @@ export function ProblemStatementManagement({
                             Edit
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
+                        <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Edit Problem Statement</DialogTitle>
                             <DialogDescription>

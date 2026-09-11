@@ -106,43 +106,27 @@ export async function createBasicData() {
   // Create domains
   const domains = await Promise.all([
     prisma.domain.upsert({
-      where: {name: "Web Development"},
+      where: {name: "FinTech"},
       update: {},
       create: {
-        name: "Web Development",
-        description: "Frontend and backend web applications",
+        name: "FinTech",
+        description: "Financial technology and digital payment solutions",
       },
     }),
     prisma.domain.upsert({
-      where: {name: "Mobile Development"},
+      where: {name: "Supply Chain and Logistics"},
       update: {},
       create: {
-        name: "Mobile Development",
-        description: "iOS and Android mobile applications",
+        name: "Supply Chain and Logistics",
+        description: "Supply chain management and logistics optimization",
       },
     }),
     prisma.domain.upsert({
-      where: {name: "AI/ML"},
+      where: {name: "Cybersecurity and Defence Systems"},
       update: {},
       create: {
-        name: "AI/ML",
-        description: "Artificial Intelligence and Machine Learning solutions",
-      },
-    }),
-    prisma.domain.upsert({
-      where: {name: "Blockchain"},
-      update: {},
-      create: {
-        name: "Blockchain",
-        description: "Decentralized applications and blockchain solutions",
-      },
-    }),
-    prisma.domain.upsert({
-      where: {name: "IoT"},
-      update: {},
-      create: {
-        name: "IoT",
-        description: "Internet of Things and embedded systems",
+        name: "Cybersecurity and Defence Systems",
+        description: "Cybersecurity solutions and defence system innovations",
       },
     }),
     prisma.domain.upsert({
@@ -151,6 +135,54 @@ export async function createBasicData() {
       create: {
         name: "Open Innovation",
         description: "Open Innovation and cross-domain solutions",
+      },
+    }),
+    prisma.domain.upsert({
+      where: {name: "EdTech"},
+      update: {},
+      create: {
+        name: "EdTech",
+        description: "Educational technology and learning platforms",
+      },
+    }),
+    prisma.domain.upsert({
+      where: {name: "Healthcare"},
+      update: {},
+      create: {
+        name: "Healthcare",
+        description: "Healthcare technology and medical innovations",
+      },
+    }),
+    prisma.domain.upsert({
+      where: {name: "Blockchain for Social Good and Smart Infrastructure"},
+      update: {},
+      create: {
+        name: "Blockchain for Social Good and Smart Infrastructure",
+        description: "Blockchain solutions for social impact and smart infrastructure",
+      },
+    }),
+    prisma.domain.upsert({
+      where: {name: "Environmental Sustainability"},
+      update: {},
+      create: {
+        name: "Environmental Sustainability",
+        description: "Environmental sustainability and green technology solutions",
+      },
+    }),
+    prisma.domain.upsert({
+      where: {name: "AgriTech"},
+      update: {},
+      create: {
+        name: "AgriTech",
+        description: "Agricultural technology and farming innovations",
+      },
+    }),
+    prisma.domain.upsert({
+      where: {name: "Disaster Response"},
+      update: {},
+      create: {
+        name: "Disaster Response",
+        description: "Disaster response, preparedness and relief solutions",
       },
     }),
   ]);
