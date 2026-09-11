@@ -19,6 +19,7 @@
     "db:seed-rooms": "tsx scripts/seed-rooms.ts",
     "db:seed-round2-rooms": "tsx scripts/seed-round2-rooms.ts",
     "db:clean-users": "tsx scripts/clean-users.ts",
+    "db:import-final-teams": "tsx scripts/import-final-teams.ts",
     "db:reset": "prisma migrate reset --force && npm run db:seed"
   },
   "dependencies": {
