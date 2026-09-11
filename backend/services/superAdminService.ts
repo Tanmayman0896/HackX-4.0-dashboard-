@@ -176,9 +176,17 @@ export class SuperAdminService {
     title: string
     description: string
     domainId: string
+    deliverables?: string[]
   }) {
+    // Frontend form data also carries a 'domain' name field for display
+    // purposes; only pass the fields the Prisma create input accepts.
     return prisma.problemStatement.create({
-      data,
+      data: {
+        title: data.title,
+        description: data.description,
+        domainId: data.domainId,
+        deliverables: data.deliverables ?? [],
+      },
       include: {
         domain: true,
       },
@@ -196,7 +204,12 @@ export class SuperAdminService {
   ) {
     return prisma.problemStatement.update({
       where: {id},
-      data,
+      data: {
+        title: data.title,
+        description: data.description,
+        domainId: data.domainId,
+        deliverables: data.deliverables ?? [],
+      },
       include: {
         domain: true,
       },
@@ -953,8 +966,8 @@ export class SuperAdminService {
   }
 
   async addJudge(payload: { name: string; }) {
-    // Generate a random password
-    const rawPassword = Math.random().toString(36).slice(-6);
+    // Generate a random 4-character all-caps password
+    const rawPassword = Math.random().toString(36).slice(-4).toUpperCase();
     const hashedPassword = await hashPassword(rawPassword);
 
     // Create user and judge profile

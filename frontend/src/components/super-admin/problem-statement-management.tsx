@@ -246,7 +246,10 @@ export function ProblemStatementManagement({
       console.error(error);
       toast({
         title: "Error",
-        description: "Failed to create problem statement",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to create problem statement",
         variant: "destructive",
       });
     }
@@ -269,7 +272,10 @@ export function ProblemStatementManagement({
       console.error(error);
       toast({
         title: "Error",
-        description: "Failed to update problem statement",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update problem statement",
         variant: "destructive",
       });
     }
