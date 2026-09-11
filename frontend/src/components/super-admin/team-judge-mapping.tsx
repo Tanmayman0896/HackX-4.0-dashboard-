@@ -95,17 +95,23 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
     const map = new Map<string, { name: string; teamCount: number }>();
     (teams || []).forEach((team) => {
       if (team?.problemStatement?.domain) {
-        const domain = team.problemStatement.domain;
-        const existing = map.get(domain);
+        const raw = team.problemStatement.domain;
+        // domain can be a string or an object { id, name } depending on API
+        const domainName =
+          typeof raw === "string"
+            ? raw
+            : ((raw as { name?: string })?.name ?? "");
+        if (!domainName) return;
+        const existing = map.get(domainName);
         if (existing) {
           existing.teamCount += 1;
         } else {
-          map.set(domain, { name: domain, teamCount: 1 });
+          map.set(domainName, { name: domainName, teamCount: 1 });
         }
       }
     });
     return Array.from(map.values()).sort((a, b) =>
-      (a.name || "").localeCompare(b.name || ""),
+      a.name.localeCompare(b.name),
     );
   }, [teams]);
 
@@ -116,8 +122,12 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
       const matchesSearch =
         team.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         team.round1Room?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesPS =
-        selectedPS === "all" || team.problemStatement?.domain === selectedPS;
+      const rawDomain = team.problemStatement?.domain;
+      const domainName =
+        typeof rawDomain === "string"
+          ? rawDomain
+          : ((rawDomain as { name?: string })?.name ?? "");
+      const matchesPS = selectedPS === "all" || domainName === selectedPS;
       const isMapped = (mappings || []).some((m) => m.teamId === team.id);
       const matchesMappedFilter = !showMappedOnly || isMapped;
 
