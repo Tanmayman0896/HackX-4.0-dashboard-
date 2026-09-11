@@ -267,7 +267,11 @@ export default function SuperAdminDashboard() {
       addMentorDetails as MentorDetails,
     );
     const username = addMentorDetails.name.toLowerCase().replace(/\s+/g, "_");
-    setMentors((prev) => [...prev, newMentor]);
+    const mentorWithQueue = {
+      ...newMentor,
+      mentorshipQueue: newMentor.mentorshipQueue || [],
+    };
+    setMentors((prev) => [...prev, mentorWithQueue]);
     alert(
       `Mentor added successfully.\nUsername: ${username}\nPassword: ${rawPassword}`,
     );
@@ -702,7 +706,7 @@ export default function SuperAdminDashboard() {
                         <Badge variant={"outline"} className="text-xs">
                           Queue:{" "}
                           {
-                            mentor.mentorshipQueue.filter(
+                            (mentor.mentorshipQueue || []).filter(
                               (q) => q.status === "WAITING",
                             ).length
                           }
@@ -739,45 +743,47 @@ export default function SuperAdminDashboard() {
                             </DialogHeader>
                             <div className="space-y-2">
                               <div className="text-muted-foreground text-sm">
-                                {mentor.mentorshipQueue.length === 0
+                                {(mentor.mentorshipQueue || []).length === 0
                                   ? "No teams in the queue."
-                                  : mentor.mentorshipQueue.map((item) => (
-                                      <div
-                                        key={item.id}
-                                        className="border-b pb-2"
-                                      >
-                                        <div className="flex w-full items-end justify-between gap-2">
-                                          <p className="font-medium">
-                                            Team: {item.team.name}
+                                  : (mentor.mentorshipQueue || []).map(
+                                      (item) => (
+                                        <div
+                                          key={item.id}
+                                          className="border-b pb-2"
+                                        >
+                                          <div className="flex w-full items-end justify-between gap-2">
+                                            <p className="font-medium">
+                                              Team: {item.team.name}
+                                            </p>
+                                            <Badge
+                                              variant={
+                                                item.status === "WAITING"
+                                                  ? "yellow"
+                                                  : item.status === "CANCELLED"
+                                                    ? "red"
+                                                    : item.status === "RESOLVED"
+                                                      ? "green"
+                                                      : "outline"
+                                              }
+                                              className="mt-1 text-xs"
+                                            >
+                                              {item.status}
+                                            </Badge>
+                                          </div>
+                                          <p className="text-muted-foreground font-medium">
+                                            {ago(item.createdAt)}
                                           </p>
-                                          <Badge
-                                            variant={
-                                              item.status === "WAITING"
-                                                ? "yellow"
-                                                : item.status === "CANCELLED"
-                                                  ? "red"
-                                                  : item.status === "RESOLVED"
-                                                    ? "green"
-                                                    : "outline"
-                                            }
-                                            className="mt-1 text-xs"
-                                          >
-                                            {item.status}
-                                          </Badge>
+                                          <p className="text-sm">
+                                            Query: {item.query}
+                                          </p>
+                                          {item.notes && (
+                                            <p className="text-sm italic">
+                                              Notes: {item.notes}
+                                            </p>
+                                          )}
                                         </div>
-                                        <p className="text-muted-foreground font-medium">
-                                          {ago(item.createdAt)}
-                                        </p>
-                                        <p className="text-sm">
-                                          Query: {item.query}
-                                        </p>
-                                        {item.notes && (
-                                          <p className="text-sm italic">
-                                            Notes: {item.notes}
-                                          </p>
-                                        )}
-                                      </div>
-                                    ))}
+                                      ),
+                                    )}
                               </div>
                             </div>
                           </DialogContent>

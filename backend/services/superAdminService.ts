@@ -941,7 +941,18 @@ export class SuperAdminService {
 
     const newMentor = await prisma.mentor.findUnique({
       where: {userId: user.id},
-      include: {user: {select: {id: true, username: true, role: true}}},
+      include: {
+        user: {select: {id: true, username: true, role: true}},
+        mentorshipQueue: {
+          include: {
+            team: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     return {newMentor, rawPassword};

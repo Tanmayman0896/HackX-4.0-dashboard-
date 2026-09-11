@@ -204,7 +204,7 @@ export interface Mentor {
   mode: "ONLINE" | "IN_PERSON";
   domains: string[];
   expertise: string[];
-  mentorshipQueue: {
+  mentorshipQueue?: {
     id: string;
     teamId: string;
     mentorId: string;
