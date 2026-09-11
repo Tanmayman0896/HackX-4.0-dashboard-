@@ -133,8 +133,9 @@ export default function AdminDashboard() {
 
   // Filter problem statements based on selection status
   const filteredProblemStatements = problemStatements.filter((ps) => {
-    if (psFilter === "selected") return ps.selectedCount > 0;
-    if (psFilter === "non-selected") return ps.selectedCount === 0;
+    const count = ps.selectedCount ?? 0;
+    if (psFilter === "selected") return count > 0;
+    if (psFilter === "non-selected") return count === 0;
     return true;
   });
 
@@ -499,15 +500,17 @@ export default function AdminDashboard() {
                     <Badge variant="default" className="text-xs">
                       Selected:{" "}
                       {
-                        problemStatements.filter((ps) => ps.selectedCount > 0)
-                          .length
+                        problemStatements.filter(
+                          (ps) => (ps.selectedCount ?? 0) > 0,
+                        ).length
                       }
                     </Badge>
                     <Badge variant="secondary" className="text-xs">
                       Non Selected:{" "}
                       {
-                        problemStatements.filter((ps) => ps.selectedCount === 0)
-                          .length
+                        problemStatements.filter(
+                          (ps) => (ps.selectedCount ?? 0) === 0,
+                        ).length
                       }
                     </Badge>
                   </div>
@@ -529,14 +532,14 @@ export default function AdminDashboard() {
                               {ps.title}
                             </span>
                             <p className="text-muted-foreground text-xs sm:text-sm">
-                              {ps.domain.name}
+                              {ps.domain?.name ?? ""}
                             </p>
                           </div>
                           <Badge
                             variant="outline"
                             className="text-foreground w-fit text-xs"
                           >
-                            {ps.selectedCount} teams
+                            {ps.selectedCount ?? 0} teams
                           </Badge>
                         </div>
                       ))
