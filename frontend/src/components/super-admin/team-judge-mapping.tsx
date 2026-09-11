@@ -396,7 +396,7 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Label>Search Teams</Label>
               <div className="relative">
                 <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
@@ -408,10 +408,10 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Label>Theme</Label>
               <Select value={selectedPS} onValueChange={setSelectedPS}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full min-w-0 truncate">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -424,9 +424,9 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Label>View Options</Label>
-              <div className="flex items-center space-x-2">
+              <div className="flex h-8.5 items-center space-x-2">
                 <Checkbox
                   id="show-mapped"
                   checked={showMappedOnly}
@@ -434,7 +434,7 @@ export function TeamJudgeMapping({ teams, judges }: TeamJudgeMappingProps) {
                     setShowMappedOnly(value as boolean)
                   }
                 />
-                <Label htmlFor="show-mapped" className="text-sm">
+                <Label htmlFor="show-mapped" className="cursor-pointer text-sm">
                   Show mapped only
                 </Label>
               </div>
