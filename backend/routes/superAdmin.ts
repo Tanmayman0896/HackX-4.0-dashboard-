@@ -122,6 +122,18 @@ router.get("/teams/:teamId", async (req: AuthRequest, res, next) => {
   }
 });
 
+router.put("/teams/:teamId", modifyLimiter, logActivity("UPDATE_TEAM_INFO"), async (req: AuthRequest, res, next) => {
+  try {
+    const team = await superAdminService.updateTeamInfo(req.params.teamId, {
+      name: req.body.name,
+      teamId: req.body.teamId,
+    });
+    res.json(team);
+  } catch (error: any) {
+    next(error)
+  }
+});
+
 // Create a new team manually
 router.post("/teams/create", modifyLimiter, logActivity("CREATE_TEAM"), async (req: AuthRequest, res, next) => {
   try {

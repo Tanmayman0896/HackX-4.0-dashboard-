@@ -924,7 +924,17 @@ export default function SuperAdminDashboard() {
         </TabsContent>
 
         <TabsContent value="teams">
-          <TeamPage teams={teams} judges={judges} />
+          <TeamPage
+            teams={teams}
+            judges={judges}
+            onTeamUpdatedAction={(updated) =>
+              setTeams((prev) =>
+                prev.map((t) =>
+                  t.id === updated.id ? { ...t, ...updated } : t,
+                ),
+              )
+            }
+          />
         </TabsContent>
 
         <TabsContent value="users">

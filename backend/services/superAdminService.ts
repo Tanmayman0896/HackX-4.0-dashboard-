@@ -341,6 +341,54 @@ export class SuperAdminService {
     return team;
   }
 
+  async updateTeamInfo(teamId: string, data: {name?: string; teamId?: string}) {
+    const team = await prisma.team.findUnique({where: {id: teamId}});
+    if (!team) {
+      throw new AppError("Team not found", 404);
+    }
+
+    const name = data.name?.trim();
+    const newTeamId = data.teamId?.trim();
+
+    if (name !== undefined && name.length === 0) {
+      throw new AppError("Team name cannot be empty", 400);
+    }
+    if (newTeamId !== undefined && newTeamId.length === 0) {
+      throw new AppError("Team ID cannot be empty", 400);
+    }
+
+    if (newTeamId && newTeamId !== team.teamId) {
+      const existingTeam = await prisma.team.findUnique({where: {teamId: newTeamId}});
+      if (existingTeam) {
+        throw new AppError("Team ID is already in use by another team", 400);
+      }
+      const existingUser = await prisma.user.findUnique({where: {username: newTeamId}});
+      if (existingUser) {
+        throw new AppError("Team ID is already in use as a username", 400);
+      }
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.team.update({
+        where: {id: teamId},
+        data: {
+          ...(name !== undefined && {name}),
+          ...(newTeamId !== undefined && {teamId: newTeamId}),
+        },
+      });
+
+      // The team's login username is set to its teamId (see updateTeamCheckpoint2) - keep it in sync.
+      if (newTeamId && newTeamId !== team.teamId) {
+        await tx.user.updateMany({
+          where: {teamId: team.id, username: team.teamId},
+          data: {username: newTeamId},
+        });
+      }
+
+      return updated;
+    });
+  }
+
   // System Settings
   async toggleMentorshipLock(locked: boolean) {
     await prisma.systemSettings.upsert({

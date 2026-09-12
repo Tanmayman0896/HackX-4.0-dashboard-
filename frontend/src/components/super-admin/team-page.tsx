@@ -33,21 +33,34 @@ import {
   FileText,
   Filter,
   Github,
+  Pencil,
   Search,
   Trophy,
 } from "lucide-react";
+import { apiService } from "@/lib/service";
+import { useToast } from "@/hooks/use-toast";
 import type { Judge, Team } from "@/lib/types";
 
 interface TeamPageProps {
   teams: Team[];
   judges: Judge[];
+  onTeamUpdatedAction?: (team: Team) => void;
 }
 
-export function TeamPage({ teams, judges }: TeamPageProps) {
+export function TeamPage({
+  teams,
+  judges,
+  onTeamUpdatedAction,
+}: TeamPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
+  const [isEditingInfo, setIsEditingInfo] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editTeamId, setEditTeamId] = useState("");
+  const [isSavingInfo, setIsSavingInfo] = useState(false);
+  const { toast } = useToast();
 
   // Filter teams based on search and filters
   const filteredTeams = useMemo(() => {
@@ -72,6 +85,52 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
   const viewTeamDetails = (team: Team) => {
     setSelectedTeam(team);
     setIsTeamDialogOpen(true);
+    setIsEditingInfo(false);
+  };
+
+  const startEditingInfo = () => {
+    if (!selectedTeam) return;
+    setEditName(selectedTeam.name);
+    setEditTeamId(selectedTeam.teamId);
+    setIsEditingInfo(true);
+  };
+
+  const cancelEditingInfo = () => {
+    setIsEditingInfo(false);
+  };
+
+  const saveTeamInfo = async () => {
+    if (!selectedTeam) return;
+    if (!editName.trim() || !editTeamId.trim()) {
+      toast({
+        title: "Error",
+        description: "Team name and Team ID cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingInfo(true);
+    try {
+      const updated = await apiService.updateTeam(selectedTeam.id, {
+        name: editName.trim(),
+        teamId: editTeamId.trim(),
+      });
+      const merged = { ...selectedTeam, ...updated };
+      setSelectedTeam(merged);
+      onTeamUpdatedAction?.(merged);
+      setIsEditingInfo(false);
+      toast({ title: "Success", description: "Team info updated" });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to update team info",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingInfo(false);
+    }
   };
 
   const clearFilters = () => {
@@ -340,18 +399,72 @@ export function TeamPage({ teams, judges }: TeamPageProps) {
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="">Team Information</CardTitle>
+                    {!isEditingInfo && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={startEditingInfo}
+                      >
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                    )}
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm font-medium *:space-y-1">
-                    <div>
-                      <Label className="font-bold">Team Name:</Label>
-                      <p>{selectedTeam.name}</p>
-                    </div>
-                    <div>
-                      <Label className="font-bold">Team ID:</Label>
-                      <p>{selectedTeam.teamId}</p>
-                    </div>
+                    {isEditingInfo ? (
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <Label htmlFor="edit-team-name" className="font-bold">
+                            Team Name
+                          </Label>
+                          <Input
+                            id="edit-team-name"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="edit-team-id" className="font-bold">
+                            Team ID
+                          </Label>
+                          <Input
+                            id="edit-team-id"
+                            value={editTeamId}
+                            onChange={(e) => setEditTeamId(e.target.value)}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={saveTeamInfo}
+                            disabled={isSavingInfo}
+                          >
+                            {isSavingInfo ? "Saving..." : "Save"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={cancelEditingInfo}
+                            disabled={isSavingInfo}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <Label className="font-bold">Team Name:</Label>
+                          <p>{selectedTeam.name}</p>
+                        </div>
+                        <div>
+                          <Label className="font-bold">Team ID:</Label>
+                          <p>{selectedTeam.teamId}</p>
+                        </div>
+                      </>
+                    )}
                     <div>
                       <Label className="font-bold">Problem Statement:</Label>
                       <p>
