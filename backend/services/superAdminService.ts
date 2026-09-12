@@ -622,7 +622,7 @@ export class SuperAdminService {
   }
 
   // Round 3 Management
-  async getRound3Candidates(sourceRound = 2) {
+  async getRound3Candidates(sourceRound = 1) {
     const aggregates = await prisma.teamScore.groupBy({
       by: ["teamId"],
       where: {round: sourceRound, totalScore: {not: null}},
