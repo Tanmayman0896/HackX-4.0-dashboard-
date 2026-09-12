@@ -14,13 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -514,33 +507,40 @@ export default function JudgeDashboard() {
                                 </div>
                               </div>
                               {activeRound === 3 ? (
-                                <Select
-                                  value={
-                                    isRound3GradeScore(scores[criteria.id])
-                                      ? String(scores[criteria.id])
-                                      : undefined
-                                  }
-                                  onValueChange={(value) =>
-                                    handleScoreChange(
-                                      criteria.id,
-                                      Number(value),
-                                    )
-                                  }
+                                <div
+                                  role="group"
+                                  aria-label={`${criteria.name} grade`}
+                                  className="grid grid-cols-5 gap-2"
                                 >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select a grade" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {round3Grades.map(({ grade, score }) => (
-                                      <SelectItem
+                                  {round3Grades.map(({ grade, score }) => {
+                                    const isSelected =
+                                      scores[criteria.id] === score;
+                                    const hasSelection = isRound3GradeScore(
+                                      scores[criteria.id],
+                                    );
+
+                                    return (
+                                      <Button
                                         key={grade}
-                                        value={String(score)}
+                                        type="button"
+                                        variant={
+                                          isSelected ? "default" : "outline"
+                                        }
+                                        aria-pressed={isSelected}
+                                        onClick={() =>
+                                          handleScoreChange(criteria.id, score)
+                                        }
+                                        className={`h-10 w-full px-2 ${
+                                          hasSelection && !isSelected
+                                            ? "opacity-50"
+                                            : ""
+                                        }`}
                                       >
                                         {grade} - {score}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                      </Button>
+                                    );
+                                  })}
+                                </div>
                               ) : (
                                 <Slider
                                   value={[scores[criteria.id] || 0]}
