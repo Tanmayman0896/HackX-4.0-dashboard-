@@ -335,7 +335,7 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {rooms.map((room) => (
           <Card
             key={room.id}
