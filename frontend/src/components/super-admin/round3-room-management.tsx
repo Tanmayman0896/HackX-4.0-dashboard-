@@ -40,6 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Judge, Round3Candidate, Round3Room } from "@/lib/types";
 
 const TOP_TEAMS_COUNT = 30;
+const REQUIRED_JUDGES_PER_ROOM = 2;
 
 export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
   const [candidates, setCandidates] = useState<Round3Candidate[]>([]);
@@ -85,7 +86,8 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
   );
   const availableJudges = judges.filter((j) => !assignedJudgeIds.has(j.id));
   const allRoomsStaffed =
-    rooms.length > 0 && rooms.every((room) => room.judges.length > 0);
+    rooms.length > 0 &&
+    rooms.every((room) => room.judges.length === REQUIRED_JUDGES_PER_ROOM);
   const assignedTeamCount = rooms.reduce(
     (sum, room) => sum + room.teams.length,
     0,
@@ -323,12 +325,14 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
       {!allRoomsStaffed && (
         <Card className="border-l-warn border-l-2">
           <CardContent className="text-muted-foreground pt-4 text-sm">
-            Assign at least one judge to each meeting room before dividing
-            teams. Unstaffed rooms:{" "}
+            Assign exactly {REQUIRED_JUDGES_PER_ROOM} judges to each meeting
+            room before dividing teams. Rooms needing attention:{" "}
             <span className="font-medium">
               {rooms
-                .filter((r) => r.judges.length === 0)
-                .map((r) => r.name)
+                .filter(
+                  (room) => room.judges.length !== REQUIRED_JUDGES_PER_ROOM,
+                )
+                .map((room) => `${room.name} (${room.judges.length})`)
                 .join(", ") || "none"}
             </span>
           </CardContent>
@@ -350,11 +354,13 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
                   <CardDescription>Capacity: {room.capacity}</CardDescription>
                 </div>
                 <Badge
-                  variant={room.judges.length > 0 ? "default" : "secondary"}
+                  variant={
+                    room.judges.length === REQUIRED_JUDGES_PER_ROOM
+                      ? "default"
+                      : "secondary"
+                  }
                 >
-                  {room.judges.length > 0
-                    ? `${room.judges.length} Judge(s)`
-                    : "No Judges"}
+                  {room.judges.length}/{REQUIRED_JUDGES_PER_ROOM} Judges
                 </Badge>
               </div>
             </CardHeader>
@@ -379,23 +385,25 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
                     </button>
                   </div>
                 ))}
-                <Select
-                  value=""
-                  onValueChange={(judgeId) =>
-                    handleAssignJudge(judgeId, room.id)
-                  }
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="+ Add judge to room" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableJudges.map((judge) => (
-                      <SelectItem key={judge.id} value={judge.id}>
-                        {judge.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {room.judges.length < REQUIRED_JUDGES_PER_ROOM && (
+                  <Select
+                    value=""
+                    onValueChange={(judgeId) =>
+                      handleAssignJudge(judgeId, room.id)
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="+ Add judge to room" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableJudges.map((judge) => (
+                        <SelectItem key={judge.id} value={judge.id}>
+                          {judge.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div>
@@ -520,9 +528,14 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className="text-center">
               <div className="text-hackx text-2xl font-semibold tracking-tight tabular-nums">
-                {rooms.filter((r) => r.judges.length > 0).length}/{rooms.length}
+                {
+                  rooms.filter(
+                    (room) => room.judges.length === REQUIRED_JUDGES_PER_ROOM,
+                  ).length
+                }
+                /{rooms.length}
               </div>
-              <p className="text-muted-foreground text-sm">Rooms with Judges</p>
+              <p className="text-muted-foreground text-sm">Rooms Ready</p>
             </div>
             <div className="text-center">
               <div className="text-info-ink text-2xl font-semibold tracking-tight tabular-nums">

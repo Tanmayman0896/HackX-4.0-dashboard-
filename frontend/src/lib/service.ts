@@ -20,6 +20,7 @@ import type {
   Round2Room,
   Round3Candidate,
   Round3Room,
+  Round3Team,
   Scores,
   Submission,
   Team,
@@ -494,6 +495,10 @@ class ApiService {
   }
 
   // Round 3 Management
+  async getRound3Teams(): Promise<Round3Team[]> {
+    return this.request("/round3/teams");
+  }
+
   async getRound3Candidates(): Promise<Round3Candidate[]> {
     return this.request("/round3/candidates");
   }

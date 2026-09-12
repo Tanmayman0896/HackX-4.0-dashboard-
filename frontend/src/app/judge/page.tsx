@@ -14,6 +14,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -55,6 +62,17 @@ interface Criterion {
   weight: number;
   maxScore: number;
 }
+
+const round3Grades = [
+  { grade: "A", score: 10 },
+  { grade: "B", score: 9 },
+  { grade: "C", score: 8 },
+  { grade: "D", score: 7 },
+  { grade: "E", score: 6 },
+] as const;
+
+const isRound3GradeScore = (score: number) =>
+  round3Grades.some((grade) => grade.score === score);
 
 export default function JudgeDashboard() {
   // const [passwordChanged, setPasswordChanged] = useState(true);
@@ -161,12 +179,16 @@ export default function JudgeDashboard() {
     return totalWeightedScore.toFixed(1);
   };
 
-  const handleScoreChange = (criteriaId: string, value: number[]) => {
+  const handleScoreChange = (criteriaId: ScoreKeys, value: number) => {
     setScores((prev) => ({
       ...prev,
-      [criteriaId]: value[0],
+      [criteriaId]: value,
     }));
   };
+
+  const allRound3CriteriaGraded = scoringCriteria.every((criteria) =>
+    isRound3GradeScore(scores[criteria.id]),
+  );
 
   const handleSaveScore = async (teamId: string) => {
     const payload = { teamId, round: activeRound, scores };
@@ -462,8 +484,9 @@ export default function JudgeDashboard() {
                             Evaluate: {evaluation.team.name}
                           </DialogTitle>
                           <DialogDescription>
-                            Score each criterion from 0–10. The weighted total
-                            is calculated automatically.
+                            {activeRound === 3
+                              ? "Select an A–E grade for each criterion. The weighted total is calculated automatically."
+                              : "Score each criterion from 0–10. The weighted total is calculated automatically."}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-5">
@@ -477,26 +500,58 @@ export default function JudgeDashboard() {
                                   <Badge variant="outline">
                                     {criteria.weight}%
                                   </Badge>
-                                  <span
-                                    data-numeric
-                                    className="text-foreground w-11 text-right text-[0.8125rem] font-semibold"
-                                  >
-                                    {scores[criteria.id] || 0}
-                                    <span className="text-faint font-normal">
-                                      /{criteria.maxScore}
+                                  {activeRound === 2 && (
+                                    <span
+                                      data-numeric
+                                      className="text-foreground w-11 text-right text-[0.8125rem] font-semibold"
+                                    >
+                                      {scores[criteria.id] || 0}
+                                      <span className="text-faint font-normal">
+                                        /{criteria.maxScore}
+                                      </span>
                                     </span>
-                                  </span>
+                                  )}
                                 </div>
                               </div>
-                              <Slider
-                                value={[scores[criteria.id] || 0]}
-                                onValueChange={(value) =>
-                                  handleScoreChange(criteria.id, value)
-                                }
-                                max={criteria.maxScore}
-                                step={0.1}
-                                className="w-full"
-                              />
+                              {activeRound === 3 ? (
+                                <Select
+                                  value={
+                                    isRound3GradeScore(scores[criteria.id])
+                                      ? String(scores[criteria.id])
+                                      : undefined
+                                  }
+                                  onValueChange={(value) =>
+                                    handleScoreChange(
+                                      criteria.id,
+                                      Number(value),
+                                    )
+                                  }
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a grade" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {round3Grades.map(({ grade, score }) => (
+                                      <SelectItem
+                                        key={grade}
+                                        value={String(score)}
+                                      >
+                                        {grade} - {score}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Slider
+                                  value={[scores[criteria.id] || 0]}
+                                  onValueChange={(value) =>
+                                    handleScoreChange(criteria.id, value[0])
+                                  }
+                                  max={criteria.maxScore}
+                                  step={0.1}
+                                  className="w-full"
+                                />
+                              )}
                             </div>
                           ))}
                           <Separator />
@@ -530,6 +585,9 @@ export default function JudgeDashboard() {
                           </Button>
                           <Button
                             onClick={() => handleSaveScore(evaluation.team.id)}
+                            disabled={
+                              activeRound === 3 && !allRound3CriteriaGraded
+                            }
                             className="w-full sm:w-auto"
                           >
                             Save score

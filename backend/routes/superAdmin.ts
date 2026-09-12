@@ -416,6 +416,15 @@ router.post("/round2/assign-team", modifyLimiter, logActivity("ASSIGN_TEAM_TO_RO
 });
 
 // Round 3 Management
+router.get("/round3/teams", async (req: AuthRequest, res, next) => {
+  try {
+    const teams = await superAdminService.getRound3Teams();
+    res.json(teams);
+  } catch (error: any) {
+    next(error)
+  }
+});
+
 router.get("/round3/candidates", async (req: AuthRequest, res, next) => {
   try {
     const candidates = await superAdminService.getRound3Candidates();

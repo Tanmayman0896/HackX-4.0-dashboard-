@@ -54,6 +54,7 @@ import { Round3RoomManagement } from "@/components/super-admin/round3-room-manag
 import { ActivityLogs } from "@/components/super-admin/activity-logs";
 import { UserManagementTab } from "@/components/super-admin/user-management-tab";
 import { TeamPage } from "@/components/super-admin/team-page";
+import { TeamRound3Page } from "@/components/super-admin/team-round3-page";
 import { apiService } from "@/lib/service";
 import { AppShell } from "@/components/shell/app-shell";
 import {
@@ -69,6 +70,7 @@ import {
   Gavel,
   GitBranch,
   LayoutGrid,
+  ListChecks,
   Megaphone,
   MessagesSquare,
   ScrollText,
@@ -451,6 +453,10 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="round3">
               <DoorOpen />
               Round 3
+            </TabsTrigger>
+            <TabsTrigger value="round3-teams">
+              <ListChecks />
+              Team Round 3
             </TabsTrigger>
             <TabsTrigger value="teams">
               <UsersRound />
@@ -921,6 +927,10 @@ export default function SuperAdminDashboard() {
 
         <TabsContent value="round3">
           <Round3RoomManagement judges={judges} />
+        </TabsContent>
+
+        <TabsContent value="round3-teams">
+          <TeamRound3Page />
         </TabsContent>
 
         <TabsContent value="teams">

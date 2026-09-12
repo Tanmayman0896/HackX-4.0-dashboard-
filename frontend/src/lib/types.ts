@@ -346,6 +346,12 @@ export interface Round3Candidate {
   judgeCount: number;
 }
 
+export interface Round3Team extends Team {
+  round3FinalScore: number | null;
+  round3ScoredJudgeCount: number;
+  round3RequiredJudgeCount: number;
+}
+
 export interface Round3JudgeInfo {
   id: string;
   name: string;
