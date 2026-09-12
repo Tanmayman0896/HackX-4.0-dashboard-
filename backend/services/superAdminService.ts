@@ -630,6 +630,8 @@ export class SuperAdminService {
       _count: {_all: true},
     });
 
+    console.log('ag', aggregates);
+
     const scoreByTeam = new Map(
       aggregates.map((a) => [
         a.teamId,
@@ -639,6 +641,8 @@ export class SuperAdminService {
         },
       ]),
     );
+
+    console.log('scoreByTeam', scoreByTeam);
 
     const teams = await prisma.team.findMany({
       where: {status: {in: ["ROUND1_QUALIFIED", "ROUND2_SUBMITTED", "ROUND2_QUALIFIED"]}},
@@ -650,6 +654,8 @@ export class SuperAdminService {
         round3Room: {select: {id: true, name: true}},
       },
     });
+
+    console.log('teams', teams);
 
     return teams
       .map((team) => ({
