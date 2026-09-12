@@ -31,6 +31,10 @@ if (process.argv.includes("--help")) {
 
 Optional environment variables (JSON values use historical judge/log IDs):
   ONLY_JUDGE_IDS=id1,id2
+  RECOVERY_SINCE=2026-09-12T06:49:00Z
+  RECOVERY_UNTIL=2026-09-12T06:51:00Z
+  REMOVE_BATCH_GAP_MINUTES=5
+  INCLUDE_UNASSIGNED_JUDGES=true
   JUDGE_ID_MAP='{"oldJudgeId":"existingJudgeId"}'
   JUDGE_NAME_MAP='{"oldJudgeId":"Judge Name"}'
   SCORE_OWNER_MAP='{"activityLogId":"oldJudgeId"}'
@@ -86,6 +90,22 @@ function normalizeUsername(name) {
     .replace(/\s+/g, "_");
 }
 
+function cuidTimestamp(id) {
+  if (!/^c[a-z0-9]{24}$/i.test(id)) return null;
+  const timestamp = Number.parseInt(id.slice(1, 9), 36);
+  return Number.isSafeInteger(timestamp) ? timestamp : null;
+}
+
+function readDateEnvironment(name) {
+  const value = process.env[name];
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`${name} must be a valid ISO-8601 date.`);
+  }
+  return date;
+}
+
 function scoreFromLog(log) {
   const payload = parsePayload(log.payload);
   const scores = payload?.scores;
@@ -123,64 +143,83 @@ function scoreFromLog(log) {
   };
 }
 
-function inferHistoricalNames(logs, liveJudges) {
+function inferHistoricalNames(logs, liveJudges, historicalJudgeIds) {
   const names = new Map(liveJudges.map((judge) => [judge.id, judge.name]));
-  const seenJudgeIds = new Set();
-  const pendingAdds = [];
+  const addEvents = logs
+    .filter((log) => log.action === "ADD_JUDGE")
+    .map((log) => ({log, name: parsePayload(log.payload)?.name}))
+    .filter((entry) => typeof entry.name === "string" && entry.name.trim())
+    .map((entry) => ({...entry, name: entry.name.trim()}));
+  const usedAddLogIds = new Set();
 
-  for (const log of logs) {
-    if (log.action === "ADD_JUDGE") {
-      const name = parsePayload(log.payload)?.name;
-      if (typeof name === "string" && name.trim()) {
-        pendingAdds.push({logId: log.id, name: name.trim()});
-      }
-      continue;
-    }
+  for (const judgeId of historicalJudgeIds) {
+    if (names.has(judgeId)) continue;
+    const createdAt = cuidTimestamp(judgeId);
+    if (createdAt === null) continue;
 
-    let judgeId = null;
-    if (log.action === "MAP_TEAM_TO_JUDGE") {
-      judgeId = parsePayload(log.payload)?.judgeId;
-    } else if (log.action === "REMOVE_TEAM_JUDGE_MAPPING") {
-      judgeId = extractRemovedMapping(log.details)?.judgeId;
-    } else if (log.action === "REMOVE_JUDGE") {
-      judgeId = extractRemovedJudgeId(log.details);
-    }
+    const match = addEvents
+      .filter((entry) => {
+        const delay = createdAt - entry.log.createdAt.getTime();
+        return !usedAddLogIds.has(entry.log.id) && delay >= 0 && delay <= 120_000;
+      })
+      .sort(
+        (left, right) =>
+          createdAt - left.log.createdAt.getTime() - (createdAt - right.log.createdAt.getTime()),
+      )[0];
 
-    if (typeof judgeId !== "string" || seenJudgeIds.has(judgeId)) continue;
-    seenJudgeIds.add(judgeId);
-
-    const liveJudge = liveJudges.find((judge) => judge.id === judgeId);
-    if (liveJudge) {
-      const matchingAdds = pendingAdds.filter(
-        (entry) => normalizeUsername(entry.name) === normalizeUsername(liveJudge.name),
-      );
-      if (matchingAdds.length === 1) {
-        pendingAdds.splice(pendingAdds.indexOf(matchingAdds[0]), 1);
-      }
-      names.set(judgeId, liveJudge.name);
-      continue;
-    }
-
-    if (pendingAdds.length === 1) {
-      names.set(judgeId, pendingAdds.shift().name);
+    if (match) {
+      names.set(judgeId, match.name);
+      usedAddLogIds.add(match.log.id);
     }
   }
 
   return names;
 }
 
-function getRemovalPlans(logs, onlyJudgeIds) {
-  const plans = new Map();
+function selectRemovalLogs(logs, onlyJudgeIds, recoverySince, recoveryUntil, batchGapMinutes) {
+  const removalLogs = logs.filter(
+    (log) => log.action === "REMOVE_JUDGE" && extractRemovedJudgeId(log.details),
+  );
 
-  for (const log of logs) {
-    if (log.action !== "REMOVE_JUDGE") continue;
+  if (onlyJudgeIds.size > 0) {
+    return removalLogs.filter((log) => onlyJudgeIds.has(extractRemovedJudgeId(log.details)));
+  }
+
+  if (recoverySince || recoveryUntil) {
+    return removalLogs.filter(
+      (log) =>
+        (!recoverySince || log.createdAt >= recoverySince) &&
+        (!recoveryUntil || log.createdAt <= recoveryUntil),
+    );
+  }
+
+  if (removalLogs.length === 0) return [];
+  const selected = [removalLogs.at(-1)];
+  const maximumGap = batchGapMinutes * 60_000;
+
+  for (let index = removalLogs.length - 2; index >= 0; index -= 1) {
+    const nextLog = selected[0];
+    const currentLog = removalLogs[index];
+    if (nextLog.createdAt.getTime() - currentLog.createdAt.getTime() > maximumGap) break;
+    selected.unshift(currentLog);
+  }
+
+  return selected;
+}
+
+function getRemovalPlans(logs, selectedRemovalLogs, includeUnassignedJudges) {
+  const plans = new Map();
+  const selectedLogIds = new Set(selectedRemovalLogs.map((log) => log.id));
+
+  for (const [logOrder, log] of logs.entries()) {
+    if (!selectedLogIds.has(log.id)) continue;
     const judgeId = extractRemovedJudgeId(log.details);
     if (!judgeId || plans.has(judgeId)) continue;
-    if (onlyJudgeIds.size > 0 && !onlyJudgeIds.has(judgeId)) continue;
 
     plans.set(judgeId, {
       oldJudgeId: judgeId,
       removeLogId: log.id,
+      removeLogOrder: logOrder,
       removedAt: log.createdAt,
       mappings: new Map(),
       scores: new Map(),
@@ -188,8 +227,8 @@ function getRemovalPlans(logs, onlyJudgeIds) {
   }
 
   for (const plan of plans.values()) {
-    for (const log of logs) {
-      if (log.createdAt > plan.removedAt) break;
+    for (const [logOrder, log] of logs.entries()) {
+      if (logOrder > plan.removeLogOrder) break;
 
       if (log.action === "MAP_TEAM_TO_JUDGE") {
         const payload = parsePayload(log.payload);
@@ -207,6 +246,12 @@ function getRemovalPlans(logs, onlyJudgeIds) {
     }
   }
 
+  if (!includeUnassignedJudges) {
+    for (const [judgeId, plan] of plans) {
+      if (plan.mappings.size === 0) plans.delete(judgeId);
+    }
+  }
+
   return plans;
 }
 
@@ -214,7 +259,7 @@ function selectScoreOwners(logs, plans, scoreOwnerOverrides, ignoredLogIds, live
   const errors = [];
   const warnings = [];
 
-  for (const log of logs) {
+  for (const [logOrder, log] of logs.entries()) {
     if (log.action !== "SUBMIT_TEAM_SCORE" || ignoredLogIds.has(log.id)) continue;
     const score = scoreFromLog(log);
 
@@ -228,14 +273,15 @@ function selectScoreOwners(logs, plans, scoreOwnerOverrides, ignoredLogIds, live
     }
 
     const override = scoreOwnerOverrides[log.id];
+    score.logOrder = logOrder;
     const candidates = [...plans.values()].filter(
-      (plan) => plan.removedAt >= score.createdAt && plan.mappings.has(score.teamId),
+      (plan) => plan.removeLogOrder >= logOrder && plan.mappings.has(score.teamId),
     );
 
     let owner = null;
     if (override) {
       owner = plans.get(override);
-      if (!owner || !owner.mappings.has(score.teamId) || owner.removedAt < score.createdAt) {
+      if (!owner || !owner.mappings.has(score.teamId) || owner.removeLogOrder < logOrder) {
         errors.push(`SCORE_OWNER_MAP assigns log ${log.id} to incompatible judge ${override}.`);
         continue;
       }
@@ -254,7 +300,7 @@ function selectScoreOwners(logs, plans, scoreOwnerOverrides, ignoredLogIds, live
 
     const key = `${score.teamId}:${score.round}`;
     const previous = owner.scores.get(key);
-    if (!previous || previous.createdAt <= score.createdAt) {
+    if (!previous || previous.logOrder < score.logOrder) {
       owner.scores.set(key, score);
     }
   }
@@ -336,7 +382,7 @@ function summarize(plans) {
     removedJudgeId: plan.oldJudgeId,
     targetJudgeId: plan.targetJudgeId,
     name: plan.targetName,
-    action: plan.createJudge ? "CREATE" : "REUSE",
+    action: plan.createJudge === true ? "CREATE" : plan.createJudge === false ? "REUSE" : "UNRESOLVED",
     removedAt: plan.removedAt.toISOString(),
     teams: plan.mappings.size,
     scores: plan.scores.size,
@@ -487,6 +533,13 @@ async function main() {
       .map((value) => value.trim())
       .filter(Boolean),
   );
+  const recoverySince = readDateEnvironment("RECOVERY_SINCE");
+  const recoveryUntil = readDateEnvironment("RECOVERY_UNTIL");
+  const batchGapMinutes = Number(process.env.REMOVE_BATCH_GAP_MINUTES ?? 5);
+  if (!Number.isFinite(batchGapMinutes) || batchGapMinutes <= 0) {
+    throw new Error("REMOVE_BATCH_GAP_MINUTES must be a positive number.");
+  }
+  const includeUnassignedJudges = process.env.INCLUDE_UNASSIGNED_JUDGES === "true";
   const ignoredLogIds = new Set(
     (process.env.IGNORE_ACTIVITY_LOG_IDS ?? "")
       .split(",")
@@ -504,12 +557,22 @@ async function main() {
     prisma.team.findMany({select: {id: true, name: true, teamId: true}}),
   ]);
 
-  const plans = getRemovalPlans(logs, onlyJudgeIds);
+  const selectedRemovalLogs = selectRemovalLogs(
+    logs,
+    onlyJudgeIds,
+    recoverySince,
+    recoveryUntil,
+    batchGapMinutes,
+  );
+  const plans = getRemovalPlans(logs, selectedRemovalLogs, includeUnassignedJudges);
   if (plans.size === 0) {
-    throw new Error("No matching REMOVE_JUDGE activity logs were found.");
+    throw new Error("No matching REMOVE_JUDGE activity logs with team mappings were found.");
   }
 
-  const historicalNames = inferHistoricalNames(logs, liveJudges);
+  console.log(
+    `Selected ${selectedRemovalLogs.length} REMOVE_JUDGE logs from ${selectedRemovalLogs[0].createdAt.toISOString()} to ${selectedRemovalLogs.at(-1).createdAt.toISOString()}.`,
+  );
+  const historicalNames = inferHistoricalNames(logs, liveJudges, plans.keys());
   const errors = resolveTargets(
     plans,
     historicalNames,
