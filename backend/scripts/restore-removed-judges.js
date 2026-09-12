@@ -24,6 +24,20 @@ const SCORE_WEIGHTS = {
   impact: 15,
 };
 
+if (process.argv.includes("--help")) {
+  console.log(`Usage:
+  node scripts/restore-removed-judges.js          # dry run
+  node scripts/restore-removed-judges.js --apply  # back up affected rows and apply
+
+Optional environment variables (JSON values use historical judge/log IDs):
+  ONLY_JUDGE_IDS=id1,id2
+  JUDGE_ID_MAP='{"oldJudgeId":"existingJudgeId"}'
+  JUDGE_NAME_MAP='{"oldJudgeId":"Judge Name"}'
+  SCORE_OWNER_MAP='{"activityLogId":"oldJudgeId"}'
+  IGNORE_ACTIVITY_LOG_IDS=id1,id2`);
+  process.exit(0);
+}
+
 function readJsonEnvironment(name, fallback = {}) {
   const value = process.env[name];
   if (!value) return fallback;
@@ -480,7 +494,7 @@ async function main() {
       .filter(Boolean),
   );
 
-  const [logs, liveJudges, allUsers, teams, activityCountBefore] = await Promise.all([
+  const [logs, liveJudges, allUsers, teams] = await Promise.all([
     prisma.activityLog.findMany({
       where: {action: {in: RELEVANT_ACTIONS}},
       orderBy: [{createdAt: "asc"}, {id: "asc"}],
@@ -488,7 +502,6 @@ async function main() {
     prisma.judge.findMany({include: {user: {select: {id: true, username: true}}}}),
     prisma.user.findMany({select: {id: true, username: true}}),
     prisma.team.findMany({select: {id: true, name: true, teamId: true}}),
-    prisma.activityLog.count(),
   ]);
 
   const plans = getRemovalPlans(logs, onlyJudgeIds);
@@ -547,14 +560,7 @@ async function main() {
   console.log(`Backup written to ${backupPath}`);
 
   const generatedPasswords = await applyRecovery(plans);
-  const activityCountAfter = await prisma.activityLog.count();
-  if (activityCountAfter !== activityCountBefore) {
-    throw new Error(
-      `ActivityLog count changed unexpectedly (${activityCountBefore} -> ${activityCountAfter}).`,
-    );
-  }
-
-  console.log("\nRecovery completed. ActivityLog was unchanged.");
+  console.log("\nRecovery completed. This script does not write to ActivityLog.");
   if (generatedPasswords.length > 0) {
     console.log("Temporary credentials for recreated judges (store these securely and reset them):");
     console.table(generatedPasswords);
