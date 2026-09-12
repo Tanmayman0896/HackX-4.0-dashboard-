@@ -645,7 +645,7 @@ export class SuperAdminService {
     console.log('scoreByTeam', scoreByTeam);
 
     const teams = await prisma.team.findMany({
-      where: {status: {in: ["ROUND1_QUALIFIED", "ROUND2_SUBMITTED", "ROUND2_QUALIFIED"]}},
+      where: {status: {in: ["ROUND1_SUBMITTED"]}},
       select: {
         id: true,
         name: true,
