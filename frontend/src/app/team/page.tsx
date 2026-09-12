@@ -41,6 +41,7 @@ export default function TeamDashboard() {
   const [psLocked, setPsLocked] = useState(false);
   const [mentorshipLocked, setMentorshipLocked] = useState(false);
   const [round1Locked, setRound1Locked] = useState(false);
+  const [round3ResultsPublished, setRound3ResultsPublished] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [team, setTeam] = useState<Team | null>(null);
   const [domains, setDomains] = useState<Domain[]>([]);
@@ -110,6 +111,7 @@ export default function TeamDashboard() {
       setPsLocked(lockedData.problem_statements_locked === "true");
       setMentorshipLocked(lockedData.mentorship_locked === "true");
       setRound1Locked(lockedData.round1_locked === "true");
+      setRound3ResultsPublished(lockedData.round3_results_published === "true");
       setSelectedMentor(selectedMentorData);
       setSubmissions(submissionsData);
       setNotDonePreviousMentorship(notDonePreviousMentorshipData);
@@ -217,6 +219,7 @@ export default function TeamDashboard() {
             psLocked={psLocked}
             mentorshipLocked={mentorshipLocked}
             round3Selected={team.status === "ROUND2_QUALIFIED"}
+            round3ResultsPublished={round3ResultsPublished}
             round1Locked={round1Locked}
             submissions={submissions}
           />

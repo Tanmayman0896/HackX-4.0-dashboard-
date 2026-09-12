@@ -48,6 +48,9 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSelectOpen, setIsSelectOpen] = useState(false);
   const [isAutoAssignOpen, setIsAutoAssignOpen] = useState(false);
+  const [isTeamAssignOpen, setIsTeamAssignOpen] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
+  const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [isMoveTeamOpen, setIsMoveTeamOpen] = useState(false);
   const [moveTeamId, setMoveTeamId] = useState<string>("");
   const [moveTargetRoom, setMoveTargetRoom] = useState<string>("");
@@ -81,6 +84,14 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
   const selectedTeams = candidates.filter(
     (t) => t.status === "ROUND2_QUALIFIED",
   );
+  const availableTeams = selectedTeams.filter(
+    (team) => !rooms.some((room) => room.teams.some((t) => t.id === team.id)),
+  );
+  const availableTeamRooms = rooms.filter(
+    (room) =>
+      room.judges.length === REQUIRED_JUDGES_PER_ROOM &&
+      room.teams.length < room.capacity,
+  );
   const assignedJudgeIds = new Set(
     rooms.flatMap((room) => room.judges.map((j) => j.id)),
   );
@@ -92,7 +103,7 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
     (sum, room) => sum + room.teams.length,
     0,
   );
-  const pendingTeams = selectedTeams.length - assignedTeamCount;
+  const pendingTeams = availableTeams.length;
 
   const handleSelectTop30 = async () => {
     setIsBusy(true);
@@ -179,6 +190,29 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
     }
   };
 
+  const handleAssignTeam = async () => {
+    if (!selectedTeamId || !selectedRoomId) return;
+    try {
+      await apiService.assignTeamToRound3Room(selectedTeamId, selectedRoomId);
+      toast({
+        title: "Success",
+        description: "Team assigned to both room judges",
+      });
+      setIsTeamAssignOpen(false);
+      setSelectedTeamId("");
+      setSelectedRoomId("");
+      await refreshData();
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to assign team",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleMoveTeam = async () => {
     if (!moveTeamId || !moveTargetRoom) return;
     try {
@@ -229,6 +263,84 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
+
+          <Dialog open={isTeamAssignOpen} onOpenChange={setIsTeamAssignOpen}>
+            <Button
+              variant="outline"
+              disabled={
+                availableTeams.length === 0 || availableTeamRooms.length === 0
+              }
+              onClick={() => setIsTeamAssignOpen(true)}
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Assign Teams
+            </Button>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Assign Team to Round 3 Judges</DialogTitle>
+                <DialogDescription>
+                  Assign a selected Round 3 team to a staffed meeting room. The
+                  team will be mapped to both judges in that room.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Team</label>
+                  <Select
+                    value={selectedTeamId}
+                    onValueChange={setSelectedTeamId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTeams.map((team) => (
+                        <SelectItem key={team.id} value={team.id}>
+                          {team.name} ({team.teamId})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Select Judges&apos; Room
+                  </label>
+                  <Select
+                    value={selectedRoomId}
+                    onValueChange={setSelectedRoomId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a room" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTeamRooms.map((room) => (
+                        <SelectItem key={room.id} value={room.id}>
+                          {room.name} - Judges:{" "}
+                          {room.judges.map((j) => j.name).join(", ")} (
+                          {room.teams.length}/{room.capacity})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsTeamAssignOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAssignTeam}
+                  disabled={!selectedTeamId || !selectedRoomId}
+                >
+                  Assign Team
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <Dialog open={isSelectOpen} onOpenChange={setIsSelectOpen}>
             <Button onClick={() => setIsSelectOpen(true)}>
@@ -551,7 +663,7 @@ export function Round3RoomManagement({ judges }: { judges: Judge[] }) {
             </div>
             <div className="text-center">
               <div className="text-warn-ink text-2xl font-semibold tracking-tight tabular-nums">
-                {pendingTeams >= 0 ? pendingTeams : selectedTeams.length}
+                {pendingTeams}
               </div>
               <p className="text-muted-foreground text-sm">Teams Pending</p>
             </div>

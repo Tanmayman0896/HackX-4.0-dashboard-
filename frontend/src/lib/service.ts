@@ -425,6 +425,7 @@ class ApiService {
     problem_statements_locked: string;
     mentorship_locked: string;
     round1_locked: string;
+    round3_results_published?: string;
   }> {
     return this.request(`/locked`);
   }

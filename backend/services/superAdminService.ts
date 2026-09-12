@@ -840,6 +840,11 @@ export class SuperAdminService {
         where: {id: {in: selectedTeamIds}},
         data: {status: "ROUND2_QUALIFIED"},
       }),
+      prisma.systemSettings.upsert({
+        where: {key: "round3_results_published"},
+        update: {value: "true"},
+        create: {key: "round3_results_published", value: "true"},
+      }),
     ]);
 
     return { teams: top, usedRound };

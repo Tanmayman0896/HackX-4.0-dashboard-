@@ -10,7 +10,7 @@ import {
   PanelTitle,
   Section,
 } from "@/components/shell/primitives";
-import { Clock, MapPin, Trophy, Users } from "lucide-react";
+import { CircleX, Clock, MapPin, Trophy, Users } from "lucide-react";
 import type {
   MentorshipSession,
   ProblemStatement,
@@ -25,6 +25,7 @@ interface OverviewTabProps {
   psLocked: boolean;
   mentorshipLocked: boolean;
   round3Selected: boolean;
+  round3ResultsPublished: boolean;
   round1Locked: boolean;
   submissions: Submission[];
 }
@@ -38,6 +39,7 @@ export function OverviewTab({
   submissions,
   mentorshipLocked,
   round3Selected,
+  round3ResultsPublished,
 }: OverviewTabProps) {
   const progress = [
     {
@@ -96,6 +98,16 @@ export function OverviewTab({
             ) : (
               " Room details will be announced soon."
             )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {round3ResultsPublished && !round3Selected && (
+        <Alert>
+          <CircleX className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Your team was not selected for Round 3.</strong> Thank you
+            for your participation in MUJ HackX.
           </AlertDescription>
         </Alert>
       )}

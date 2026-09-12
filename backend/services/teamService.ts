@@ -541,13 +541,22 @@ export class TeamService {
 
   async getLockedOverview() {
     const overview = await prisma.systemSettings.findMany();
-    return overview.reduce(
+    const settings = overview.reduce(
       (acc, setting) => {
         acc[setting.key] = setting.value;
         return acc;
       },
       {} as Record<string, string>,
     );
+
+    if (!("round3_results_published" in settings)) {
+      const selectedTeamCount = await prisma.team.count({
+        where: {status: "ROUND2_QUALIFIED"},
+      });
+      settings.round3_results_published = String(selectedTeamCount > 0);
+    }
+
+    return settings;
   }
 
   // Get team participants
