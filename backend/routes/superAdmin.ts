@@ -428,8 +428,12 @@ router.get("/round3/candidates", async (req: AuthRequest, res, next) => {
 router.post("/round3/select-top", modifyLimiter, logActivity("SELECT_TOP_TEAMS_ROUND3"), async (req: AuthRequest, res, next) => {
   try {
     const limit = typeof req.body.limit === "number" ? req.body.limit : 30;
-    const selected = await superAdminService.selectTopTeamsForRound3(limit);
-    res.json({message: `Selected top ${selected.length} teams for Round 3`, teams: selected});
+    const result = await superAdminService.selectTopTeamsForRound3(limit);
+    res.json({
+      message: `Selected top ${result.teams.length} teams for Round 3 (using Round ${result.usedRound} scores)`,
+      teams: result.teams,
+      usedRound: result.usedRound
+    });
   } catch (error: any) {
     next(error)
   }

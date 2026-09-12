@@ -500,7 +500,7 @@ class ApiService {
 
   async selectTopTeamsForRound3(
     limit = 30,
-  ): Promise<{ message: string; teams: Round3Candidate[] }> {
+  ): Promise<{ message: string; teams: Round3Candidate[]; usedRound: number }> {
     return this.request("/round3/select-top", {
       method: "POST",
       body: JSON.stringify({ limit }),

@@ -737,12 +737,22 @@ export class SuperAdminService {
       );
     }
 
-    const candidates = await this.getRound3Candidates(sourceRound);
-    const scored = candidates.filter((c) => c.averageScore !== null);
+    let candidates = await this.getRound3Candidates(sourceRound);
+    let scored = candidates.filter((c) => c.averageScore !== null);
+    
+    // Fallback to previous round if no scores available
+    let usedRound = sourceRound;
+    if (scored.length === 0 && sourceRound > 1) {
+      console.log(`No Round ${sourceRound} scores found, falling back to Round ${sourceRound - 1}...`);
+      candidates = await this.getRound3Candidates(sourceRound - 1);
+      scored = candidates.filter((c) => c.averageScore !== null);
+      usedRound = sourceRound - 1;
+    }
+
     const top = scored.slice(0, limit);
 
     if (top.length === 0) {
-      throw new AppError(`No teams have scores from Round ${sourceRound} yet.`, 400);
+      throw new AppError(`No teams have scores from Round ${sourceRound} or earlier rounds yet.`, 400);
     }
 
     await prisma.team.updateMany({
@@ -750,7 +760,7 @@ export class SuperAdminService {
       data: {status: "ROUND2_QUALIFIED"},
     });
 
-    return top;
+    return { teams: top, usedRound };
   }
 
   private async ensureRound3Rooms() {

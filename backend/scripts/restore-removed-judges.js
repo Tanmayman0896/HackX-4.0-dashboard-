@@ -476,6 +476,8 @@ async function applyRecovery(plans) {
       }
 
       for (const score of plan.scores.values()) {
+        // Ensure evaluation exists for this score's round
+        // (scores from Round 2+ require their own evaluations)
         await transaction.evaluation.upsert({
           where: {
             teamId_judgeId_round: {
