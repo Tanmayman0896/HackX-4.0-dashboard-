@@ -136,6 +136,12 @@ export class JudgeService {
                 block: true,
               },
             },
+            round2Room: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
             round3Room: {
               select: {
                 id: true,
@@ -168,10 +174,14 @@ export class JudgeService {
         },
       }))
       .sort((a, b) => {
-        const roomA =
-          a.round === 3 ? a.team.round3Room?.name : a.team.round1Room?.name;
-        const roomB =
-          b.round === 3 ? b.team.round3Room?.name : b.team.round1Room?.name;
+        const roomOf = (e: typeof a) =>
+          e.round === 3
+            ? e.team.round3Room?.name
+            : e.round === 2
+              ? e.team.round2Room?.name
+              : e.team.round1Room?.name;
+        const roomA = roomOf(a);
+        const roomB = roomOf(b);
         const numA = parseInt(roomA?.replace(/\D/g, "") || "0", 10);
         const numB = parseInt(roomB?.replace(/\D/g, "") || "0", 10);
         if (numA !== numB) return numA - numB;

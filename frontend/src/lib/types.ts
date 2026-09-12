@@ -113,7 +113,10 @@ export interface Team {
   participants: TeamParticipant[];
   round1Status?: string;
   round2Status?: string;
-  round2Room?: string | null;
+  round2Room?: {
+    id: string;
+    name: string;
+  } | null;
   round3Room?: {
     id: string;
     name: string;

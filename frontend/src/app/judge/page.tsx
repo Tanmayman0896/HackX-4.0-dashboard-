@@ -72,7 +72,7 @@ export default function JudgeDashboard() {
   const [judge, setJudge] = useState<Judge>();
   const [assignedTeams, setAssignedTeams] = useState<Evaluation[]>([]);
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
-  const [activeRound, setActiveRound] = useState<1 | 3>(1);
+  const [activeRound, setActiveRound] = useState<2 | 3>(2);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -251,7 +251,7 @@ export default function JudgeDashboard() {
       nav={
         <div className="flex w-full flex-col gap-0.5">
           <p className="eyebrow px-3 pb-2">Evaluation round</p>
-          {([1, 3] as const).map((round) => (
+          {([2, 3] as const).map((round) => (
             <button
               key={round}
               type="button"
@@ -381,8 +381,8 @@ export default function JudgeDashboard() {
                         {activeRound === 3
                           ? (evaluation.team?.round3Room?.name ??
                             "Room not assigned")
-                          : evaluation.team?.round1Room
-                            ? `${evaluation.team.round1Room.block} ${evaluation.team.round1Room.name}`
+                          : evaluation.team?.round2Room
+                            ? evaluation.team.round2Room.name
                             : "Room not assigned"}
                       </span>
 
