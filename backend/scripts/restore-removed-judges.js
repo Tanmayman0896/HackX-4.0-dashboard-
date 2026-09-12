@@ -518,7 +518,7 @@ async function applyRecovery(plans) {
         });
       }
     }
-  });
+  }, {maxWait: 10_000, timeout: 120_000});
 
   return generatedPasswords;
 }
