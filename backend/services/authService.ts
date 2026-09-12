@@ -8,24 +8,16 @@ const prisma = new PrismaClient();
 export class AuthService {
   async login(credentials: LoginRequest) {
     const { username, password } = credentials;
-    console.log(`Attempting login for username: ${username} with password ${password}`);
     
-    // Find user by username (case-insensitive)
-    const user = await prisma.user.findFirst({
-      where: {
-        username: {
-          equals: username.trim(),
-          mode: "insensitive",
-        },
-      },
+    // Find user by username
+    const user = await prisma.user.findUnique({
+      where: { username },
       include: {
         participantTeam: true,
         mentorProfile: true,
         judgeProfile: true,
       },
     });
-
-    console.log(`User found: ${user ? "yes" : "no"}: ${JSON.stringify(user, null, 2)}`);
 
     if (!user) {
       throw new Error("Invalid credentials");
@@ -37,8 +29,6 @@ export class AuthService {
 
     // Verify password
     const isValidPassword = await comparePassword(password, user.password);
-    console.log(`Password valid: ${isValidPassword} | compared: ${password} with ${user.password}`);
-    
     if (!isValidPassword) {
       throw new Error("Invalid credentials");
     }

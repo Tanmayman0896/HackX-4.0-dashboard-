@@ -678,8 +678,6 @@ export class SuperAdminService {
       _count: {_all: true},
     });
 
-    console.log('ag', aggregates);
-
     const scoreByTeam = new Map(
       aggregates.map((a) => [
         a.teamId,
@@ -690,8 +688,6 @@ export class SuperAdminService {
       ]),
     );
 
-    console.log('scoreByTeam', scoreByTeam);
-
     const teams = await prisma.team.findMany({
       where: {status: {in: ["ROUND1_SUBMITTED"]}},
       select: {
@@ -699,19 +695,34 @@ export class SuperAdminService {
         name: true,
         teamId: true,
         status: true,
+        participants: {select: {role: true, residence: true}},
         round3Room: {select: {id: true, name: true}},
       },
     });
 
-    console.log('teams', teams);
-
-    return teams
-      .map((team) => ({
+    const rankedCandidates = teams
+      .map(({participants, ...team}) => ({
         ...team,
+        residence:
+          (participants.find((participant) => participant.role === "LEADER")
+            ?.residence ?? participants[0]?.residence) === "outhouse"
+            ? "outhouse"
+            : "inhouse",
         averageScore: scoreByTeam.get(team.id)?.averageScore ?? null,
         judgeCount: scoreByTeam.get(team.id)?.judgeCount ?? 0,
       }))
       .sort((a, b) => (b.averageScore ?? -1) - (a.averageScore ?? -1));
+
+    const inhouseCandidates = rankedCandidates
+      .filter((team) => team.residence === "inhouse")
+      .slice(0, 10);
+    const outhouseCandidates = rankedCandidates
+      .filter((team) => team.residence === "outhouse")
+      .slice(0, 20);
+
+    return [...inhouseCandidates, ...outhouseCandidates].sort(
+      (a, b) => (b.averageScore ?? -1) - (a.averageScore ?? -1),
+    );
   }
 
   async selectTopTeamsForRound3(limit = 30, sourceRound = 2) {
