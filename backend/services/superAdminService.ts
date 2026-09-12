@@ -673,7 +673,11 @@ export class SuperAdminService {
   // Round 3 Management
   async getRound3Teams() {
     const teams = await prisma.team.findMany({
-      where: {status: "ROUND2_QUALIFIED"},
+      where: {
+  round3RoomId: {
+    not: null,
+  },
+},
       include: {
         participants: {
           select: {
