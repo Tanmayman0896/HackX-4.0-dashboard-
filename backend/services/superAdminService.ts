@@ -8,8 +8,8 @@ const prisma = new PrismaClient();
 const ROUND3_ROOM_NAMES = [
   "Meeting Room 1",
   "Meeting Room 2",
-  "Meeting Room 3",
 ];
+const ROUND3_ROOM_CAPACITY = 15;
 
 interface Checkpoint1Data {
   teamId: string;
@@ -535,23 +535,89 @@ export class SuperAdminService {
   }
 
   async assignJudgeToRoom(judgeId: string, roomId: string) {
-    return prisma.judge.update({
-      where: {id: judgeId},
-      data: {round2RoomId: roomId},
+    const judge = await prisma.judge.findUnique({where: {id: judgeId}});
+    if (!judge) {
+      throw new AppError("Judge not found", 404);
+    }
+
+    const room = await prisma.round2Room.findUnique({where: {id: roomId}});
+    if (!room) {
+      throw new AppError("Round 2 room not found", 404);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      await tx.evaluation.deleteMany({where: {judgeId, round: 2}});
+      await tx.judge.update({
+        where: {id: judgeId},
+        data: {round2RoomId: roomId},
+      });
+
+      const roomTeams = await tx.team.findMany({
+        where: {round2RoomId: roomId},
+        select: {id: true},
+      });
+
+      if (roomTeams.length > 0) {
+        await tx.evaluation.createMany({
+          data: roomTeams.map((team) => ({teamId: team.id, judgeId, round: 2})),
+          skipDuplicates: true,
+        });
+      }
+
+      return tx.judge.findUnique({
+        where: {id: judgeId},
+        include: {
+          user: {select: {username: true}},
+          round2Room: {select: {id: true, name: true}},
+        },
+      });
     });
   }
 
   async removeJudgeFromRound2Room(judgeId: string) {
-    return prisma.judge.update({
-      where: {id: judgeId},
-      data: {round2RoomId: null},
-    });
+    const judge = await prisma.judge.findUnique({where: {id: judgeId}});
+    if (!judge) {
+      throw new AppError("Judge not found", 404);
+    }
+
+    return prisma.$transaction([
+      prisma.evaluation.deleteMany({where: {judgeId, round: 2}}),
+      prisma.judge.update({where: {id: judgeId}, data: {round2RoomId: null}}),
+    ]);
   }
 
   async assignTeamToRoom(teamId: string, roomId: string) {
-    return prisma.team.update({
-      where: {id: teamId},
-      data: {round2RoomId: roomId},
+    const team = await prisma.team.findUnique({where: {id: teamId}});
+    if (!team) {
+      throw new AppError("Team not found", 404);
+    }
+
+    const room = await prisma.round2Room.findUnique({where: {id: roomId}});
+    if (!room) {
+      throw new AppError("Round 2 room not found", 404);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.team.update({
+        where: {id: teamId},
+        data: {round2RoomId: roomId},
+      });
+
+      await tx.evaluation.deleteMany({where: {teamId, round: 2}});
+
+      const roomJudges = await tx.judge.findMany({
+        where: {round2RoomId: roomId},
+        select: {id: true},
+      });
+
+      if (roomJudges.length > 0) {
+        await tx.evaluation.createMany({
+          data: roomJudges.map((j) => ({teamId, judgeId: j.id, round: 2})),
+          skipDuplicates: true,
+        });
+      }
+
+      return updated;
     });
   }
 
@@ -600,8 +666,9 @@ export class SuperAdminService {
     });
 
     if (assignedCount > 0) {
-      throw new Error(
+      throw new AppError(
         "Some teams are already assigned to Round 3 rooms. Release room assignments before re-selecting.",
+        400,
       );
     }
 
@@ -610,7 +677,7 @@ export class SuperAdminService {
     const top = scored.slice(0, limit);
 
     if (top.length === 0) {
-      throw new Error(`No teams have scores from Round ${sourceRound} yet.`);
+      throw new AppError(`No teams have scores from Round ${sourceRound} yet.`, 400);
     }
 
     await prisma.team.updateMany({
@@ -622,13 +689,24 @@ export class SuperAdminService {
   }
 
   private async ensureRound3Rooms() {
-    await prisma.round3Room.createMany({
-      data: ROUND3_ROOM_NAMES.map((name) => ({
-        name,
-        capacity: 10,
-      })),
-      skipDuplicates: true,
+    for (const name of ROUND3_ROOM_NAMES) {
+      await prisma.round3Room.upsert({
+        where: {name},
+        update: {capacity: ROUND3_ROOM_CAPACITY},
+        create: {name, capacity: ROUND3_ROOM_CAPACITY},
+      });
+    }
+
+    // Drop rooms no longer in the configured list, as long as nothing depends on them.
+    const stale = await prisma.round3Room.findMany({
+      where: {name: {notIn: ROUND3_ROOM_NAMES}},
+      include: {_count: {select: {teams: true, judges: true}}},
     });
+
+    for (const room of stale) {
+      if (room._count.teams > 0 || room._count.judges > 0) continue;
+      await prisma.round3Room.delete({where: {id: room.id}});
+    }
   }
 
   async getRound3Rooms() {
@@ -657,7 +735,7 @@ export class SuperAdminService {
   async removeJudgeFromRound3Room(judgeId: string) {
     const judge = await prisma.judge.findUnique({where: {id: judgeId}});
     if (!judge) {
-      throw new Error("Judge not found");
+      throw new AppError("Judge not found", 404);
     }
 
     return prisma.$transaction([
@@ -669,12 +747,12 @@ export class SuperAdminService {
   async assignJudgeToRound3Room(judgeId: string, roomId: string) {
     const judge = await prisma.judge.findUnique({where: {id: judgeId}});
     if (!judge) {
-      throw new Error("Judge not found");
+      throw new AppError("Judge not found", 404);
     }
 
     const room = await prisma.round3Room.findUnique({where: {id: roomId}});
     if (!room) {
-      throw new Error("Round 3 room not found");
+      throw new AppError("Round 3 room not found", 404);
     }
 
     return prisma.$transaction(async (tx) => {
@@ -713,20 +791,22 @@ export class SuperAdminService {
     });
 
     if (rooms.length === 0) {
-      throw new Error("No Round 3 meeting rooms configured.");
+      throw new AppError("No Round 3 meeting rooms configured.", 400);
     }
 
     const unstaffed = rooms.filter((r) => r.judges.length === 0);
     if (unstaffed.length > 0) {
-      throw new Error(
+      throw new AppError(
         `Assign judges to these rooms first: ${unstaffed.map((r) => r.name).join(", ")}`,
+        400,
       );
     }
 
     const existingScores = await prisma.teamScore.count({where: {round: 3}});
     if (existingScores > 0) {
-      throw new Error(
+      throw new AppError(
         "Round 3 judging has already started. Teams cannot be redistributed.",
+        400,
       );
     }
 
@@ -736,15 +816,17 @@ export class SuperAdminService {
     );
 
     if (selectedTeams.length === 0) {
-      throw new Error(
+      throw new AppError(
         "No teams selected for Round 3 yet. Select the top teams first.",
+        400,
       );
     }
 
     const totalCapacity = rooms.reduce((sum, r) => sum + r.capacity, 0);
     if (selectedTeams.length > totalCapacity) {
-      throw new Error(
+      throw new AppError(
         `Selected teams (${selectedTeams.length}) exceed total room capacity (${totalCapacity}).`,
+        400,
       );
     }
 
@@ -828,7 +910,7 @@ export class SuperAdminService {
   async assignTeamToRound3Room(teamId: string, roomId: string) {
     const team = await prisma.team.findUnique({where: {id: teamId}});
     if (!team) {
-      throw new Error("Team not found");
+      throw new AppError("Team not found", 404);
     }
 
     const room = await prisma.round3Room.findUnique({
@@ -836,11 +918,11 @@ export class SuperAdminService {
       include: {_count: {select: {teams: true}}},
     });
     if (!room) {
-      throw new Error("Round 3 room not found");
+      throw new AppError("Round 3 room not found", 404);
     }
 
     if (team.round3RoomId !== roomId && room._count.teams >= room.capacity) {
-      throw new Error(`${room.name} is at full capacity (${room.capacity}).`);
+      throw new AppError(`${room.name} is at full capacity (${room.capacity}).`, 400);
     }
 
     return prisma.$transaction(async (tx) => {
